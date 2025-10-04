@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+    themes: light --default, dark --prefersdark, wireframe, valentine, dim, cupcake, garden, forest, aqua, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk, bumblebee, emerald, synthwave;
+}
+
+@plugin "daisyui/theme" {
+    name: "cupcake";
+    default: false;
+    prefersdark: false;
+    color-scheme: "light";
+    --color-base-100: oklch(97.788% 0.004 56.375);
+    --color-base-200: oklch(93.982% 0.007 61.449);
+    --color-base-300: oklch(91.586% 0.006 53.44);
+    --color-base-content: oklch(23.574% 0.066 313.189);
+    --color-primary: oklch(60% 0.118 184.704);
+    --color-primary-content: oklch(43% 0.078 188.216);
+    --color-secondary: oklch(89% 0.061 343.231);
+    --color-secondary-content: oklch(45% 0.187 3.815);
+    --color-accent: oklch(78% 0.115 274.713);
+    --color-accent-content: oklch(26% 0 0);
+    --color-neutral: oklch(27% 0.006 286.033);
+    --color-neutral-content: oklch(92% 0.004 286.32);
+    --color-info: oklch(68% 0.169 237.323);
+    --color-info-content: oklch(29% 0.066 243.157);
+    --color-success: oklch(64% 0.2 131.684);
+    --color-success-content: oklch(26% 0.051 172.552);
+    --color-warning: oklch(79% 0.184 86.047);
+    --color-warning-content: oklch(28% 0.066 53.813);
+    --color-error: oklch(64% 0.246 16.439);
+    --color-error-content: oklch(27% 0.105 12.094);
+    --radius-selector: 1rem;
+    --radius-field: 2rem;
+    --radius-box: 1rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 2px;
+    --depth: 1;
+    --noise: 0;
+}
+
+.drawer-button {
+    @apply btn btn-active mb-2 hover:bg-base-100 w-7 h-7 p-0.5 justify-center align-middle;
+    @apply sm:p-0.5 sm:w-8 sm:h-8;
+    @apply md:w-9 md:h-9;
+    @apply lg:w-12 lg:h-12 lg:p-1;
+}
+
+
+/* Add to your global CSS or component styles */
+/* .navbar-svgs {
+    @apply p-0 m-0 flex items-center justify-center w-fit h-fit leading-none;
+}
+
+.navbar-svgs svg {
+    @apply block p-0;
+} */
+.navbar-svgs {
+    @apply btn btn-square btn-soft lg:text-lg text-sm w-6 h-6 sm:w-8 sm:h-8 ml-1 sm:mr-1
+}
+
+.selected-dark {
+    @apply bg-secondary;
+}
