@@ -3,11 +3,10 @@ import { type Handle, redirect } from '@sveltejs/kit'
 import { sequence } from "@sveltejs/kit/hooks";
 
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
-import { isVenueOwner } from "$lib/dbFunctions/venuesDB";
 
 const supabase: Handle = async ({ event, resolve }) => {
     const host = event.request.headers.get('host') ?? '';
-    const subdomain = host !== '' ? host.split('.')[0] : '';
+    const subdomain = 'stmarybball'; // PLEASE REMEMBER TO NEVER HAVE THIS HARDCODED
     event.locals.venueURL = subdomain;
     event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         cookies: {

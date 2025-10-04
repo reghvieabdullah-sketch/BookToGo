@@ -1,13 +1,6 @@
 // Booking logic functions that can be used on server or client
-import type { BookingDetails, BookingEntry, Closure, CourtWithClosures, daySettingsType, SubUnit, Unit } from '../types/bookingTypes';
-enum recurrenceEnum {
-    DAILY = 'daily',
-    WEEKLY = 'weekly',
-    MONTHLY = 'monthly',
-    YEARLY = 'yearly',
-    ONCE = 'once',
-    NOT_REGULAR = 'not regular',
-}
+import type { BookingDetails, BookingEntry, Closure, CourtWithClosures, daySettingsType } from '../types/bookingTypes';
+import { recurrenceEnum, courtStatusEnum } from './constants/postgressFunctionConstants';
 
 function getRecurrence(date1: Date, date2: Date): recurrenceEnum {
     const diffMs = date2.getTime() - date1.getTime();
@@ -20,10 +13,7 @@ function getRecurrence(date1: Date, date2: Date): recurrenceEnum {
     return recurrenceEnum.NOT_REGULAR;
 }
 
-enum courtStatusEnum {
-    APPROVED = 'approved',
-    ARCHIVED = 'archived',
-}
+
 
 function getHHMMSSInMinutes(timeString: string, delimiter: string = ':') {
     let [h, m, s] = timeString.split(delimiter).map(Number);

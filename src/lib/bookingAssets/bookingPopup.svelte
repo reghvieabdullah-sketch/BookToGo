@@ -14,7 +14,7 @@
 		VenueSettings
 	} from '../../types/bookingTypes';
 	import { goto } from '$app/navigation';
-	import { QUERY_PARAM_BOOKING_DATE } from '$lib/constants/postgressFunctionConstants';
+	import { courtStatusEnum, QUERY_PARAM_BOOKING_DATE } from '$lib/constants/postgressFunctionConstants';
 
 	export const onclose = () => {};
 
@@ -69,11 +69,10 @@
 	}
 	async function confirmBooking(): Promise<void> {
 		if (!pendingBooking) return;
-		if (!isLoggedIn) {
-			// goto(
-			// 	`/auth?next=/booking?${QUERY_PARAM_BOOKING_DATE}=${$bookingDayData.date.toISOString().split('T')[0]}`
-			// );
-		}
+		if (!isLoggedIn)
+			return goto(
+				`/auth?next=/booking?${QUERY_PARAM_BOOKING_DATE}=${$bookingDayData.date.toISOString().split('T')[0]}`
+			);
 		isConfirming = true;
 		const bookingPossible: boolean = await attemptBooking(pendingBooking);
 		if (typeof bookingPossible === 'boolean' && bookingPossible) {
@@ -125,7 +124,7 @@
 	// Get all available units across all courts for the dropdown
 	$: allUnits = courtsData.flatMap(
 		(court) =>
-			(court.approvalStatus === 'approved' &&
+			(court.approvalStatus === courtStatusEnum.APPROVED &&
 				court.units?.map((unit) => ({
 					...unit,
 					courtId: court.courtID,

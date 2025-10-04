@@ -35,6 +35,7 @@
 					courtsData={data.courtsData}
 					closureData={data.closureData}
 					venueData={data.venueData}
+					isLoggedIn={data.userLoggedIn}
 				/>
 			</div>
 		</div>

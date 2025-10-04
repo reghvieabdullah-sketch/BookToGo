@@ -1,11 +1,12 @@
-import { json } from "@sveltejs/kit";
 import type { Closure, courtsType, CourtWithClosures, VenueData, VenueSettings } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX } from "$lib/constants/postgressFunctionConstants";
 
 // IMPORTANT: All update functions are protected at the database level with ownership checks. Thus adding ownership checks here is redundant.
 
-//  TODO - add return comments showing what each function returns in terms of what the json structure looks like
+// Common return type for DB operations
+type DBResult<T> = { data: T | null; error: string | null };
+
 /** Boolean returned indicating is the passed in userID is the ownersID. There is already a function at db level to check verification. But this is added for sake of completeness */
 export async function isVenueOwner(supabase: SupabaseClient, venueID: string | null | undefined, userID: string | undefined): Promise<boolean> {
     if (!venueID || isNaN(parseInt(venueID))) return false;
@@ -54,7 +55,7 @@ export async function uploadVenueImages(supabase: SupabaseClient, venueID: strin
     return urls;
 }
 
-export async function updateVenueImages(supabase: SupabaseClient, venueID: string | null | undefined, files: File[]): Promise<Response> {
+export async function updateVenueImages(supabase: SupabaseClient, venueID: string | null | undefined, files: File[]): Promise<DBResult<any>> {
     /* 
         Incase of any failure, we must provide fallbacks. For that
         1. If its not the owner, return a fail response
@@ -63,120 +64,115 @@ export async function updateVenueImages(supabase: SupabaseClient, venueID: strin
         4. If its a success, delete the old files. and then update the venue's image paths in the database.
         5. return a response indicating the success state
     */
-    if (!venueID || isNaN(parseInt(venueID))) return json({ error: "Missing venue id" }, { status: 400 });
+    if (!venueID || isNaN(parseInt(venueID))) return { data: null, error: "Missing venue id" };
     const oldImagePaths = await getVenueImages(supabase, venueID);
     const newImagePaths = await uploadVenueImages(supabase, venueID, files)
     const { data, error } = await supabase
         .rpc(FN_VENUE_GENERAL_SETTINGS_GET, { p_venue_id: venueID, p_image_urls: newImagePaths });
     if (!error) await deleteVenueImages(supabase, oldImagePaths); // delete the old images
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
-
-
+        ? { data: null, error: error.message }
+        : { data, error: null };
 }
 
 /**Gets the bundle containing settings, courts, and general data of a venue. Bundles 3 separate calls into 1 api call. 
  * Meant for when a client requests a page initially and needs to get all 3 sequentially*/
-export async function getVenueBundled(supabase: SupabaseClient, venueURL: string | null | undefined): Promise<Response> {
-    if (!venueURL || venueURL === '') return json({ error: "Missing venue url" }, { status: 400 });
+export async function getVenueBundled(supabase: SupabaseClient, venueURL: string | null | undefined): Promise<DBResult<any>> {
+    if (!venueURL || venueURL === '') return { data: null, error: "Missing venue url" };
     const { data, error } = await supabase
         .rpc(FN_VENUE_BUNDLER_GET, { p_venue_url: venueURL });
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
+        ? { data: null, error: error.message }
+        : { data, error: null };
 }
 
 /**Gets the general venue settings of a specific venue by venue URL*/
-export async function getVenueGeneralSettings(supabase: SupabaseClient, venueURL: string | null | undefined): Promise<Response> {
-    if (!venueURL || venueURL === '') return json({ error: "Missing venue url" }, { status: 400 });
+export async function getVenueGeneralSettings(supabase: SupabaseClient, venueURL: string | null | undefined): Promise<DBResult<VenueData>> {
+    if (!venueURL || venueURL === '') return { data: null, error: "Missing venue url" };
     const { data, error } = await supabase
         .rpc(FN_VENUE_GENERAL_SETTINGS_GET, { p_venue_url: venueURL });
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
-};
-
+        ? { data: null, error: error.message }
+        : { data, error: null };
+}
 
 /**Updates a specific venues settings under the venue specific bucket. No type/null checks done.*/
-export async function updateVenueGeneralSettings(supabase: SupabaseClient, venueData: VenueData): Promise<Response> {
+export async function updateVenueGeneralSettings(supabase: SupabaseClient, venueData: VenueData): Promise<DBResult<any>> {
     const { data, error } = await supabase
         .rpc(FN_VENUE_GENERAL_SETTINGS_UPDATE, { p_venue: venueData });
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
+        ? { data: null, error: error.message }
+        : { data, error: null };
 }
 
 /**Gets the courts of a specific venue by venueID*/
-export async function getVenueCourts(supabase: SupabaseClient, venueID: string | null | undefined): Promise<Response> {
-    if (!venueID || isNaN(parseInt(venueID))) return json({ error: "Missing venue id" }, { status: 400 });
+export async function getVenueCourts(supabase: SupabaseClient, venueID: string | null | undefined): Promise<DBResult<courtsType>> {
+    if (!venueID || isNaN(parseInt(venueID))) return { data: null, error: "Missing venue id" };
     const { data, error } = await supabase
         .rpc(FN_VENUE_COURTS_GET, { p_venue_id: venueID });
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
+        ? { data: null, error: error.message }
+        : { data, error: null };
 }
 
 /**Updates a specific venues courts. No type/null checks done.*/
-export async function updateVenueCourts(supabase: SupabaseClient, courtData: courtsType, venueID: string | null | undefined): Promise<Response> {
-    if (!venueID || isNaN(parseInt(venueID))) return json({ error: "Missing venue id" }, { status: 400 });
+export async function updateVenueCourts(supabase: SupabaseClient, courtData: courtsType, venueID: string | null | undefined): Promise<DBResult<any>> {
+    if (!venueID || isNaN(parseInt(venueID))) return { data: null, error: "Missing venue id" };
     const { data, error } = await supabase
         .rpc(FN_VENUE_COURTS_UPDATE, { p_venue_id: venueID, p_courts: courtData });
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
+        ? { data: null, error: error.message }
+        : { data, error: null };
 }
 
-
-
 /**Gets a specific venues settings from venueID. No type/null checks done.*/
-export async function getVenueSettings(supabase: SupabaseClient, venueID: string | null | undefined): Promise<Response> {
-    if (!venueID || isNaN(parseInt(venueID))) return json({ error: "Missing venue id" }, { status: 400 });
+export async function getVenueSettings(supabase: SupabaseClient, venueID: string | null | undefined): Promise<DBResult<VenueSettings>> {
+    if (!venueID || isNaN(parseInt(venueID))) return { data: null, error: "Missing venue id" };
     const { data, error } = await supabase
         .rpc(FN_VENUE_SETTINGS_GET, { p_venue_id: venueID });
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
+        ? { data: null, error: error.message }
+        : { data, error: null };
 }
 
-
 /**Updates a specific venues settings from venueID & venueData. No type/null checks done.*/
-export async function updateVenueSettings(supabase: SupabaseClient, settingsJSON: VenueSettings, venueID: string | null | undefined): Promise<Response> {
-    if (!venueID || isNaN(parseInt(venueID))) return json({ error: "Missing venue id" }, { status: 400 });
-    if (!settingsJSON) return json({ error: "Missing settings" }, { status: 400 });
+export async function updateVenueSettings(supabase: SupabaseClient, settingsJSON: VenueSettings, venueID: string | null | undefined): Promise<DBResult<any>> {
+    if (!venueID || isNaN(parseInt(venueID))) return { data: null, error: "Missing venue id" };
+    if (!settingsJSON) return { data: null, error: "Missing settings" };
     const { data, error } = await supabase
         .rpc(FN_VENUE_SETTINGS_UPDATE, { p_venue_id: venueID, p_venue_settings_json: settingsJSON });
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
+        ? { data: null, error: error.message }
+        : { data, error: null };
 }
 
 /**Gets a specific venues closures from venueID. No type/null checks done.*/
-export async function getVenueClosures(supabase: SupabaseClient, venueID: string | null | undefined): Promise<Response> {
-    if (!venueID || isNaN(parseInt(venueID))) return json({ error: "Missing venue id" }, { status: 400 });
+export async function getVenueClosures(supabase: SupabaseClient, venueID: string | null | undefined): Promise<DBResult<Closure[]>> {
+    if (!venueID || isNaN(parseInt(venueID))) return { data: null, error: "Missing venue id" };
     const { data, error } = await supabase
         .rpc(FN_VENUE_CLOSURES_GET, { p_venue_id: venueID });
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
+        ? { data: null, error: error.message }
+        : { data, error: null };
 }
+
 /**Updates a specific venues closures from venueID & courtClosure. No type/null checks done.*/
-export async function updateVenueClosures(supabase: SupabaseClient, venueID: string | null | undefined, courtClosure: CourtWithClosures[]): Promise<Response> {
-    if (!venueID || isNaN(parseInt(venueID))) return json({ error: "Missing venue id" }, { status: 400 });
-    if (!courtClosure) return json({ error: "Missing courts data" }, { status: 400 });
+export async function updateVenueClosures(supabase: SupabaseClient, venueID: string | null | undefined, courtClosure: CourtWithClosures[]): Promise<DBResult<any>> {
+    if (!venueID || isNaN(parseInt(venueID))) return { data: null, error: "Missing venue id" };
+    if (!courtClosure) return { data: null, error: "Missing courts data" };
     const { data, error } = await supabase
         .rpc(FN_VENUE_CLOSURES_UPDATE, { p_all_courts_json: courtClosure });
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
+        ? { data: null, error: error.message }
+        : { data, error: null };
 }
 
 /**Deletes a specific venues closure from closureID. No type/null checks done.*/
-export async function deleteVenueClosure(supabase: SupabaseClient, closureID: string | null | undefined): Promise<Response> {
-    if (!closureID || isNaN(parseInt(closureID))) return json({ error: "Missing closure id" }, { status: 400 });
+export async function deleteVenueClosure(supabase: SupabaseClient, closureID: string | null | undefined): Promise<DBResult<any>> {
+    if (!closureID || isNaN(parseInt(closureID))) return { data: null, error: "Missing closure id" };
     const { data, error } = await supabase
         .rpc(FN_VENUE_CLOSURES_DELETE, { p_closure_id: closureID });
     return error
-        ? json({ error: error.message }, { status: 400 })
-        : json(data, { status: 200 });
+        ? { data: null, error: error.message }
+        : { data, error: null };
 }

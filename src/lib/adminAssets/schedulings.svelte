@@ -1,10 +1,6 @@
 <script lang="ts">
-	import { venueDataStore } from '$lib/bookingAssets/bookingStore';
-	import {
-		FN_VENUE_CLOSURES_DELETE,
-		QUERY_PARAM_VENUE_CLOSURE_ID
-	} from '$lib/constants/postgressFunctionConstants';
-	import type { CourtWithClosures, VenueData } from '../../types/bookingTypes';
+	import { QUERY_PARAM_VENUE_CLOSURE_ID } from '$lib/constants/postgressFunctionConstants';
+	import type { CourtWithClosures } from '../../types/bookingTypes';
 
 	// Refresh trigger - increment this to force re-fetch
 	let refreshTrigger = $state(0);

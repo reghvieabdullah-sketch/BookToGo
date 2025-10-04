@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { courtStatusEnum } from '$lib/constants/postgressFunctionConstants';
 	import type { courtsType } from '../../types/bookingTypes';
 
 	export let courts: courtsType;
@@ -28,7 +29,7 @@
 				courtID: newId,
 				name: newCourtName.trim(),
 				units: [],
-				approvalStatus: 'pending',
+				approvalStatus: 'pending'
 			}
 		];
 		showAddCourtModal = false;
@@ -138,8 +139,10 @@
 																	</p>
 																</div>
 																<button
-																	on:click={() => removeSubUnit(court.courtID, unit.unitID, subUnit.id)}
+																	on:click={() =>
+																		removeSubUnit(court.courtID, unit.unitID, subUnit.id)}
 																	class="btn btn-circle self-start btn-ghost btn-xs"
+																	class:hidden={court.approvalStatus !== courtStatusEnum.APPROVED}
 																>
 																	<svg
 																		xmlns="http://www.w3.org/2000/svg"
@@ -163,6 +166,7 @@
 												<button
 													on:click={() => openAddSubUnitModal(court.courtID, unit.unitID)}
 													class="btn ml-auto btn-circle btn-sm btn-primary"
+													class:hidden={court.approvalStatus !== courtStatusEnum.APPROVED}
 												>
 													<svg
 														xmlns="http://www.w3.org/2000/svg"
@@ -197,6 +201,7 @@
 										<button
 											on:click={() => openAddSubUnitModal(court.courtID, unit.unitID)}
 											class="btn m-1! mt-3 h-fit w-fit grow-0 border-2 p-1! btn-outline btn-sm btn-primary sm:w-auto"
+											class:hidden={court.approvalStatus !== courtStatusEnum.APPROVED}
 										>
 											<svg
 												xmlns="http://www.w3.org/2000/svg"
@@ -228,6 +233,7 @@
 												<button
 													on:click={() => removeSubUnit(court.courtID, unit.unitID, subUnit.id)}
 													class="btn ml-2 btn-circle flex-shrink-0 btn-ghost btn-xs"
+													class:hidden={court.approvalStatus !== courtStatusEnum.APPROVED}
 												>
 													<svg
 														xmlns="http://www.w3.org/2000/svg"
@@ -256,6 +262,7 @@
 						<button
 							on:click={() => openAddUnitModal(court.courtID)}
 							class="btn w-full border-2 text-xs uppercase btn-outline btn-primary sm:w-auto sm:text-sm"
+							class:hidden={court.approvalStatus !== courtStatusEnum.APPROVED}
 						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"

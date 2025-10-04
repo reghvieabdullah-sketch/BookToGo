@@ -14,7 +14,7 @@
 
 	function setDayBooking(date: Date) {
 		const key = date.toLocaleDateString('en-CA');
-		const entries = bookingData[key] ?? [];
+		const entries = bookingData ? (bookingData[key] ?? []) : [];
 		$bookingDayData = { date: date, entries };
 	}
 

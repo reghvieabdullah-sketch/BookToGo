@@ -40,5 +40,19 @@ export const FN_USER_SETTINGS_SET = 'create_venue_user'
 export const QUERY_PARAM_BOOKING_DATE = 'p_booking_date';
 
 
-
 export const INVALIDATE_PARENT_LAYOUT_CODE = 'layout:parent';
+
+
+export enum recurrenceEnum {
+    DAILY = 'daily',
+    WEEKLY = 'weekly',
+    MONTHLY = 'monthly',
+    YEARLY = 'yearly',
+    ONCE = 'once',
+    NOT_REGULAR = 'not regular',
+}
+
+export enum courtStatusEnum {
+    APPROVED = 'approved',
+    ARCHIVED = 'archived',
+}
