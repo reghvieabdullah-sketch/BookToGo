@@ -1,12 +1,14 @@
-import adapter from '@sveltejs/adapter-auto';
+import netlify from '@sveltejs/adapter-netlify';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// Consult https://svelte.dev/docs/kit/integrations
-	// for more information about preprocessors
 	preprocess: vitePreprocess(),
-	kit: { adapter: adapter() }
+	kit: {
+		adapter: netlify(),
+		// optional: you can specify build options if needed
+		// target: '#svelte', // if using an older SvelteKit version
+	}
 };
 
 export default config;
