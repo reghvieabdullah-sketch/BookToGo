@@ -20,7 +20,6 @@
 	});
 
 	onMount(() => {
-		
 		// if (!venueData) handleServerDownOrVenueIdFsailure();
 
 		const { data } = supabase.auth.onAuthStateChange((_, newSession) => {
@@ -56,7 +55,7 @@
 			{#if isOwnerValue}
 				<a href="/dashboard" class="btn btn-outline btn-primary">Dashboard</a>
 			{:else}
-				<a href="/bookings" class="btn btn-primary">Book Now</a>
+				<a href="/mybookings" class="btn btn-primary">My Bookings</a>
 			{/if}
 		{/await}
 	</div>
