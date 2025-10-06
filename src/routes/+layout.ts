@@ -1,7 +1,6 @@
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr'
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public'
 import type { LayoutLoad } from './$types'
-import type { courtsType, VenueData, VenueSettings } from '../types/bookingTypes'
 import { courtDataStore, userLoggedInStore, venueDataStore, venueSettingsStore } from '$lib/bookingAssets/bookingStore'
 import { INVALIDATE_PARENT_LAYOUT_CODE, QUERY_PARAM_VENUE_GET_BUNDLE } from '$lib/constants/postgressFunctionConstants'
 
