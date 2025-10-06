@@ -1,0 +1,9 @@
+[build]
+  command = "pnpm build"                 # or npm run build
+  publish = ".svelte-kit/output/client" # static assets
+  functions = ".svelte-kit/output/server" # server functions for SSR
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/sveltekit-render"
+  status = 200
