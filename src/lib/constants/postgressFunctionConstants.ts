@@ -55,4 +55,6 @@ export enum recurrenceEnum {
 export enum courtStatusEnum {
     APPROVED = 'approved',
     ARCHIVED = 'archived',
+    PENDING = 'pending',
+    TEMPORARY = 'temporary'
 }

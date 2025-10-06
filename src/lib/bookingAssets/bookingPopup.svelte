@@ -14,7 +14,10 @@
 		VenueSettings
 	} from '../../types/bookingTypes';
 	import { goto } from '$app/navigation';
-	import { courtStatusEnum, QUERY_PARAM_BOOKING_DATE } from '$lib/constants/postgressFunctionConstants';
+	import {
+		courtStatusEnum,
+		QUERY_PARAM_BOOKING_DATE
+	} from '$lib/constants/postgressFunctionConstants';
 
 	export const onclose = () => {};
 
@@ -31,7 +34,7 @@
 	let bookingMessage = '';
 	$: ($bookingDayData.date, (showConfirmation = false), (bookingResult = null));
 
-	async function attemptBooking(booking: BookingDetails): Promise<boolean> {
+	async function attemptBooking(booking: BookingDetails): Promise<any> {
 		try {
 			const response = await fetch(`/api/v1/bookings/${venueData.venueID}`, {
 				method: 'PUT',
@@ -41,13 +44,14 @@
 				body: JSON.stringify(booking)
 			});
 			$bookingDayData.entries = [...$bookingDayData.entries, { details: booking }]; // even if its a failure, we add it to the list for now. since the user would keep seeing the same booking otherwise.
-			if (!response.ok) return false;
+			// if (!response.ok) return false;
 			// Assume passed the insertion checks if we get a 200 response
-			return (await response.json()) as boolean;
+			const r = await response.json();
+			console.log(r, ' is the response');
+			return r;
 		} catch (error) {
-			console.error('Error: ', error);
+			console.log('Error: ', error);
 		}
-		return false;
 	}
 
 	function saveBooking(state: any) {
@@ -74,7 +78,9 @@
 				`/auth?next=/booking?${QUERY_PARAM_BOOKING_DATE}=${$bookingDayData.date.toISOString().split('T')[0]}`
 			);
 		isConfirming = true;
-		const bookingPossible: boolean = await attemptBooking(pendingBooking);
+		const bookingPossible = await attemptBooking(pendingBooking);
+		console.log(bookingPossible);
+
 		if (typeof bookingPossible === 'boolean' && bookingPossible) {
 			bookingResult = 'success';
 			bookingMessage = 'Your booking has been confirmed successfully! Redirecting...';
@@ -86,7 +92,9 @@
 			}, 2000);
 		} else {
 			bookingResult = 'error';
-			bookingMessage = 'Failed to confirm booking. Please try a different time.';
+			bookingMessage =
+				'Failed to confirm booking. ' +
+				(bookingPossible && bookingPossible.error ? bookingPossible.error : '');
 			showConfirmation = false;
 			pendingBooking = null;
 
@@ -150,8 +158,9 @@
 		const closingTime = HHMMToMinutes(daySettings.closeTime.slice(0, 5));
 		const interval = settingsData.slotGenerationInterval || 60;
 		const durationMinutes = HHMMToMinutes(selectedDuration);
-
-		for (let time = openingTime; time <= closingTime - durationMinutes; time += interval) {
+		let time = openingTime;
+		while (time <= closingTime - durationMinutes) {
+			time += interval;
 			if (
 				!isConflictingWithBookings(
 					$bookingDayData.date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase(),
@@ -168,6 +177,8 @@
 				options.push(minutesToHHMM(time));
 			} else {
 				console.log('Conflict at time: ', minutesToHHMM(time));
+				// And add a cooldown
+				if (settingsData.bookingCoolDown) time += settingsData.bookingCoolDown;
 			}
 		}
 		timeOptions = options;

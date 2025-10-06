@@ -6,6 +6,9 @@
 	let showAddUnitModal = false;
 	let showAddSubUnitModal = false;
 	let showAddCourtModal = false;
+	let showPendingWarningModal = false;
+	let showDeleteCourtModal = false;
+	let courtToDelete = 0;
 	let currentCourtId = 0;
 	let currentUnitId = 0;
 	let newUnitTitle = '';
@@ -13,6 +16,8 @@
 	let newSubUnitPrice = 0;
 	let newCourtName = '';
 	let isAddingWithUnit = false;
+
+	$: hasPendingCourts = courts.some((c) => c.approvalStatus === courtStatusEnum.PENDING);
 
 	function openAddCourtModal() {
 		newCourtName = '';
@@ -29,13 +34,29 @@
 				courtID: newId,
 				name: newCourtName.trim(),
 				units: [],
-				approvalStatus: 'pending'
+				approvalStatus: courtStatusEnum.PENDING
 			}
 		];
 		showAddCourtModal = false;
 	}
 
+	function openDeleteCourtModal(courtId: number) {
+		courtToDelete = courtId;
+		showDeleteCourtModal = true;
+	}
+
+	function deleteCourt() {
+		courts = courts.filter((c) => c.courtID !== courtToDelete);
+		showDeleteCourtModal = false;
+		courtToDelete = 0;
+	}
+
 	function openAddUnitModal(courtId: number) {
+		const court = courts.find((c) => c.courtID === courtId);
+		if (court?.approvalStatus === courtStatusEnum.APPROVED && hasPendingCourts) {
+			showPendingWarningModal = true;
+			return;
+		}
 		currentCourtId = courtId;
 		newUnitTitle = '';
 		newSubUnitDescription = '';
@@ -45,6 +66,11 @@
 	}
 
 	function openAddSubUnitModal(courtId: number, unitId: number) {
+		const court = courts.find((c) => c.courtID === courtId);
+		if (court?.approvalStatus === courtStatusEnum.APPROVED && hasPendingCourts) {
+			showPendingWarningModal = true;
+			return;
+		}
 		currentCourtId = courtId;
 		currentUnitId = unitId;
 		newSubUnitDescription = '';
@@ -88,6 +114,10 @@
 
 	function removeSubUnit(courtId: number, unitId: number, subUnitId: number) {
 		const court = courts.find((c) => c.courtID === courtId);
+		if (court?.approvalStatus === courtStatusEnum.APPROVED && hasPendingCourts) {
+			showPendingWarningModal = true;
+			return;
+		}
 		const unit = court?.units.find((u) => u.unitID === unitId);
 		if (unit) {
 			if (unit.subUnits.length > 1) {
@@ -102,14 +132,25 @@
 
 <div class="card bg-base-100 md:shadow-xl">
 	<div class="card-body p-0!">
-		<h2 class="mx-auto card-title hidden text-2xl md:inline">Pricing</h2>
 		<div class="card bg-base-100 md:shadow-xl">
 			{#each courts as court}
-				<div class="flex w-full flex-row-reverse">
-					<div class="mx-auto badge w-fit badge-secondary">{court.approvalStatus}</div>
+				<div class="flex w-full flex-row-reverse justify-center gap-2">
+					<div class="flex w-full items-center justify-between">
+						<div></div>
+						<div class="mx-auto badge w-fit badge-secondary">{court.approvalStatus}</div>
+					</div>
 				</div>
 				<div class="card-body bg-base-200 p-4 sm:m-4 sm:p-6">
-					<h3 class="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">{court.name}</h3>
+					<div class="flex w-full justify-between">
+						<h3 class="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">{court.name}</h3>
+						<button
+							on:click={() => openDeleteCourtModal(court.courtID)}
+							class="btn btn-error"
+							title="Delete court"
+						>
+							DELETE
+						</button>
+					</div>
 
 					<!-- Desktop Table View -->
 					<div class="hidden overflow-x-auto md:block">
@@ -400,6 +441,39 @@
 				<button class="btn btn-sm btn-primary sm:btn-md" on:click={addNewSubUnit}
 					>Add Sub-unit</button
 				>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if showPendingWarningModal}
+	<div class="modal-open modal">
+		<div class="modal-box mx-4 max-w-sm sm:max-w-lg">
+			<h3 class="mb-4 text-lg font-bold text-warning">Cannot Edit Approved Courts</h3>
+			<p class="mb-4">
+				You cannot edit approved courts while there are pending courts. Please delete all pending
+				courts first to make changes to approved courts.
+			</p>
+			<div class="modal-action">
+				<button
+					class="btn btn-sm btn-primary sm:btn-md"
+					on:click={() => (showPendingWarningModal = false)}>OK</button
+				>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if showDeleteCourtModal}
+	<div class="modal-open modal">
+		<div class="modal-box mx-4 max-w-sm sm:max-w-lg">
+			<h3 class="mb-4 text-lg font-bold text-error">Delete Court</h3>
+			<p class="mb-4">Are you sure you want to delete this court? This action cannot be undone.</p>
+			<div class="modal-action">
+				<button class="btn btn-sm sm:btn-md" on:click={() => (showDeleteCourtModal = false)}
+					>Cancel</button
+				>
+				<button class="btn btn-sm btn-error sm:btn-md" on:click={deleteCourt}>Delete</button>
 			</div>
 		</div>
 	</div>

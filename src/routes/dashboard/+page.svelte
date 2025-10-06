@@ -8,7 +8,10 @@
 	import FeatureCards from '$lib/configAssets/featureCards.svelte';
 	import GeneralInfo from '$lib/configAssets/generalInfo.svelte';
 	import ImageManager from '$lib/configAssets/imageManager.svelte';
-	import { INVALIDATE_PARENT_LAYOUT_CODE } from '$lib/constants/postgressFunctionConstants';
+	import {
+		courtStatusEnum,
+		INVALIDATE_PARENT_LAYOUT_CODE
+	} from '$lib/constants/postgressFunctionConstants';
 	import equal from 'fast-deep-equal';
 
 	let activeSection = 'bookings';
@@ -86,6 +89,10 @@
 				finishedUpdating = true;
 				// invalidate the parent layout to refetch the updated data
 				await invalidate(INVALIDATE_PARENT_LAYOUT_CODE);
+				// then reset the vars
+				venueDataCopy = structuredClone(data.venueData);
+				courtDataCopy = structuredClone(data.courtsData);
+				venueSettingsCopy = structuredClone(data.settingsData);
 			}
 		} catch (error) {
 			console.error('Error updating config:', error);
@@ -227,6 +234,8 @@
 								bind:courts={courtDataCopy}
 								bind:imageBlobs
 								bind:venueSettings={venueSettingsCopy}
+								bind:closureData={data.closureData}
+								bind:bookingData={data.bookingData}
 							/>
 						{/if}
 					</div>

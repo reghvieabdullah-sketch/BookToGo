@@ -1,18 +1,31 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { invalidate } from '$app/navigation';
+	import BookingCard from './BookingCard.svelte';
+	import type { BookingEntry } from '../../types/bookingTypes';
+	import BookingInfo from './BookingInfo.svelte';
 
-	let { startDate = new Date(), endDate = new Date(), venueID = 1 } = $props();
-	endDate.setDate(startDate.getDate() + 100);
-	async function getBookingsFromServer(venueID: number, startDate: Date, endDate: Date) {
-		const response = await fetch(
-			`api/venue/booking?venue_id=${venueID}&date_start=${startDate.toISOString().split('T')[0]}&date_end=${endDate.toISOString().split('T')[0]}`
-		);
-		const data = await response.json();
-		const get_bookings_by_day_for_venue = Object.values(data).flat();
-		return get_bookings_by_day_for_venue as BookingEntry[];
-	}
+	let {
+		bookingData,
+		venueID
+	}: {
+		bookingData: Record<string, BookingEntry[]> | BookingEntry[];
+		venueID: number;
+	} = $props();
 
-	const bookingsPromise = $derived(getBookingsFromServer(venueID, startDate, endDate));
+	// Flatten bookings if they're grouped by date
+	const flattenedBookings = $derived(() => {
+		if (Array.isArray(bookingData)) {
+			return bookingData;
+		}
+		// If it's an object grouped by date, flatten it
+		return Object.values(bookingData).flat();
+	});
+
+	$effect(() => {
+		console.log('Flattened bookings:', flattenedBookings());
+	});
+
 	let selectedBooking = $state<BookingEntry | null>(null);
 	let isMobile = $state(false);
 	let showMobileDetails = $state(false);
@@ -75,43 +88,39 @@
 		}
 	}
 
-	function handleCancel() {
-		// console.log('Cancel booking:', selectedBooking?.bookingID);
+	async function handleCancel() {
+		if (!selectedBooking) return;
+
+		// Implement your cancel logic here
+		// After successful cancellation:
+		await invalidate('layout:dashboard');
 	}
 
-	function handleEdit() {
-		// console.log('Edit booking:', selectedBooking?.bookingID);
+	async function handleEdit() {
+		if (!selectedBooking) return;
+
+		// Implement your edit logic here
+		// After successful edit:
+		await invalidate('layout:dashboard');
 	}
-	import BookingCard from './BookingCard.svelte';
-	import type { BookingEntry } from '../../types/bookingTypes';
-	import BookingInfo from './BookingInfo.svelte';
 </script>
 
 <div class="flex h-full flex-row gap-4">
 	<div class="min-w-0 flex-1">
 		<div class="flex flex-row flex-wrap gap-4 p-2">
-			{#await bookingsPromise}
-				<div class="flex w-full items-center justify-center p-8">
-					<span class="loading loading-spinner loading-lg"></span>
-				</div>
-			{:then bookings}
-				{#if bookings.length > 0}
-					{#each bookings as booking}
-						<BookingCard
-							{booking}
-							selected={selectedBooking?.details.bookingID === booking.details.bookingID &&
-								!isMobile}
-							onClick={() => selectBooking(booking)}
-							{getStatusBadgeClass}
-							{formatDate}
-						/>
-					{/each}
-				{:else}
-					<div class="card card-body text-center text-2xl">No bookings just yet...</div>
-				{/if}
-			{:catch error}
+			{#if flattenedBookings().length > 0}
+				{#each flattenedBookings() as booking}
+					<BookingCard
+						{booking}
+						selected={selectedBooking?.details.bookingID === booking.details.bookingID && !isMobile}
+						onClick={() => selectBooking(booking)}
+						{getStatusBadgeClass}
+						{formatDate}
+					/>
+				{/each}
+			{:else}
 				<div class="card card-body text-center text-2xl">No bookings just yet...</div>
-			{/await}
+			{/if}
 		</div>
 	</div>
 

@@ -4,7 +4,7 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 
 export const GET: RequestHandler = async ({ locals, params }) => {
     const { venueID } = params;
-    const cacheKey = `venue:${venueID}:courts`;
+    const cacheKey = `venue:${locals.venueURL}:courts`;
 
     const cached = await getCachedData(cacheKey);
     if (cached) return json(cached);
@@ -20,7 +20,7 @@ export const PUT: RequestHandler = async ({ locals, request, params }) => {
     const { venueID } = params;
     console.log('the url told to change is ', locals.venueURL);
 
-    const cacheKeys = [`venue:${venueID}:courts`, `venue:${locals.venueURL}:bundled`];
+    const cacheKeys = [`venue:${locals.venueURL}:courts`, `venue:${locals.venueURL}:bundled`];
     const result = await updateVenueCourts(locals.supabase, courtsJSON, venueID)
     if (result.error) {
         return json({ error: result.error }, { status: 400 });

@@ -7,6 +7,7 @@
 		QUERY_PARAM_VENUE_BOOKING_DATE_END,
 		QUERY_PARAM_VENUE_BOOKING_DATE_START
 	} from '$lib/constants/postgressFunctionConstants';
+	import { onMount } from 'svelte';
 	let { bookingData, settingsData, venueData } = $props();
 	let currentMonth = $derived($bookingDayData.date?.getMonth() ?? new Date().getMonth());
 	let currentYear = $derived($bookingDayData.date?.getFullYear() ?? new Date().getFullYear());
@@ -32,6 +33,21 @@
 		const isOnOrAfterToday = date >= today || date.toDateString() === today.toDateString();
 
 		return isOpen && isWithinAllowedRange && isOnOrAfterToday;
+	}
+
+	function findNextBookableDay(startDate: Date): Date | null {
+		const maxDaysToCheck = 365; // Check up to a year ahead
+		let checkDate = new Date(startDate);
+
+		for (let i = 0; i < maxDaysToCheck; i++) {
+			if (getIsBookableDay(checkDate)) {
+				return checkDate;
+			}
+			checkDate = new Date(checkDate);
+			checkDate.setDate(checkDate.getDate() + 1);
+		}
+
+		return null; // No bookable day found in the next year
 	}
 
 	function generateCalendarDays(month: number, year: number) {
@@ -124,6 +140,18 @@
 		if (totalSlots === 0) return 0;
 		return (bookedSlots / totalSlots) * 100;
 	}
+
+	onMount(() => {
+		const today = new Date();
+
+		// If today is not bookable, find and select the next bookable day
+		if (!getIsBookableDay(today)) {
+			const nextBookable = findNextBookableDay(today);
+			if (nextBookable) {
+				setDayBooking(nextBookable);
+			}
+		}
+	});
 </script>
 
 <div class="mx-auto w-full sm:w-[90%] lg:w-[60%]">

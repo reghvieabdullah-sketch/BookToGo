@@ -9,7 +9,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
     const { venueID } = params;
     const getBundledData = url.searchParams.get(QUERY_PARAM_VENUE_GET_BUNDLE);
     const requestedBundle = getBundledData === '1';
-    const cacheKey = `venue:${venueID}:${requestedBundle ? 'bundled' : 'general'}`;
+    const cacheKey = `venue:${locals.venueURL}:${requestedBundle ? 'bundled' : 'general'}`;
 
     const cached = await getCachedData(cacheKey);
     if (cached) return json(cached);
@@ -26,7 +26,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 export const PUT: RequestHandler = async ({ locals, request, params }) => {
     const venueData = await request.json();
     const { venueID } = params;
-    const cacheKeys = [`venue:${venueID}:general`, `venue:${locals.venueURL}:bundled`];
+    const cacheKeys = [`venue:${locals.venueURL}:general`, `venue:${locals.venueURL}:bundled`];
     await deleteCachedData(cacheKeys);
     return json(await updateVenueGeneralSettings(locals.supabase, venueData))
 };

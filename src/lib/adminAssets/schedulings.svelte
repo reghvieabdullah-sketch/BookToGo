@@ -1,22 +1,10 @@
 <script lang="ts">
+	import { invalidate } from '$app/navigation';
 	import { QUERY_PARAM_VENUE_CLOSURE_ID } from '$lib/constants/postgressFunctionConstants';
 	import type { CourtWithClosures } from '../../types/bookingTypes';
 
-	// Refresh trigger - increment this to force re-fetch
-	let refreshTrigger = $state(0);
+	let { venueID, closureData }: { venueID: number; closureData: CourtWithClosures[] } = $props();
 
-	async function getClosureFromServer() {
-		const response = await fetch(`/api/v1/venues/${venueID}/closures`);
-		return (await response.json()) as CourtWithClosures[];
-	}
-
-	// Make the promise reactive to refreshTrigger
-	const closuresPromise = $derived.by(() => {
-		refreshTrigger; // Access trigger to create dependency
-		return getClosureFromServer();
-	});
-
-	let { venueID }: { venueID: number } = $props();
 	// Form state
 	let selectedCourtID = $state('');
 	let reason = $state('');
@@ -86,9 +74,7 @@
 			);
 
 			if (response.ok) {
-				console.log('Closure deleted successfully');
-				// Trigger refresh
-				refreshTrigger++;
+				invalidate('layout:dashboard');
 			} else {
 				console.error('Failed to delete closure');
 			}
@@ -129,7 +115,7 @@
 		};
 
 		try {
-			const response = await fetch(`/api/v1/venues/${venueData.venueID}/closures?bulk=1`, {
+			const response = await fetch(`/api/v1/venues/${venueID}/closures`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify([closure])
@@ -138,6 +124,7 @@
 			if (response.ok) {
 				console.log('Closure saved successfully');
 				// Reset form
+				invalidate('layout:dashboard');
 				selectedCourtID = '';
 				reason = '';
 				duration = 1;
@@ -145,8 +132,6 @@
 				startDate = '';
 				startTime = '';
 				frequency = 'Once';
-				// Trigger refresh
-				refreshTrigger++;
 			} else {
 				console.error('Failed to save closure');
 			}
@@ -162,151 +147,189 @@
 	<div class="card-body p-4 sm:p-6 lg:p-8">
 		<h2 class="mb-4 card-title text-lg sm:text-xl">Schedule Task</h2>
 
-		{#await closuresPromise}
-			<!-- Loading state for court selection -->
-			<div class="py-4 text-center">
-				<span class="loading loading-md loading-spinner"></span>
-			</div>
-		{:then courtsData}
-			<form onsubmit={handleSave}>
-				<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-					<!-- Court Selection -->
-					<div class="form-control md:col-span-2 lg:col-span-3">
+		<form onsubmit={handleSave}>
+			<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+				<!-- Court Selection -->
+				<div class="form-control md:col-span-2 lg:col-span-3">
+					<label class="label">
+						<span class="label-text text-base font-medium">Select Court</span>
+					</label>
+					<select class="select-bordered select w-full" bind:value={selectedCourtID} required>
+						<option value="" disabled>Choose a court...</option>
+						{#each closureData as court}
+							<option value={court.courtID}>
+								{court.courtDescription || `Court ${court.courtID}`} (ID: {court.courtID})
+							</option>
+						{/each}
+					</select>
+					{#if submitted && !selectedCourtID}
 						<label class="label">
-							<span class="label-text text-base font-medium">Select Court</span>
+							<span class="label-text-alt text-error">This field is required</span>
 						</label>
-						<select class="select-bordered select w-full" bind:value={selectedCourtID} required>
-							<option value="" disabled>Choose a court...</option>
-							{#each courtsData as court}
-								<option value={court.courtID}>
-									{court.courtDescription || `Court ${court.courtID}`} (ID: {court.courtID})
-								</option>
-							{/each}
-						</select>
-						{#if submitted && !selectedCourtID}
-							<label class="label">
-								<span class="label-text-alt text-error">This field is required</span>
-							</label>
-						{/if}
-					</div>
+					{/if}
+				</div>
 
-					<!-- Reason Field -->
-					<div class="form-control md:col-span-2 lg:col-span-3">
+				<!-- Reason Field -->
+				<div class="form-control md:col-span-2 lg:col-span-3">
+					<label class="label">
+						<span class="label-text text-base font-medium">Reason</span>
+					</label>
+					<input
+						type="text"
+						placeholder="Enter reason for closure..."
+						class="input-bordered input w-full"
+						bind:value={reason}
+						required
+					/>
+					{#if submitted && !reason}
 						<label class="label">
-							<span class="label-text text-base font-medium">Reason</span>
+							<span class="label-text-alt text-error">This field is required</span>
 						</label>
+					{/if}
+				</div>
+
+				<!-- Duration Section -->
+				<div class="form-control">
+					<label class="label">
+						<span class="label-text text-base font-medium">Duration</span>
+					</label>
+					<div class="join w-full">
 						<input
-							type="text"
-							placeholder="Enter reason for closure..."
-							class="input-bordered input w-full"
-							bind:value={reason}
+							type="number"
+							min="1"
+							max="60"
+							bind:value={duration}
+							class="input-bordered input join-item min-w-0 flex-1"
 							required
 						/>
-						{#if submitted && !reason}
-							<label class="label">
-								<span class="label-text-alt text-error">This field is required</span>
-							</label>
-						{/if}
-					</div>
-
-					<!-- Duration Section -->
-					<div class="form-control">
-						<label class="label">
-							<span class="label-text text-base font-medium">Duration</span>
-						</label>
-						<div class="join w-full">
-							<input
-								type="number"
-								min="1"
-								max="60"
-								bind:value={duration}
-								class="input-bordered input join-item min-w-0 flex-1"
-								required
-							/>
-							<select
-								class="select-bordered select join-item min-w-0 flex-1"
-								bind:value={durationUnit}
-								required
-							>
-								<option>Hours</option>
-								<option>Days</option>
-								<option>Weeks</option>
-							</select>
-						</div>
-						{#if submitted && !duration}
-							<label class="label">
-								<span class="label-text-alt text-error">This field is required</span>
-							</label>
-						{/if}
-					</div>
-
-					<!-- Date Section -->
-					<div class="form-control">
-						<label class="label">
-							<span class="label-text text-base font-medium">Start Date</span>
-						</label>
-						<input
-							type="date"
-							class="input-bordered input w-full"
-							bind:value={startDate}
+						<select
+							class="select-bordered select join-item min-w-0 flex-1"
+							bind:value={durationUnit}
 							required
-						/>
-						{#if submitted && !startDate}
-							<label class="label">
-								<span class="label-text-alt text-error">This field is required</span>
-							</label>
-						{/if}
-					</div>
-
-					<!-- Time Section -->
-					<div class="form-control">
-						<label class="label">
-							<span class="label-text text-base font-medium">Start Time</span>
-						</label>
-						<input
-							type="time"
-							class="input-bordered input w-full"
-							bind:value={startTime}
-							required
-						/>
-						{#if submitted && !startTime}
-							<label class="label">
-								<span class="label-text-alt text-error">This field is required</span>
-							</label>
-						{/if}
-					</div>
-
-					<!-- Frequency Section -->
-					<div class="form-control md:col-span-2 lg:col-span-1">
-						<label class="label">
-							<span class="label-text text-base font-medium">Frequency</span>
-						</label>
-						<select class="select-bordered select w-full" bind:value={frequency} required>
-							<option>Once</option>
-							<option>Daily</option>
-							<option>Weekly</option>
-							<option>Monthly</option>
-						</select>
-						{#if submitted && !frequency}
-							<label class="label">
-								<span class="label-text-alt text-error">This field is required</span>
-							</label>
-						{/if}
-					</div>
-
-					<!-- Action Button -->
-					<div class="form-control flex items-end justify-end md:col-span-2 lg:col-span-2">
-						<button
-							type="submit"
-							class="btn w-full min-w-[140px] btn-primary sm:w-auto"
-							disabled={submitted}
 						>
-							{#if submitted}
-								<span class="loading loading-sm loading-spinner"></span>
+							<option>Hours</option>
+							<option>Days</option>
+							<option>Weeks</option>
+						</select>
+					</div>
+					{#if submitted && !duration}
+						<label class="label">
+							<span class="label-text-alt text-error">This field is required</span>
+						</label>
+					{/if}
+				</div>
+
+				<!-- Date Section -->
+				<div class="form-control">
+					<label class="label">
+						<span class="label-text text-base font-medium">Start Date</span>
+					</label>
+					<input type="date" class="input-bordered input w-full" bind:value={startDate} required />
+					{#if submitted && !startDate}
+						<label class="label">
+							<span class="label-text-alt text-error">This field is required</span>
+						</label>
+					{/if}
+				</div>
+
+				<!-- Time Section -->
+				<div class="form-control">
+					<label class="label">
+						<span class="label-text text-base font-medium">Start Time</span>
+					</label>
+					<input type="time" class="input-bordered input w-full" bind:value={startTime} required />
+					{#if submitted && !startTime}
+						<label class="label">
+							<span class="label-text-alt text-error">This field is required</span>
+						</label>
+					{/if}
+				</div>
+
+				<!-- Frequency Section -->
+				<div class="form-control md:col-span-2 lg:col-span-1">
+					<label class="label">
+						<span class="label-text text-base font-medium">Frequency</span>
+					</label>
+					<select class="select-bordered select w-full" bind:value={frequency} required>
+						<option>Once</option>
+						<option>Daily</option>
+						<option>Weekly</option>
+						<option>Monthly</option>
+					</select>
+					{#if submitted && !frequency}
+						<label class="label">
+							<span class="label-text-alt text-error">This field is required</span>
+						</label>
+					{/if}
+				</div>
+
+				<!-- Action Button -->
+				<div class="form-control flex items-end justify-end md:col-span-2 lg:col-span-2">
+					<button
+						type="submit"
+						class="btn w-full min-w-[140px] btn-primary sm:w-auto"
+						disabled={submitted}
+					>
+						{#if submitted}
+							<span class="loading loading-sm loading-spinner"></span>
+						{:else}
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-5 w-5"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 13l4 4L19 7"
+								/>
+							</svg>
+						{/if}
+						Save Schedule
+					</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+<!-- Closures List Section -->
+<div class="card mx-auto mt-6 max-w-4xl bg-base-100 shadow-xl">
+	<div class="card-body p-4 sm:p-6 lg:p-8">
+		<h2 class="mb-4 card-title text-lg sm:text-xl">Scheduled Closures</h2>
+
+		{#if flattenClosures(closureData).length > 0}
+			<div class="space-y-3">
+				{#each flattenClosures(closureData) as closure (closure.closureID)}
+					<div
+						class="flex flex-row items-center gap-3 rounded-lg bg-base-200 p-3 transition-colors hover:bg-base-300"
+					>
+						<div class="min-w-0 flex-1">
+							<div class="truncate text-sm font-semibold sm:text-base">
+								{closure.courtDescription}{closure.reason ? ` - ${closure.reason}` : ''}
+							</div>
+							<div class="mt-1 text-xs text-base-content/70 sm:text-sm">
+								<span class="inline-block"
+									>{formatDateRange(closure.startTimestamp, closure.durationMinutes)}</span
+								>
+								<span class="mx-2 hidden sm:inline">•</span>
+								<span class="inline-block">{getRecurringTypeText(closure.recurringType)}</span>
+							</div>
+						</div>
+						<button
+							class="btn flex-shrink-0 btn-sm btn-error"
+							onclick={() => handleDelete(closure.closureID)}
+							disabled={isDeleting}
+						>
+							{#if isDeleting}
+								<span class="loading loading-xs loading-spinner"></span>
 							{:else}
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
-									class="h-5 w-5"
+									class="h-4 w-4"
 									fill="none"
 									viewBox="0 0 24 24"
 									stroke="currentColor"
@@ -315,109 +338,21 @@
 										stroke-linecap="round"
 										stroke-linejoin="round"
 										stroke-width="2"
-										d="M5 13l4 4L19 7"
+										d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
 									/>
 								</svg>
 							{/if}
-							Save Schedule
+							<span class="ml-1 hidden sm:inline">Delete</span>
 						</button>
 					</div>
-				</div>
-			</form>
-		{:catch error}
-			<!-- Error state -->
-			<div class="py-4 text-center text-error">
-				<p class="text-sm">Failed to load courts</p>
-				<p class="mt-1 text-xs text-base-content/60">{error.message}</p>
+				{/each}
 			</div>
-		{/await}
-	</div>
-</div>
-<!-- Closures List Section -->
-<div class="card mx-auto mt-6 max-w-4xl bg-base-100 shadow-xl">
-	<div class="card-body p-4 sm:p-6 lg:p-8">
-		<h2 class="mb-4 card-title text-lg sm:text-xl">Scheduled Closures</h2>
-
-		{#await closuresPromise}
-			<!-- Loading state -->
-			<div class="py-8 text-center">
-				<span class="loading loading-lg loading-spinner"></span>
-				<p class="mt-2 text-sm text-base-content/60">Loading closures...</p>
-			</div>
-		{:then courtsData}
-			{@const allClosures = flattenClosures(courtsData)}
-			{#if allClosures.length > 0}
-				<div class="space-y-3">
-					{#each allClosures as closure (closure.closureID)}
-						<div
-							class="flex flex-row items-center gap-3 rounded-lg bg-base-200 p-3 transition-colors hover:bg-base-300"
-						>
-							<div class="min-w-0 flex-1">
-								<div class="truncate text-sm font-semibold sm:text-base">
-									{closure.courtDescription}{closure.reason ? ` - ${closure.reason}` : ''}
-								</div>
-								<div class="mt-1 text-xs text-base-content/70 sm:text-sm">
-									<span class="inline-block"
-										>{formatDateRange(closure.startTimestamp, closure.durationMinutes)}</span
-									>
-									<span class="mx-2 hidden sm:inline">•</span>
-									<span class="inline-block">{getRecurringTypeText(closure.recurringType)}</span>
-								</div>
-							</div>
-							<button
-								class="btn flex-shrink-0 btn-sm btn-error"
-								onclick={() => handleDelete(closure.closureID)}
-								disabled={isDeleting}
-							>
-								{#if isDeleting}
-									<span class="loading loading-xs loading-spinner"></span>
-								{:else}
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="h-4 w-4"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-										/>
-									</svg>
-								{/if}
-								<span class="ml-1 hidden sm:inline">Delete</span>
-							</button>
-						</div>
-					{/each}
-				</div>
-			{:else}
-				<!-- Empty State -->
-				<div class="py-8 text-center text-base-content/60">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="mx-auto mb-3 h-12 w-12 opacity-50"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-						/>
-					</svg>
-					<p class="text-sm">No scheduled closures yet</p>
-				</div>
-			{/if}
-		{:catch error}
-			<!-- Error state -->
-			<div class="py-8 text-center text-error">
+		{:else}
+			<!-- Empty State -->
+			<div class="py-8 text-center text-base-content/60">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
-					class="mx-auto mb-3 h-12 w-12"
+					class="mx-auto mb-3 h-12 w-12 opacity-50"
 					fill="none"
 					viewBox="0 0 24 24"
 					stroke="currentColor"
@@ -426,12 +361,11 @@
 						stroke-linecap="round"
 						stroke-linejoin="round"
 						stroke-width="2"
-						d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+						d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
 					/>
 				</svg>
-				<p class="text-sm">Failed to load closures</p>
-				<p class="mt-1 text-xs text-base-content/60">{error.message}</p>
+				<p class="text-sm">No scheduled closures yet</p>
 			</div>
-		{/await}
+		{/if}
 	</div>
 </div>
