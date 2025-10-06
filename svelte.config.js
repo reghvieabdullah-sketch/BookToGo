@@ -1,15 +1,11 @@
-import netlify from '@sveltejs/adapter-netlify';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import adapter from '@sveltejs/adapter-netlify';
 
-const config = {
-	preprocess: vitePreprocess(),
+export default {
 	kit: {
-		adapter: netlify({
-			// disable automatic _headers generation
-			headers: undefined,
-			redirects: undefined // optional, if you also don't need redirects
+		adapter: adapter({
+			split: false,       // optional, prevents Edge Functions split
+			redirects: undefined,
+			headers: undefined
 		})
 	}
 };
-
-export default config;
