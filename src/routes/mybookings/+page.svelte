@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { UserBookings } from '../../types/bookingTypes';
 
-	let { bookings } = $props();
+	export let bookings: UserBookings;
 
 	function formatDate(isoString: string): string {
 		const date = new Date(isoString);
