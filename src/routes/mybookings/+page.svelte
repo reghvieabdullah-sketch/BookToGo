@@ -1,12 +1,18 @@
 <script lang="ts">
 	import type { BookingDetails } from '../../types/bookingTypes';
+	import type { PageData } from './$types';
 
-	// Properly type your props
-	interface Props {
-		bookings: BookingDetails[];
-	}
+	// Properly type your props using PageData
+	let { data }: { data: PageData } = $props();
 
-	let { bookings = [] }: Props = $props();
+	// Extract bookings with a fallback
+	let bookings = $derived(data.bookings || []);
+
+	// Debug log
+	$effect(() => {
+		console.log('Bookings in component:', bookings);
+		console.log('Bookings length:', bookings.length);
+	});
 
 	function formatDate(isoString: string): string {
 		const date = new Date(isoString);
