@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { dayNamesShort, monthNames } from '$lib/constants/dayMonthconstants';
 	import { bookingDayData, bookingPopupVisible } from './bookingStore';
-	import type { BookingsForDateRange, VenueData, VenueSettings } from '../../types/bookingTypes';
 	import { HHMMToMinutes } from '$lib/utils/timeUtils';
 	import {
 		QUERY_PARAM_VENUE_BOOKING_DATE_END,

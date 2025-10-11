@@ -26,6 +26,7 @@ export const FN_BOOKING_CLOSURE_GET = 'get_booking_closure_bundle';
 
 export const FN_VENUE_CLOSURES_GET = 'get_venue_closures'
 export const FN_VENUE_CLOSURES_UPDATE = 'update_all_venue_court_closures'
+export const FN_VENUE_USER_BOOKINGS_GET = 'get_user_bookings';
 export const FN_VENUE_CLOSURES_DELETE = 'delete_court_closure'
 // Query params 
 

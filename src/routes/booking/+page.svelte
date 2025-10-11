@@ -12,7 +12,7 @@
 </script>
 
 <div
-	class="relative flex h-[100vh] w-full flex-col items-center bg-base-300 px-4 sm:px-6 md:flex-row lg:px-8"
+	class="relative flex h-[100vh] w-full flex-col items-center justify-center bg-base-300 px-4 sm:px-6 md:flex-row md:items-center md:justify-center lg:px-8"
 >
 	<Calender
 		bookingData={data.bookingData}

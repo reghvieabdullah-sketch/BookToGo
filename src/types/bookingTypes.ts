@@ -117,3 +117,5 @@ export interface BookingsByDate { date: Date, entries: BookingEntry[]; }
 export interface BookingsForDateRange {
   [date: string]: BookingEntry[]; // key = date string "YYYY-MM-DD", value = array of bookings
 }
+
+export type UserBookings = BookingDetails[];
