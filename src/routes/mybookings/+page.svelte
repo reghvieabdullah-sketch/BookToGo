@@ -1,7 +1,12 @@
 <script lang="ts">
-	import type { UserBookings } from '../../types/bookingTypes';
+	import type { BookingDetails } from '../../types/bookingTypes';
 
-	export let bookings: UserBookings;
+	// Properly type your props
+	interface Props {
+		bookings: BookingDetails[];
+	}
+
+	let { bookings = [] }: Props = $props();
 
 	function formatDate(isoString: string): string {
 		const date = new Date(isoString);
@@ -32,10 +37,11 @@
 
 	function getStatusColor(status: string): string {
 		const statusMap: Record<string, string> = {
+			upcoming: 'badge-info',
 			active: 'badge-success',
 			pending: 'badge-warning',
 			cancelled: 'badge-error',
-			completed: 'badge-info'
+			completed: 'badge-neutral'
 		};
 		return statusMap[status.toLowerCase()] || 'badge-ghost';
 	}
@@ -64,7 +70,7 @@
 			<div class="card-body">
 				<h2 class="mb-6 card-title text-2xl font-bold md:text-3xl">My Bookings</h2>
 
-				{#if !bookings || bookings.length === 0}
+				{#if bookings.length === 0}
 					<div class="py-8 text-center">
 						<svg
 							class="mx-auto mb-4 h-16 w-16 text-base-300"
@@ -83,7 +89,7 @@
 					</div>
 				{:else}
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-						{#each bookings as booking}
+						{#each bookings as booking (booking.bookingID)}
 							<div
 								class="flex flex-col rounded-lg border border-base-300 p-4 transition-colors hover:border-primary hover:shadow-md"
 							>
@@ -141,12 +147,14 @@
 								<div class="mb-3">
 									<div class="mb-1 text-xs text-base-content/60">Units:</div>
 									{#each booking.units as unit}
-										<div class="badge badge-outline badge-sm">{unit.title}</div>
-										<ul class="ml-2 list-disc text-xs text-base-content/70">
-											{#each unit.subUnits as sub}
-												<li>{sub.description} - Rs.{sub.price}</li>
-											{/each}
-										</ul>
+										<div class="mb-1">
+											<div class="mb-1 badge badge-outline badge-sm">{unit.title}</div>
+											<ul class="ml-4 list-disc text-xs text-base-content/70">
+												{#each unit.subUnits as sub}
+													<li>{sub.description} - Rs.{sub.price}</li>
+												{/each}
+											</ul>
+										</div>
 									{/each}
 								</div>
 
@@ -157,10 +165,10 @@
 								</div>
 
 								<!-- Cancel Button -->
-								{#if booking.status.toLowerCase() === 'active' || booking.status.toLowerCase() === 'pending'}
+								{#if booking.status.toLowerCase() === 'upcoming' || booking.status.toLowerCase() === 'active' || booking.status.toLowerCase() === 'pending'}
 									<button
 										class="btn mt-auto w-full btn-outline btn-sm btn-error"
-										on:click={() => cancelBooking(booking.bookingID)}
+										onclick={() => cancelBooking(booking.bookingID)}
 									>
 										Cancel Booking
 									</button>

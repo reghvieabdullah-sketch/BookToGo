@@ -5,9 +5,10 @@ export const load: PageLoad = async ({ parent, fetch }) => {
 
     const bookings = await fetch(`/api/v1/my-bookings/${parentData.venueID}`)
         .then(res => res.json());
-    console.log(bookings);
+    
+    console.log('Loaded bookings:', bookings);
 
     return {
-        bookings: bookings
+        bookings: bookings || []
     };
 };
