@@ -1,125 +1,234 @@
-// Booking logic functions that can be used on server or client
-import type { BookingDetails, BookingEntry, Closure, CourtWithClosures, daySettingsType } from '../types/bookingTypes';
-import { recurrenceEnum, courtStatusEnum } from './constants/postgressFunctionConstants';
+// bookingValidator.ts
+// Clean, modular, timezone-safe booking conflict checker
 
-function getRecurrence(date1: Date, date2: Date): recurrenceEnum {
-    const diffMs = date2.getTime() - date1.getTime();
-    const diffDays = Math.abs(diffMs / (1000 * 60 * 60 * 24));
+import type {
+  BookingDetails,
+  BookingEntry,
+  Closure,
+  CourtWithClosures,
+  daySettingsType,
+} from "../types/bookingTypes";
+import { recurrenceEnum, courtStatusEnum } from "./constants/postgressFunctionConstants";
 
-    if (Math.abs(diffDays - 1) < 0.1) return recurrenceEnum.DAILY;
-    if (Math.abs(diffDays - 7) < 1) return recurrenceEnum.WEEKLY;
-    if (date1.getDate() === date2.getDate()) return recurrenceEnum.MONTHLY;
-    if (date1.getDate() === date2.getDate() && date1.getMonth() === date2.getMonth()) return recurrenceEnum.YEARLY;
-    return recurrenceEnum.NOT_REGULAR;
+// -------------------------
+// Time + Date Utilities
+// -------------------------
+
+/**
+ * Converts a UTC timestamp to minutes of local day.
+ * (e.g. 08:30 local => 510)
+ */
+function utcToLocalMinutes(utcString: string): number {
+  const dt = new Date(utcString);
+  return dt.getHours() * 60 + dt.getMinutes(); // Local hours/minutes
 }
 
-
-
-function getHHMMSSInMinutes(timeString: string, delimiter: string = ':') {
-    let [h, m, s] = timeString.split(delimiter).map(Number);
-    return h * 60 + m;
+/**
+ * Converts "HH:MM[:SS]" to total minutes.
+ */
+function parseHHMMToMinutes(timeString: string, delimiter = ":"): number {
+  const [h, m] = timeString.split(delimiter).map(Number);
+  return h * 60 + m;
 }
 
-function utcToLocalMinutes(utcStr: string) {
-    let dt = new Date(utcStr); // interprets UTC string
-    let hours = dt.getHours();
-    let minutes = dt.getMinutes();
-    return hours * 60 + minutes;
+/**
+ * True if two intervals [startA, endA) and [startB, endB) overlap
+ */
+function doIntervalsOverlap(
+  startA: number,
+  endA: number,
+  startB: number,
+  endB: number
+): boolean {
+  return startA < endB && endA > startB;
 }
 
-function occursAtRecurrence(closureDate: Date, attemptedDate: Date, recurringType: string | recurrenceEnum) {
-    // Normalize recurringType to string for comparison
-    const recurringTypeStr = typeof recurringType === 'string' ? recurringType : recurringType.valueOf();
+// -------------------------
+// Recurrence logic
+// -------------------------
 
-    // Daily closures apply to every day
-    if (recurringTypeStr === recurrenceEnum.DAILY) return true;
+function occursAtRecurrence(
+  closureDate: Date,
+  attemptedDate: Date,
+  recurrenceType: recurrenceEnum | string
+): boolean {
+  const type =
+    typeof recurrenceType === "string"
+      ? recurrenceType
+      : recurrenceType.valueOf();
 
-    // Once type only matches exact date
-    if (recurringTypeStr === recurrenceEnum.ONCE) {
-        return closureDate.toLocaleDateString() === attemptedDate.toLocaleDateString();
-    }
-
-    // For other types, check if the recurrence pattern matches
-    return getRecurrence(closureDate, attemptedDate) === recurringTypeStr;
+  switch (type) {
+    case recurrenceEnum.DAILY:
+      return true;
+    case recurrenceEnum.WEEKLY:
+      return closureDate.getDay() === attemptedDate.getDay();
+    case recurrenceEnum.MONTHLY:
+      return closureDate.getDate() === attemptedDate.getDate();
+    case recurrenceEnum.YEARLY:
+      return (
+        closureDate.getDate() === attemptedDate.getDate() &&
+        closureDate.getMonth() === attemptedDate.getMonth()
+      );
+    case recurrenceEnum.ONCE:
+      return closureDate.toDateString() === attemptedDate.toDateString();
+    default:
+      return false;
+  }
 }
 
-function _isConflictWithSingleClosure(closure: Closure, attemptedStartMinutes: number, attemptedEndMinutes: number, attemptedDate: string) {
-    // Use utcToLocalMinutes to properly convert UTC timestamp to local minutes
-    const closureStartMinutes = utcToLocalMinutes(closure.startTimestamp);
-    const closureEndMinutes = closureStartMinutes + (closure.durationMinutes || 0);
-    const closureDate = new Date(closure.startTimestamp.split('T')[0]); // date part
-    const attemptedDateObj = new Date(attemptedDate);
+// -------------------------
+// Conflict checkers
+// -------------------------
 
-    // Check for time overlap: conflicts if they overlap at all
-    const timeConflicts = (attemptedStartMinutes < closureEndMinutes && attemptedEndMinutes > closureStartMinutes);
-    const dateConflicts = occursAtRecurrence(closureDate, attemptedDateObj, closure.recurringType as recurrenceEnum);
+function conflictWithClosure(
+  closure: Closure,
+  attemptedStart: number,
+  attemptedEnd: number,
+  attemptedDate: string
+): boolean {
+  const closureStartMinutes = utcToLocalMinutes(closure.startTimestamp);
+  const closureEndMinutes =
+    closureStartMinutes + (closure.durationMinutes || 0);
+  const closureDate = new Date(closure.startTimestamp);
+  const attemptedDateObj = new Date(attemptedDate);
 
-    return (timeConflicts && dateConflicts);
+  const timeOverlap = doIntervalsOverlap(
+    attemptedStart,
+    attemptedEnd,
+    closureStartMinutes,
+    closureEndMinutes
+  );
+  const recurrenceMatch = occursAtRecurrence(
+    closureDate,
+    attemptedDateObj,
+    closure.recurringType as recurrenceEnum
+  );
+
+  return timeOverlap && recurrenceMatch;
 }
 
-function isWithinClosures(allClosures: CourtWithClosures[], attemptedStartMinutes: number, attemptedEndMinutes: number, attemptedCourtID: number, attemptedDate: string) {
-    //  find the closures for this court
-    const closures = allClosures.filter(c => c.courtID === attemptedCourtID);
-    if (!closures || !closures.length) return false; // no closures for this court, so no conflict
-    for (const courtClosure of closures) {
-        for (const closure of courtClosure.closures) {
-            if (_isConflictWithSingleClosure(closure, attemptedStartMinutes, attemptedEndMinutes, attemptedDate)) {
-                console.log("Conflict with closure found: ", closure);
-                return true;
-            }
-        }
-    }
-    return false;
+function conflictWithinClosures(
+  allClosures: CourtWithClosures[],
+  attemptedCourtID: number,
+  attemptedStart: number,
+  attemptedEnd: number,
+  attemptedDate: string
+): boolean {
+  const courtClosures = allClosures.find(
+    (c) => c.courtID === attemptedCourtID
+  );
+  if (!courtClosures || !courtClosures.closures.length) return false;
+
+  return courtClosures.closures.some((closure) =>
+    conflictWithClosure(
+      closure,
+      attemptedStart,
+      attemptedEnd,
+      attemptedDate
+    )
+  );
 }
 
-function isWithinOpenHours(daySettings: daySettingsType, dayKey: string, startMinutes: number, endMinutes: number) {
-    // COMPARE WITH LOCAL TIME
-    dayKey = dayKey.toLowerCase(); // cause im sure my ass would try sending in uppercase. since im like that
-    if (!daySettings[dayKey].is_day_bookable) return false;
-    const openTimeString = daySettings[dayKey].openTime // already in HH:MM:SS format
-    const closeTimeString = daySettings[dayKey].closeTime // already in HH:MM:SS format
-    if (!openTimeString || !closeTimeString) return false;
+function withinOpenHours(
+  daySettings: daySettingsType,
+  dayKey: string,
+  startMinutes: number,
+  endMinutes: number
+): boolean {
+  const key = dayKey.toLowerCase();
+  const settings = daySettings[key];
+  if (!settings?.is_day_bookable) return false;
 
-    const openTimeMinutes = getHHMMSSInMinutes(openTimeString)
-    const closeTimeMinutes = getHHMMSSInMinutes(closeTimeString)
-
-    return (startMinutes >= openTimeMinutes && endMinutes <= closeTimeMinutes)
+  const open = parseHHMMToMinutes(settings.openTime);
+  const close = parseHHMMToMinutes(settings.closeTime);
+  return startMinutes >= open && endMinutes <= close;
 }
 
-function _isConflictingWithCurrentBookings(currentBookings: BookingDetails[], attemptedStartMinutes: number, attemptedEndMinutes: number, attemptedCourtID: number, attemptedSubUnitsID: number[]) {
-    for (const booking of currentBookings) {
-        // bookings are using UTC time format, but the attempted time args here are using local time.
-        const oldBookingStartTime = utcToLocalMinutes(booking.startTime);
-        const oldBookingEndTime = utcToLocalMinutes(booking.endTime);
-        const subunits = booking.units[0].subUnits ? booking.units[0].subUnits.map(su => su.id) : [];
-        // Should be (checking if there IS overlap)
-        const timeConflicts = (attemptedStartMinutes < oldBookingEndTime && attemptedEndMinutes > oldBookingStartTime);
-        const subUnitConflicts = attemptedSubUnitsID.some(item => subunits.includes(item))
+function conflictWithBookings(
+  bookings: BookingDetails[],
+  attemptedStart: number,
+  attemptedEnd: number,
+  attemptedCourtID: number,
+  attemptedSubUnitIDs: number[]
+): boolean {
+  for (const booking of bookings) {
+    const existingStart = utcToLocalMinutes(booking.startTime);
+    const existingEnd = utcToLocalMinutes(booking.endTime);
 
-        const courtConflicts = attemptedCourtID === booking.courtID;
+    const sameCourt = attemptedCourtID === booking.courtID;
+    const overlap = doIntervalsOverlap(
+      attemptedStart,
+      attemptedEnd,
+      existingStart,
+      existingEnd
+    );
 
-        if (courtConflicts && timeConflicts) { return true };
-    }
-    return false;
+    const subunitIDs =
+      booking.units[0]?.subUnits?.map((su) => su.id) ?? [];
+    const subunitOverlap = attemptedSubUnitIDs.some((id) =>
+      subunitIDs.includes(id)
+    );
+
+    if (sameCourt && overlap && subunitOverlap) return true;
+  }
+  return false;
 }
 
-function _isConflictingWithArchivedBookings(archivedBookings: BookingDetails[], attemptedStartMinutes: number, attemptedEndMinutes: number) {
-    for (const booking of archivedBookings) {
-        // bookings are using UTC time format, but the attempted time args here are using local time.
-        const oldBookingStartTime = utcToLocalMinutes(booking.startTime);
-        const oldBookingEndTime = utcToLocalMinutes(booking.endTime);
-        if (attemptedStartMinutes < oldBookingEndTime && attemptedEndMinutes > oldBookingStartTime) return true;
-    }
+// -------------------------
+// Master Validator
+// -------------------------
 
-    return false;
-}
+export function hasBookingConflict(
+  dayKey: string,
+  daySettings: daySettingsType,
+  attemptedCourtID: number,
+  attemptedSubUnits: number[],
+  attemptedStartMinutes: number,
+  attemptedEndMinutes: number,
+  bookings: BookingEntry[],
+  attemptedDate: string,
+  allCourtsWithClosures: CourtWithClosures[]
+): boolean {
+  const approved = bookings
+    .filter((b) => b.details.courtStatus === courtStatusEnum.APPROVED)
+    .map((b) => b.details);
 
-export function isConflictingWithBookings(dayKey: string, daySettings: daySettingsType, attemptedCourtID: number, attemptedSubUnitsID: number[], attemptedStartMinutes: number, attemptedEndMinutes: number, bookings: BookingEntry[], attemptedDate: string, allCourtsWithClosures: CourtWithClosures[]) {
-    const approvedCourtBookings = bookings.filter(entry => entry.details.courtStatus === courtStatusEnum.APPROVED).map(entry => entry.details);
-    const archivedArchivedBookings = bookings.filter(entry => entry.details.courtStatus === courtStatusEnum.ARCHIVED).map(entry => entry.details);
-    const conflictWithArchived = _isConflictingWithArchivedBookings(archivedArchivedBookings, attemptedStartMinutes, attemptedEndMinutes)
-    const conflictWithCurrent = _isConflictingWithCurrentBookings(approvedCourtBookings, attemptedStartMinutes, attemptedEndMinutes, attemptedCourtID, attemptedSubUnitsID)
-    const conflictWithOpenCloseTime = !isWithinOpenHours(daySettings, dayKey, attemptedStartMinutes, attemptedEndMinutes)
-    const conflictWithClosures = isWithinClosures(allCourtsWithClosures, attemptedStartMinutes, attemptedEndMinutes, attemptedCourtID, attemptedDate)
-    return conflictWithCurrent || conflictWithArchived || conflictWithClosures || conflictWithOpenCloseTime;
+  const archived = bookings
+    .filter((b) => b.details.courtStatus === courtStatusEnum.ARCHIVED)
+    .map((b) => b.details);
+
+  const currentConflict = conflictWithBookings(
+    approved,
+    attemptedStartMinutes,
+    attemptedEndMinutes,
+    attemptedCourtID,
+    attemptedSubUnits
+  );
+
+  const archivedConflict = conflictWithBookings(
+    archived,
+    attemptedStartMinutes,
+    attemptedEndMinutes,
+    attemptedCourtID,
+    attemptedSubUnits
+  );
+
+  const closureConflict = conflictWithinClosures(
+    allCourtsWithClosures,
+    attemptedCourtID,
+    attemptedStartMinutes,
+    attemptedEndMinutes,
+    attemptedDate
+  );
+
+  const outsideHours = !withinOpenHours(
+    daySettings,
+    dayKey,
+    attemptedStartMinutes,
+    attemptedEndMinutes
+  );
+
+  return (
+    currentConflict || archivedConflict || closureConflict || outsideHours
+  );
 }

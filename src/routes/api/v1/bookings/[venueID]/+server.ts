@@ -1,5 +1,5 @@
-import { QUERY_PARAM_VENUE_BOOKING_DATE_END, QUERY_PARAM_VENUE_BOOKING_DATE_START, QUERY_PARAM_VENUE_ID } from "$lib/constants/postgressFunctionConstants";
-import { getVenueBookingsForDateRange, insertVenueBooking } from "$lib/dbFunctions/bookingsDB";
+import { QUERY_PARAM_BOOKING_INSERT_WITH_CHECK, QUERY_PARAM_VENUE_BOOKING_DATE_END, QUERY_PARAM_VENUE_BOOKING_DATE_START, QUERY_PARAM_VENUE_ID } from "$lib/constants/postgressFunctionConstants";
+import { getVenueBookingsForDateRange, insertVenueBooking, insertVenueBookingWithPossibilityCheck } from "$lib/dbFunctions/bookingsDB";
 import { deleteCachedData, getCachedData, setCachedData } from "$lib/dbFunctions/cacheHandler";
 import { json, type RequestHandler } from "@sveltejs/kit";
 
@@ -19,11 +19,11 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
     return json(result.data, { status: 200 });
 };
 
-export const PUT: RequestHandler = async ({ locals, request, params }) => {
+export const PUT: RequestHandler = async ({ locals, request, params, url }) => {
     const { venueID } = params;
     const bookingJSON = await request.json();
     const cacheKey = [`booking:${locals.venueURL}`, `bookingclosures:${locals.venueURL}:bundled`];
-    const result = await insertVenueBooking(locals.supabase, venueID, bookingJSON);
+const result = QUERY_PARAM_BOOKING_INSERT_WITH_CHECK in url.searchParams ? await insertVenueBookingWithPossibilityCheck(locals.supabase, venueID, bookingJSON) : await insertVenueBooking(locals.supabase, venueID, bookingJSON);
     if (result.error) {
         return json({ error: result.error }, { status: 400 });
     }

@@ -5,6 +5,8 @@ export const VENUE_IMAGE_BUCKET_FORMATS = ['webp', 'jpg', 'jpeg']
 
 
 // Functions
+export const FN_USER_SETTINGS_SET = 'create_venue_user'
+
 export const FN_VENUE_BUNDLER_GET = 'get_venue_bundle'
 
 export const FN_VENUE_GENERAL_SETTINGS_UPDATE = 'update_venue_data'
@@ -36,9 +38,9 @@ export const QUERY_PARAM_VENUE_GET_BUNDLE = 'p_venue_bundle';
 export const QUERY_PARAM_VENUE_BOOKING_DATE_START = 'p_start_date';
 export const QUERY_PARAM_VENUE_BOOKING_DATE_END = 'p_end_date';
 export const QUERY_PARAM_VENUE_CLOSURE_ID = 'p_closure_id';
-export const FN_USER_SETTINGS_SET = 'create_venue_user'
-
 export const QUERY_PARAM_BOOKING_DATE = 'p_booking_date';
+export const QUERY_PARAM_BOOKING_INSERT_WITH_CHECK = 'p_insert_booking_with_check';
+
 
 
 export const INVALIDATE_PARENT_LAYOUT_CODE = 'layout:parent';

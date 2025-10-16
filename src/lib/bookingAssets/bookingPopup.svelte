@@ -3,7 +3,7 @@
 	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate } from '$lib/utils/timeUtils';
 	import GrabHandleIcon from '$lib/icons/GrabHandleIcon.svelte';
 	import { bookingDayData } from './bookingStore';
-	import { isConflictingWithBookings } from '$lib/bookingLogic';
+	import { hasBookingConflict } from '$lib/bookingLogic';
 	import type {
 		BookingDetails,
 		courtsType,
@@ -16,7 +16,10 @@
 	import { goto } from '$app/navigation';
 	import {
 		courtStatusEnum,
-		QUERY_PARAM_BOOKING_DATE
+		QUERY_PARAM_BOOKING_DATE,
+
+		QUERY_PARAM_BOOKING_INSERT_WITH_CHECK
+
 	} from '$lib/constants/postgressFunctionConstants';
 
 	export const onclose = () => {};
@@ -36,7 +39,7 @@
 
 	async function attemptBooking(booking: BookingDetails): Promise<any> {
 		try {
-			const response = await fetch(`/api/v1/bookings/${venueData.venueID}`, {
+			const response = await fetch(`/api/v1/bookings/${venueData.venueID}?${QUERY_PARAM_BOOKING_INSERT_WITH_CHECK}`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
@@ -162,7 +165,7 @@
 		while (time <= closingTime - durationMinutes) {
 			time += interval;
 			if (
-				!isConflictingWithBookings(
+				!hasBookingConflict(
 					$bookingDayData.date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase(),
 					settingsData.daySettings,
 					selectedCourtId!,
@@ -170,7 +173,7 @@
 					time,
 					time + durationMinutes,
 					$bookingDayData.entries,
-					$bookingDayData.date.toLocaleDateString(),
+					$bookingDayData.date.toDateString(),
 					closureData
 				)
 			) {

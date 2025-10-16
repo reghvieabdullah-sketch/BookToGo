@@ -7,13 +7,7 @@
 
 	// Extract bookings with a fallback
 	let bookings = $derived(data.bookings || []);
-
-	// Debug log
-	$effect(() => {
-		console.log('Bookings in component:', bookings);
-		console.log('Bookings length:', bookings.length);
-	});
-
+	
 	function formatDate(isoString: string): string {
 		const date = new Date(isoString);
 		return date.toLocaleDateString('en-US', {
