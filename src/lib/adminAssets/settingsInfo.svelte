@@ -14,25 +14,31 @@
 		return days * 24 * 60;
 	}
 
+	function timeToISO(time: string): string {
+    const [hoursStr, minutesStr] = time.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
+
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        throw new Error('Invalid HH:MM time string');
+    }
+
+    const now = new Date();
+    now.setUTCHours(hours, minutes, 0, 0); // set hours and minutes in UTC
+    return now.toISOString();
+	}
+
 	function updateOpenTime(day: string, value: string) {
-	if (venueSettings.daySettings?.[day]) {
-		// Convert local "HH:MM" to ISO string (UTC)
-		const [hours, minutes] = value.split(':').map(Number);
-		const date = new Date();
-		date.setHours(hours, minutes, 0, 0);
-		venueSettings.daySettings[day].openTime = date.toISOString(); // ISO string in UTC
+		if (venueSettings.daySettings?.[day]) {
+			venueSettings.daySettings[day].openTime = timeToISO(value);
+		}
 	}
-}
 
-function updateCloseTime(day: string, value: string) {
-	if (venueSettings.daySettings?.[day]) {
-		const [hours, minutes] = value.split(':').map(Number);
-		const date = new Date();
-		date.setHours(hours, minutes, 0, 0);
-		venueSettings.daySettings[day].closeTime = date.toISOString();
+	function updateCloseTime(day: string, value: string) {
+		if (venueSettings.daySettings?.[day]) {
+			venueSettings.daySettings[day].closeTime = timeToISO(value);
+		}
 	}
-}
-
 
 	function updateDayBookable(day: string, checked: boolean) {
 		if (venueSettings.daySettings?.[day]) {
