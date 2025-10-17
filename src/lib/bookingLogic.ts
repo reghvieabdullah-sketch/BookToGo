@@ -177,7 +177,6 @@ function conflictWithBookings(
 // -------------------------
 // Master Validator
 // -------------------------
-
 export function hasBookingConflict(
   dayKey: string,
   daySettings: daySettingsType,
@@ -188,7 +187,9 @@ export function hasBookingConflict(
   bookings: BookingEntry[],
   attemptedDate: string,
   allCourtsWithClosures: CourtWithClosures[]
-): boolean {
+) {
+  const flags: string[] = [];
+
   const approved = bookings
     .filter((b) => b.details.courtStatus === courtStatusEnum.APPROVED)
     .map((b) => b.details);
@@ -204,6 +205,7 @@ export function hasBookingConflict(
     attemptedCourtID,
     attemptedSubUnits
   );
+  if (currentConflict) flags.push("conflict_with_current_bookings");
 
   const archivedConflict = conflictWithBookings(
     archived,
@@ -212,6 +214,7 @@ export function hasBookingConflict(
     attemptedCourtID,
     attemptedSubUnits
   );
+  if (archivedConflict) flags.push("conflict_with_archived_bookings");
 
   const closureConflict = conflictWithinClosures(
     allCourtsWithClosures,
@@ -220,6 +223,7 @@ export function hasBookingConflict(
     attemptedEndMinutes,
     attemptedDate
   );
+  if (closureConflict) flags.push("conflict_with_closure");
 
   const outsideHours = !withinOpenHours(
     daySettings,
@@ -227,8 +231,9 @@ export function hasBookingConflict(
     attemptedStartMinutes,
     attemptedEndMinutes
   );
+  if (outsideHours) flags.push("outside_open_hours");
 
-  return (
-    currentConflict || archivedConflict || closureConflict || outsideHours
-  );
+  console.log(flags);
+  
+  return (currentConflict || archivedConflict || closureConflict || outsideHours)
 }

@@ -30,13 +30,15 @@ export async function insertVenueBookingWithPossibilityCheck(supabase: SupabaseC
     if (!bookingJSON) return { data: null, error: "Missing booking JSON" };
     // We assume that the bookingJSON is sent in ISO format
     // Since redis isnt used here. we can reduce checks + calls by passing in the start and end time
-    // get the bookings
-    const bookingResponse = await getBookingClosureBundle(supabase, venueID, bookingJSON.startTime, bookingJSON.endTime)
+    // get the bookings for this day. from that start to end time
+    const bookingStart = bookingJSON.startTime.split('T')[0] + 'T00:00:00Z'
+    const bookingEnd = bookingJSON.startTime.split('T')[0] + 'T23:59:59Z'
+    const bookingResponse = await getBookingClosureBundle(supabase, venueID, bookingStart, bookingEnd)
     const settingResponse = await getVenueSettings(supabase, venueID)
- 
+    
     if (bookingResponse.error) return bookingResponse;
     if (settingResponse.error || !settingResponse.data?.daySettings) return settingResponse;
-    if (!bookingResponse.data || bookingResponse?.data?.length < 1) return { data: true, error: null}
+    if (!bookingResponse.data.bookingData || bookingResponse?.data?.bookingData?.length < 1) return { data: true, error: null}
     const dayKey = new Date(bookingJSON.startTime);
 
     // Booking limited to single day bookings only.
@@ -47,8 +49,8 @@ export async function insertVenueBookingWithPossibilityCheck(supabase: SupabaseC
     
     // hardcoded to follow 'bookingData and closureData'
     const isoDayIndex = ((new Date(bookingJSON.startTime).getUTCDay() + 6) % 7) + 1; // 1=Mon … 7=Sun
-    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    const conflicts = (hasBookingConflict(dayNamesFull[isoDayIndex - 1], settingResponse.data?.daySettings, bookingJSON.courtID, bookingJSON.units.map(x => x.unitID), startTime, endTime, bookingResponse.data.bookingData, dayKey.toDateString(), bookingResponse.data.closureData))
+    
+    const conflicts = (hasBookingConflict(dayNamesFull[isoDayIndex - 1], settingResponse.data?.daySettings, bookingJSON.courtID, bookingJSON.units.map(x => x.unitID), startTime, endTime, Object.values(bookingResponse.data.bookingData).flat() , dayKey.toDateString(), bookingResponse.data.closureData))
     // console log temporarily
     console.log('checking booking possibility, ', bookingJSON, '\n and got that it ', (conflicts ? 'conflicted' : 'went thru'));
     return { data: conflicts, error: null}
