@@ -31,6 +31,7 @@ export const FN_VENUE_CLOSURES_UPDATE = 'update_all_venue_court_closures'
 export const FN_VENUE_USER_BOOKINGS_GET = 'get_user_bookings';
 export const FN_VENUE_CLOSURES_DELETE = 'delete_court_closure'
 export const FN_VENUE_BOOKING_LIMIT = 'past_limit_for_booking_for_user';
+export const FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK = 'insert_booking_without_check' // used when the db doesnt check for compatibility and just directly inserts it. but this additionally needs the user id
 // Query params 
 
 export const QUERY_PARAM_VENUE_URL = 'p_venue_url';

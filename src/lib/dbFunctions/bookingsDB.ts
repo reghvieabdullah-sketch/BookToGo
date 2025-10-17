@@ -1,6 +1,6 @@
 import type { BookingDetails } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { FN_BOOKING_CLOSURE_GET, FN_VENUE_BOOKING_GET, FN_VENUE_BOOKING_INSERT, FN_VENUE_BOOKING_LIMIT, FN_VENUE_USER_BOOKINGS_GET } from "$lib/constants/postgressFunctionConstants";
+import { FN_BOOKING_CLOSURE_GET, FN_VENUE_BOOKING_GET, FN_VENUE_BOOKING_INSERT, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, FN_VENUE_BOOKING_LIMIT, FN_VENUE_USER_BOOKINGS_GET } from "$lib/constants/postgressFunctionConstants";
 import { error } from "@sveltejs/kit";
 import { hasBookingConflict } from "$lib/bookingLogic";
 import { getVenueSettings } from "./venuesDB";
@@ -66,7 +66,15 @@ export async function insertVenueBookingWithPossibilityCheck(supabase: SupabaseC
     const conflicts = (hasBookingConflict(dayNamesFull[isoDayIndex - 1], settingResponse.data?.daySettings, bookingJSON.courtID, bookingJSON.units.map(x => x.unitID), startTime, endTime, Object.values(bookingResponse.data.bookingData).flat() , dayKey.toDateString(), bookingResponse.data.closureData))
     // console log temporarily
     console.log('does it conflict? ', conflicts);
-    
+    if (!conflicts){
+        // add the booking
+        const { data, error } = await supabase
+        .rpc(FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, { p_venue_id: venueID, p_attempted_booking: bookingJSON, p_user_id: userID });
+    return error
+        ? { data: null, error: error.message }
+        : { data, error: null };
+
+    }
     return { data: conflicts, error: null}
 
 }
