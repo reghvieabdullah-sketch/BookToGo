@@ -15,24 +15,16 @@
 	}
 
 	function updateOpenTime(day: string, value: string) {
-	if (venueSettings.daySettings?.[day]) {
-		// Convert local "HH:MM" to ISO string (UTC)
-		const [hours, minutes] = value.split(':').map(Number);
-		const date = new Date();
-		date.setHours(hours, minutes, 0, 0);
-		venueSettings.daySettings[day].openTime = date.toISOString(); // ISO string in UTC
+		if (venueSettings.daySettings?.[day]) {
+			venueSettings.daySettings[day].openTime = value;
+		}
 	}
-}
 
-function updateCloseTime(day: string, value: string) {
-	if (venueSettings.daySettings?.[day]) {
-		const [hours, minutes] = value.split(':').map(Number);
-		const date = new Date();
-		date.setHours(hours, minutes, 0, 0);
-		venueSettings.daySettings[day].closeTime = date.toISOString();
+	function updateCloseTime(day: string, value: string) {
+		if (venueSettings.daySettings?.[day]) {
+			venueSettings.daySettings[day].closeTime = value;
+		}
 	}
-}
-
 
 	function updateDayBookable(day: string, checked: boolean) {
 		if (venueSettings.daySettings?.[day]) {

@@ -76,6 +76,8 @@
 						body: JSON.stringify(venueSettingsCopy)
 					})
 				);
+				console.log('we got ', data.settingsData);
+				
 			}
 			if (imageBlobs) {
 				responses.push(
