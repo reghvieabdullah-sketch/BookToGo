@@ -14,29 +14,46 @@
 		return days * 24 * 60;
 	}
 
-	function timeToISO(time: string): string {
-    const [hoursStr, minutesStr] = time.split(':');
+	function timetoISO(time24: string): string {
+    // Parse hours and minutes
+    const [hoursStr, minutesStr] = time24.split(":");
     const hours = parseInt(hoursStr, 10);
     const minutes = parseInt(minutesStr, 10);
 
-    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-        throw new Error('Invalid HH:MM time string');
+    if (
+        isNaN(hours) || isNaN(minutes) ||
+        hours < 0 || hours > 23 ||
+        minutes < 0 || minutes > 59
+    ) {
+        throw new Error("Invalid HH:MM time string");
     }
 
+    // Create a Date object for today with the given time
     const now = new Date();
-    now.setUTCHours(hours, minutes, 0, 0); // set hours and minutes in UTC
-    return now.toISOString();
-	}
+    now.setHours(hours, minutes, 0, 0);
+
+    // Get timezone offset in ±HH:MM format
+    const offsetMinutes = now.getTimezoneOffset();
+    const absOffset = Math.abs(offsetMinutes);
+    const offsetHours = Math.floor(absOffset / 60).toString().padStart(2, '0');
+    const offsetMins = (absOffset % 60).toString().padStart(2, '0');
+    const sign = offsetMinutes <= 0 ? "+" : "-";
+
+    // Return ISO-like time string with local timezone
+    return `${hoursStr.padStart(2,'0')}:${minutesStr.padStart(2,'0')}:00${sign}${offsetHours}:${offsetMins}`;
+}
+
+// 
 
 	function updateOpenTime(day: string, value: string) {
 		if (venueSettings.daySettings?.[day]) {
-			venueSettings.daySettings[day].openTime = timeToISO(value);
+			venueSettings.daySettings[day].openTime = timetoISO(value);
 		}
 	}
 
 	function updateCloseTime(day: string, value: string) {
 		if (venueSettings.daySettings?.[day]) {
-			venueSettings.daySettings[day].closeTime = timeToISO(value);
+			venueSettings.daySettings[day].closeTime = timetoISO(value);
 		}
 	}
 
