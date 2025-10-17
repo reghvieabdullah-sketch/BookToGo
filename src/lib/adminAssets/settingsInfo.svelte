@@ -1,4 +1,10 @@
 <script lang="ts">
+	// TODO - add a check if the owner accidently set open time > close time, which cannot be possible
+	// TODO - add a limit check to only allow the allowed number of bookings if it is NOT the owner
+	// TODO - allow the postgress owner to simulate any venue without problem
+	// TODO - create a home page.
+	// TODO - add the payment creds detail info into the dashboard page
+	// TODO - allow the user to do cash/card payments
 	import { dayNamesFull } from '$lib/constants/dayMonthconstants';
 	import type { VenueSettings } from '../../types/bookingTypes';
 	import LabelHelper from './LabelHelper.svelte';

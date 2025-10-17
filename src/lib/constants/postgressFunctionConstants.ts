@@ -30,6 +30,7 @@ export const FN_VENUE_CLOSURES_GET = 'get_venue_closures'
 export const FN_VENUE_CLOSURES_UPDATE = 'update_all_venue_court_closures'
 export const FN_VENUE_USER_BOOKINGS_GET = 'get_user_bookings';
 export const FN_VENUE_CLOSURES_DELETE = 'delete_court_closure'
+export const FN_VENUE_BOOKING_LIMIT = 'past_limit_for_booking_for_user';
 // Query params 
 
 export const QUERY_PARAM_VENUE_URL = 'p_venue_url';

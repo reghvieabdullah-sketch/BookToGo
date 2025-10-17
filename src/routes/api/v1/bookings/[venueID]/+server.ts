@@ -23,7 +23,7 @@ export const PUT: RequestHandler = async ({ locals, request, params, url }) => {
     const { venueID } = params;
     const bookingJSON = await request.json();
     const cacheKey = [`booking:${locals.venueURL}`, `bookingclosures:${locals.venueURL}:bundled`];
-    const result = QUERY_PARAM_BOOKING_INSERT_WITH_CHECK in url.searchParams ? await insertVenueBooking(locals.supabase, venueID, bookingJSON) : await insertVenueBookingWithPossibilityCheck(locals.supabase, venueID, bookingJSON);
+    const result = QUERY_PARAM_BOOKING_INSERT_WITH_CHECK in url.searchParams ? await insertVenueBooking(locals.supabase, venueID, bookingJSON) : await insertVenueBookingWithPossibilityCheck(locals.supabase, venueID, locals.session?.user.id, bookingJSON);
     if (result.error) {
         return json({ error: result.error }, { status: 400 });
     }

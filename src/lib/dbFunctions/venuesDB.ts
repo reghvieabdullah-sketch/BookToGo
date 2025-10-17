@@ -139,8 +139,6 @@ export async function getVenueSettings(supabase: SupabaseClient, venueID: string
 export async function updateVenueSettings(supabase: SupabaseClient, settingsJSON: VenueSettings, venueID: string | null | undefined): Promise<DBResult<any>> {
     if (!venueID || isNaN(parseInt(venueID))) return { data: null, error: "Missing venue id" };
     if (!settingsJSON) return { data: null, error: "Missing settings" };
-    console.log('we got the settings as follows');
-    
     const { data, error } = await supabase
         .rpc(FN_VENUE_SETTINGS_UPDATE, { p_venue_id: venueID, p_venue_settings_json: settingsJSON });
     return error

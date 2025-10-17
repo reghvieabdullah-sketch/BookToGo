@@ -82,8 +82,6 @@
 		// 	);
 		isConfirming = true;
 		const bookingPossible = await attemptBooking(pendingBooking);
-		console.log(bookingPossible);
-
 		if (typeof bookingPossible === 'boolean' && bookingPossible) {
 			bookingResult = 'success';
 			bookingMessage = 'Your booking has been confirmed successfully! Redirecting...';
