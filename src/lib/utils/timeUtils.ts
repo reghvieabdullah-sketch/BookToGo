@@ -1,5 +1,8 @@
 // Utility functions for time and date formatting
 
+import { dayNamesFull } from "$lib/constants/dayMonthconstants";
+import { recurrenceEnum } from "$lib/constants/postgressFunctionConstants";
+
 export function isWeekend(day: Date): boolean {
     const dayOfWeek = day.getDay(); // 0 = Sunday, 6 = Saturday
     return dayOfWeek === 0 || dayOfWeek === 6;
@@ -43,4 +46,67 @@ export function to24HourFormat(time12: string): string {
         hour += 12;
     }
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+}
+
+
+/**
+ * Converts a UTC timestamp to minutes of UTC day.
+ * (e.g. 08:30 UTC => 510)
+ */
+export function utcToMinutes(utcString: string): number {
+  const dt = new Date(utcString);
+  return dt.getUTCHours() * 60 + dt.getUTCMinutes();
+}
+
+/**
+ * Converts a time string like "09:00:00+05:30" or "18:00:00Z" to total UTC minutes.
+ */
+export function parseTimeStringToUTCMinutes(timeString: string): number {
+  // Construct a valid ISO datetime (date part doesn't matter)
+  const iso = `1970-01-01T${timeString}`;
+  const date = new Date(iso);
+
+  if (isNaN(date.getTime())) {
+    throw new Error(`Invalid time string: ${timeString}`);
+  }
+
+  return date.getUTCHours() * 60 + date.getUTCMinutes();
+}
+
+
+export function doIntervalsOverlap(startA: number, endA: number, startB: number, endB: number): boolean {
+  return startA < endB && endA > startB;
+}
+
+export function occursAtRecurrence(closureDateString: string, attemptedDateString: string, recurrenceType: recurrenceEnum | string): boolean {
+  const closureDate = new Date(closureDateString)
+  const attemptedDate = new Date(attemptedDateString)
+  const type = typeof recurrenceType === "string" ? recurrenceType : recurrenceType.valueOf();
+  switch (type) {
+    case recurrenceEnum.DAILY:
+      return true;
+    case recurrenceEnum.WEEKLY:
+      return closureDate.getUTCDay() === attemptedDate.getUTCDay();
+    case recurrenceEnum.MONTHLY:
+      return closureDate.getUTCDate() === attemptedDate.getUTCDate();
+    case recurrenceEnum.YEARLY:
+      return (
+        closureDate.getUTCDate() === attemptedDate.getUTCDate() &&
+        closureDate.getUTCMonth() === attemptedDate.getUTCMonth()
+      );
+    case recurrenceEnum.ONCE:
+      return closureDate.toISOString().split('T')[0] === attemptedDate.toISOString().split('T')[0];
+    default:
+      return false;
+  }
+}
+
+
+export function timeStampToDayKey(timestampString: string){
+    const isoDayIndex = ((new Date( timestampString).getUTCDay() + 6) % 7); // 0=Mon … 6=Sun
+    return dayNamesFull[isoDayIndex];
+}
+
+export function timeStampToDateString(timestampString: string){
+    return new Date(timestampString).toDateString();
 }
