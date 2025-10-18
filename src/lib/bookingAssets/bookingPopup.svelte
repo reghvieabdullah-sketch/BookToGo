@@ -76,10 +76,10 @@
 	}
 	async function confirmBooking(): Promise<void> {
 		if (!pendingBooking) return;
-		// if (!isLoggedIn)
-		// 	return goto(
-		// 		`/auth?next=/booking?${QUERY_PARAM_BOOKING_DATE}=${$bookingDayData.date.toISOString().split('T')[0]}`
-		// 	);
+		if (!isLoggedIn)
+			return goto(
+				`/auth?next=/booking?${QUERY_PARAM_BOOKING_DATE}=${$bookingDayData.date.toISOString().split('T')[0]}`
+			);
 		isConfirming = true;
 		const bookingPossible = await attemptBooking(pendingBooking);
 		if (typeof bookingPossible === 'boolean' && bookingPossible) {

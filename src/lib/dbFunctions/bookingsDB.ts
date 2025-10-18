@@ -45,8 +45,8 @@ export async function insertVenueBookingWithPossibilityCheck(supabase: SupabaseC
     getBookingClosureBundle(
       supabase,
       venueID,
-      `${bookingJSON.startTime.split("T")[0]}T00:00:00Z`,
-      `${bookingJSON.endTime.split("T")[0]}T23:59:59Z`
+      `${bookingJSON.startTime.split("T")[1]}T00:00:00Z`,
+      `${bookingJSON.endTime.split("T")[1]}T23:59:59Z`
     ),
   ]);
 
