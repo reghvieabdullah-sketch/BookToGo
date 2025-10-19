@@ -125,5 +125,5 @@ export function laterTimestamp(t1: string, t2: string){
 }
 
 export function isSameDay(t1: string, t2: string){
-  return new Date(t1).toDateString() !== new Date(t2).toDateString()
+  return new Date(t1).toDateString() === new Date(t2).toDateString()
 }
