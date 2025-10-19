@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { FN_BOOKING_CLOSURE_GET, FN_VENUE_BOOKING_GET, FN_VENUE_BOOKING_INSERT, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, FN_VENUE_BOOKING_LIMIT, FN_VENUE_USER_BOOKINGS_GET } from "$lib/constants/postgressFunctionConstants";
 import { hasBookingConflict } from "$lib/bookingLogic";
 import { getVenueSettings } from "./venuesDB";
-import { HHMMToMinutes, timeStampToDateString, timeStampToDayKey } from "$lib/utils/timeUtils";
+import { HHMMToMinutes, isSameDay, timeStampToDateString, timeStampToDayKey, utcToMinutes } from "$lib/utils/timeUtils";
 
 // Common return type for DB operations
 type DBResult<T> = { data: T | null; error: string | null };
@@ -53,11 +53,9 @@ export async function insertVenueBookingWithPossibilityCheck(supabase: SupabaseC
   if (limitRes.error || limitRes.data) return { data: null, error: limitRes.error || "Past limits" };
   if (bookingRes.error) return bookingRes;
   if (settingRes.error || !settingRes.data?.daySettings) return settingRes;
+  if (!isSameDay(bookingJSON.startTime, bookingJSON.endTime)) return { data: null, error: "Multi-day booking not supported." };
 
-  const start = HHMMToMinutes(bookingJSON.startTime.split("T")[1]);
-  const end = HHMMToMinutes(bookingJSON.endTime.split("T")[1]);
-  if (end < start) return { data: null, error: "Multi-day booking not supported." };
-  const conflict = hasBookingConflict(timeStampToDayKey(bookingJSON.startTime), settingRes.data.daySettings, bookingJSON.courtID, bookingJSON.units.map((x) => x.unitID), start, end, Object.values(bookingRes.data.bookingData ?? {}).flat() as BookingEntry[], timeStampToDateString(bookingJSON.startTime), bookingRes.data.closureData);
+  const conflict = hasBookingConflict(timeStampToDayKey(bookingJSON.startTime), settingRes.data.daySettings, bookingJSON.courtID, bookingJSON.units.map((x) => x.unitID), utcToMinutes(bookingJSON.startTime), utcToMinutes(bookingJSON.endTime), Object.values(bookingRes.data.bookingData ?? {}).flat() as BookingEntry[], timeStampToDateString(bookingJSON.startTime), bookingRes.data.closureData);
   if (conflict) return { data: false, error: null };
   return runRPC(supabase, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, {
     p_venue_id: venueID,

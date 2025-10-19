@@ -118,3 +118,12 @@ export function timeStampToDayKey(timestampString: string){
 export function timeStampToDateString(timestampString: string){
     return new Date(timestampString).toDateString();
 }
+
+
+export function laterTimestamp(t1: string, t2: string){
+  return new Date(t1) > new Date(t2) ? t1 : t2;
+}
+
+export function isSameDay(t1: string, t2: string){
+  return new Date(t1).toDateString() !== new Date(t2).toDateString()
+}
