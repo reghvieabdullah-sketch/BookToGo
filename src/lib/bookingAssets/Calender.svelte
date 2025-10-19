@@ -7,21 +7,28 @@
 		QUERY_PARAM_VENUE_BOOKING_DATE_START
 	} from '$lib/constants/postgressFunctionConstants';
 	import { onMount } from 'svelte';
+
 	let { bookingData, settingsData, venueData } = $props();
-	let currentMonth = $derived($bookingDayData.date?.getMonth() ?? new Date().getMonth());
-	let currentYear = $derived($bookingDayData.date?.getFullYear() ?? new Date().getFullYear());
+	let currentMonth = $derived($bookingDayData.date?.getUTCMonth() ?? new Date().getUTCMonth());
+	let currentYear = $derived($bookingDayData.date?.getUTCFullYear() ?? new Date().getUTCFullYear());
 	let calendarDays = $derived(generateCalendarDays(currentMonth, currentYear));
 
+	// --- Helper: format date in YYYY-MM-DD (UTC) ---
+	function formatDateUTC(date: Date) {
+		return date.toISOString().split('T')[0];
+	}
+
 	function setDayBooking(date: Date) {
-		const key = date.toLocaleDateString('en-CA');
+		const key = formatDateUTC(date);
 		const entries = bookingData ? (bookingData[key] ?? []) : [];
-		$bookingDayData = { date: date, entries };
+		$bookingDayData = { date, entries };
 	}
 
 	function getIsBookableDay(date: Date) {
-		const today = new Date();
+		const todayUTC = new Date();
+		todayUTC.setUTCHours(0, 0, 0, 0); // start of UTC day
 
-		const dayOfWeek = date.toLocaleString('en-US', { weekday: 'long' });
+		const dayOfWeek = date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' });
 
 		const isOpen = settingsData.daySettings?.[dayOfWeek.toLowerCase()]?.is_day_bookable ?? true;
 
@@ -29,30 +36,27 @@
 			? date.getTime() < Date.now() + settingsData.maxBookingNoticeMinutes * 60 * 1000
 			: true;
 
-		const isOnOrAfterToday = date >= today || date.toDateString() === today.toDateString();
+		const isOnOrAfterToday = date.getTime() >= todayUTC.getTime();
 
 		return isOpen && isWithinAllowedRange && isOnOrAfterToday;
 	}
 
 	function findNextBookableDay(startDate: Date): Date | null {
-		const maxDaysToCheck = 365; // Check up to a year ahead
-		let checkDate = new Date(startDate);
+		const maxDaysToCheck = 365;
+		let checkDate = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate()));
 
 		for (let i = 0; i < maxDaysToCheck; i++) {
-			if (getIsBookableDay(checkDate)) {
-				return checkDate;
-			}
-			checkDate = new Date(checkDate);
-			checkDate.setDate(checkDate.getDate() + 1);
+			if (getIsBookableDay(checkDate)) return checkDate;
+			checkDate.setUTCDate(checkDate.getUTCDate() + 1);
 		}
 
-		return null; // No bookable day found in the next year
+		return null;
 	}
 
 	function generateCalendarDays(month: number, year: number) {
-		const firstDay = new Date(year, month, 1);
-		const daysInMonth = new Date(year, month + 1, 0).getDate();
-		const firstDayOfWeek = (firstDay.getDay() + 6) % 7; // Monday = 0
+		const firstDayUTC = new Date(Date.UTC(year, month, 1));
+		const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+		const firstDayOfWeek = (firstDayUTC.getUTCDay() + 6) % 7; // Monday = 0
 		const days = [];
 
 		// Leading blanks
@@ -62,42 +66,38 @@
 
 		// Month days
 		for (let day = 1; day <= daysInMonth; day++) {
-			const date = new Date(year, month, day);
-			const today = new Date();
+			const dateUTC = new Date(Date.UTC(year, month, day));
+			const todayUTC = new Date();
+			todayUTC.setUTCHours(0, 0, 0, 0);
+
 			days.push({
 				day,
-				isBookableDay: getIsBookableDay(date),
-				date,
-				isToday: date.toDateString() === today.toDateString()
+				isBookableDay: getIsBookableDay(dateUTC),
+				date: dateUTC,
+				isToday: formatDateUTC(dateUTC) === formatDateUTC(todayUTC)
 			});
 		}
-
-		// Pad to 35 cells
-		// for (let i = 1; i <= 35 - days.length; i++) {
-		// 	days.push({ day: i, isBookableDay: false, date: new Date(year, month + 1, i) });
-		// }
 
 		return days;
 	}
 
 	async function refetchBookingData() {
-		bookingData = await fetch(
-			`/api/v1/bookings/${venueData?.venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${new Date(
-				currentYear,
-				currentMonth,
-				1
-			).toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${new Date(currentYear, currentMonth + 1, 0).toISOString()}`
-		).then((res) => res.json());
-	}
-	async function previousMonth() {
-		const today = new Date();
+		const startUTC = new Date(Date.UTC(currentYear, currentMonth, 1)).toISOString();
+		const endUTC = new Date(Date.UTC(currentYear, currentMonth + 1, 0)).toISOString();
 
-		// If we're at the current month/year, don't go back
+		bookingData = await fetch(
+			`/api/v1/bookings/${venueData?.venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startUTC}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endUTC}`
+		).then(res => res.json());
+	}
+
+	async function previousMonth() {
+		const todayUTC = new Date();
+		todayUTC.setUTCHours(0, 0, 0, 0);
+
 		if (
-			currentYear < today.getFullYear() ||
-			(currentYear === today.getFullYear() && currentMonth <= today.getMonth())
-		)
-			return;
+			currentYear < todayUTC.getUTCFullYear() ||
+			(currentYear === todayUTC.getUTCFullYear() && currentMonth <= todayUTC.getUTCMonth())
+		) return;
 
 		if (currentMonth === 0) {
 			currentMonth = 11;
@@ -117,15 +117,16 @@
 		}
 		await refetchBookingData();
 	}
+
 	function selectDate(day: any) {
 		if (!day?.date || !day.isBookableDay) return;
 		setDayBooking(day.date);
 	}
+
 	function bookedPercentageForDate(date: Date) {
 		if (!date) return 0;
 
-		const weekday = date.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
-
+		const weekday = date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' }).toLowerCase();
 		const daySettings = settingsData?.daySettings?.[weekday] ?? {};
 		const slotGenerationValue = settingsData?.slotGenerationInterval ?? 60;
 
@@ -133,22 +134,19 @@
 		const closeTime = daySettings.closeTime ?? '23:59';
 
 		const totalSlots = (HHMMToMinutes(closeTime) - HHMMToMinutes(openTime)) / slotGenerationValue;
-
-		const bookedSlots = bookingData?.[date.toLocaleDateString('en-CA')]?.length ?? 0;
+		const bookedSlots = bookingData?.[formatDateUTC(date)]?.length ?? 0;
 
 		if (totalSlots === 0) return 0;
 		return (bookedSlots / totalSlots) * 100;
 	}
 
 	onMount(() => {
-		const today = new Date();
+		const todayUTC = new Date();
+		todayUTC.setUTCHours(0, 0, 0, 0);
 
-		// If today is not bookable, find and select the next bookable day
-		if (!getIsBookableDay(today)) {
-			const nextBookable = findNextBookableDay(today);
-			if (nextBookable) {
-				setDayBooking(nextBookable);
-			}
+		if (!getIsBookableDay(todayUTC)) {
+			const nextBookable = findNextBookableDay(todayUTC);
+			if (nextBookable) setDayBooking(nextBookable);
 		}
 	});
 </script>

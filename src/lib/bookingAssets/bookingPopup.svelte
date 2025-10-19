@@ -58,16 +58,11 @@
 	}
 
 	function saveBooking(state: any) {
-		console.log('saved state: ', state);
-
 		localStorage.setItem('bookingState', JSON.stringify(state));
 	}
 
 	function loadBooking() {
 		const raw = localStorage.getItem('bookingState');
-		raw
-			? console.log('Loaded booking state: ', JSON.parse(raw))
-			: console.log('No saved booking state');
 		return raw ? JSON.parse(raw) : null;
 	}
 
@@ -203,13 +198,8 @@
 			units: [
 			{ title: selectedUnit?.title!, unitID: selectedUnit?.unitID!, subUnits: selectedSubUnits }]
 		};
-		saveBooking({
-			selectedCourtId,
-			selectedUnitId,
-			selectedSubUnitIds,
-			selectedDuration,
-			selectedTime
-		});
+		console.log(booking);
+		saveBooking({selectedCourtId, selectedUnitId, selectedSubUnitIds, selectedDuration, selectedTime});
 		showConfirmation = true;
 		pendingBooking = booking;
 	}
@@ -330,7 +320,7 @@
 
 		<!-- Book Button -->
 		<div class="flex justify-center">
-			<button on:click={handleBooking} class="btn btn-md btn-primary">
+			<button on:click={handleBooking} class="btn btn-md btn-primary" class:disabled = {!timeOptions || timeOptions.length === 0}>
 				<BookIcon />
 				Book
 			</button>
