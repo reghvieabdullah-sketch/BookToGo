@@ -320,7 +320,7 @@
 
 		<!-- Book Button -->
 		<div class="flex justify-center">
-			<button on:click={handleBooking} class="btn btn-md btn-primary" class:disabled = {!timeOptions || timeOptions.length === 0}>
+			<button on:click={handleBooking} class="btn btn-md btn-primary" disabled = {!timeOptions || timeOptions.length === 0}>
 				<BookIcon />
 				Book
 			</button>

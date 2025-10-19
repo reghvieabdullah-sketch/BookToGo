@@ -6,7 +6,7 @@ import type {
   daySettingsType,
 } from "../types/bookingTypes";
 import { recurrenceEnum, courtStatusEnum } from "./constants/postgressFunctionConstants";
-import { utcToMinutes, parseTimeStringToUTCMinutes, doIntervalsOverlap, occursAtRecurrence } from "./utils/timeUtils";
+import { utcToMinutes, parseTimeStringToUTCMinutes, doIntervalsOverlap, occursAtRecurrence, HHMMToMinutes, minutesToHHMM } from "./utils/timeUtils";
 
 
 
@@ -38,10 +38,14 @@ export function hasBookingConflict(dayKey: string, daySettings: daySettingsType,
 function conflictWithClosure( closure: Closure, attemptedStart: number, attemptedEnd: number, attemptedDateString: string): boolean {
   const closureStartMinutes = utcToMinutes(closure.startTimestamp);
   const closureEndMinutes = closureStartMinutes + (closure.durationMinutes || 0);
-  const timeOverlap = doIntervalsOverlap( attemptedStart, attemptedEnd, closureStartMinutes, closureEndMinutes);
+  // Closure start < attempted start < attempted end < closure End
+  const timeOverlap = closureStartMinutes < attemptedStart || attemptedEnd < closureEndMinutes;
   const recurrenceMatch = occursAtRecurrence(closure.startTimestamp, attemptedDateString, closure.recurringType as recurrenceEnum);
-
-  return timeOverlap && recurrenceMatch;
+  if (timeOverlap) console.log(closureStartMinutes, ' to ', closureEndMinutes);
+  
+  const _c =  timeOverlap && recurrenceMatch;
+  if (_c) console.warn(`FOUND A CONFLICT WITH A CLOSURE FROM ${minutesToHHMM(attemptedStart)} & ${minutesToHHMM(attemptedEnd)}\nFOR ${closure}`);
+  return _c
 }
 
 function conflictWithinClosures(allClosures: CourtWithClosures[], attemptedCourtID: number, attemptedStart: number, attemptedEnd: number, attemptedDate: string): boolean {

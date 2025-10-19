@@ -92,6 +92,7 @@ export function combineUTCDateAndTime(date: Date, timeStr: string): string {
 }
 
 export function doIntervalsOverlap(startA: number, endA: number, startB: number, endB: number): boolean {
+  // doIntervalsOverlap( attemptedStart, attemptedEnd, closureStartMinutes, closureEndMinutes)
   return startA < endB && endA > startB;
 }
 
