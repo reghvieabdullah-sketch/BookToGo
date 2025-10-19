@@ -74,6 +74,14 @@ export function parseTimeStringToUTCMinutes(timeString: string): number {
 }
 
 
+export function localTimeToUTC(date: Date, timeStr: string): string {
+		const [hours, minutes] = timeStr.split(':').map(Number);
+		const localDate = new Date(date);
+		localDate.setHours(hours, minutes, 0, 0);
+		return localDate.toISOString();
+}
+
+
 export function doIntervalsOverlap(startA: number, endA: number, startB: number, endB: number): boolean {
   return startA < endB && endA > startB;
 }

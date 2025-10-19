@@ -16,16 +16,16 @@ import { utcToMinutes, parseTimeStringToUTCMinutes, doIntervalsOverlap, occursAt
 export function hasBookingConflict(dayKey: string, daySettings: daySettingsType, attemptedCourtID: number, attemptedSubUnits: number[], attemptedStartMinutes: number, attemptedEndMinutes: number, bookings: BookingEntry[], attemptedDate: string,allCourtsWithClosures: CourtWithClosures[]) {
   const closureConflict = conflictWithinClosures(allCourtsWithClosures, attemptedCourtID, attemptedStartMinutes, attemptedEndMinutes, attemptedDate);
   const outsideHours = !withinOpenHours(daySettings, dayKey, attemptedStartMinutes, attemptedEndMinutes);
-
-  if (outsideHours) return true;
-  if (!closureConflict && !bookings) return false;
-
+  if (!bookings) bookings = []
   const approved = bookings.filter((b) => b.details.courtStatus === courtStatusEnum.APPROVED).map((b) => b.details);
   const archived = bookings.filter((b) => b.details.courtStatus === courtStatusEnum.ARCHIVED).map((b) => b.details);
 
   const currentConflict = conflictWithBookings(approved, attemptedStartMinutes, attemptedEndMinutes, attemptedCourtID, attemptedSubUnits);
   const archivedConflict = conflictWithBookings(archived, attemptedStartMinutes, attemptedEndMinutes, attemptedCourtID, attemptedSubUnits);
-  
+  const flags = { currentConflict, archivedConflict, closureConflict, outsideHours };
+
+  for (const [key, val] of Object.entries(flags)) if (val) console.log(`Conflicted on ${key}`);
+
   return (currentConflict || archivedConflict || closureConflict || outsideHours)
 }
 
@@ -53,12 +53,9 @@ function conflictWithinClosures(allClosures: CourtWithClosures[], attemptedCourt
 function withinOpenHours(daySettings: daySettingsType, dayKey: string, startMinutes: number, endMinutes: number): boolean {
   const key = dayKey.toLowerCase();
   const settings = daySettings[key];
-
   if (!settings?.is_day_bookable) return false;
-
   const open = parseTimeStringToUTCMinutes(settings.openTime!);
   const close = parseTimeStringToUTCMinutes(settings.closeTime!);
-
   return startMinutes >= open && endMinutes <= close;
 }
 

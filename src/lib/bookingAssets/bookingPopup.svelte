@@ -1,6 +1,6 @@
 <script lang="ts">
 	import BookIcon from '$lib/icons/BookIcon.svelte';
-	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate } from '$lib/utils/timeUtils';
+	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate, parseTimeStringToUTCMinutes, localTimeToUTC } from '$lib/utils/timeUtils';
 	import GrabHandleIcon from '$lib/icons/GrabHandleIcon.svelte';
 	import { bookingDayData } from './bookingStore';
 	import { hasBookingConflict } from '$lib/bookingLogic';
@@ -120,6 +120,7 @@
 	let selectedSubUnitIds: number[] = loadedBooking?.selectedSubUnitIds || [];
 	let selectedDuration = loadedBooking?.selectedDuration || '01:00';
 	let selectedTime = loadedBooking?.selectedTime || '09:00';
+	let totalPrice = 0;
 
 	let timeOptions: string | any[] = [];
 	// Reactive computations
@@ -144,82 +145,43 @@
 	);
 
 	function generateTimeOptions() {
-		if (!settingsData?.daySettings || !$bookingDayData?.date) return [];
-		const dayName = $bookingDayData.date
-			.toLocaleDateString('en-LK', { weekday: 'long' })
-			.toLowerCase();
+		if (!settingsData?.daySettings || !$bookingDayData?.date) return timeOptions = [];
+		const dayName = $bookingDayData.date.toLocaleDateString('en-LK', { weekday: 'long' }).toLowerCase();
 		const daySettings = settingsData.daySettings[dayName];
 
-		if (!daySettings?.is_day_bookable || !daySettings.openTime || !daySettings.closeTime) {
-			return [];
-		}
+		if (!daySettings?.is_day_bookable || !daySettings.openTime || !daySettings.closeTime) return timeOptions = []
 
 		const options: string[] = [];
-		const openingTime = HHMMToMinutes(daySettings.openTime.slice(0, 5));
-		const closingTime = HHMMToMinutes(daySettings.closeTime.slice(0, 5));
+		const openingTime = parseTimeStringToUTCMinutes(daySettings.openTime);
+		const closingTime = parseTimeStringToUTCMinutes(daySettings.closeTime);
 		const interval = settingsData.slotGenerationInterval || 60;
 		const durationMinutes = HHMMToMinutes(selectedDuration);
 		let time = openingTime;
+
 		while (time <= closingTime - durationMinutes) {
+			const conflicts = hasBookingConflict( dayName, settingsData.daySettings, selectedCourtId!, selectedSubUnitIds, time, time + durationMinutes, $bookingDayData.entries, $bookingDayData.date.toDateString(), closureData)
+			conflicts? time += settingsData.bookingCoolDown! : options.push(minutesToHHMM(time));
 			time += interval;
-			if (
-				!hasBookingConflict(
-					$bookingDayData.date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase(),
-					settingsData.daySettings,
-					selectedCourtId!,
-					selectedSubUnitIds,
-					time,
-					time + durationMinutes,
-					$bookingDayData.entries,
-					$bookingDayData.date.toDateString(),
-					closureData
-				)
-			) {
-				options.push(minutesToHHMM(time));
-			} else {
-				console.log('Conflict at time: ', minutesToHHMM(time));
-				// And add a cooldown
-				if (settingsData.bookingCoolDown) time += settingsData.bookingCoolDown;
-			}
 		}
 		timeOptions = options;
 	}
-
-	let totalPrice = 0;
-	$: (selectedDuration,
-		$bookingDayData,
-		selectedSubUnits,
-		generateTimeOptions(),
-		calculateTotalPrice());
-	$: if (timeOptions.length > 0 && !timeOptions.includes(selectedTime)) {
-		selectedTime = timeOptions[0];
-	}
+	$: (selectedDuration, $bookingDayData, selectedSubUnits, generateTimeOptions(), calculateTotalPrice());
+	$: if (timeOptions.length > 0 && !timeOptions.includes(selectedTime)) { selectedTime = timeOptions[0] }
 
 	function handleUnitSelection(event: Event) {
 		const target = event.target as HTMLSelectElement;
 		const selectedUnitData = JSON.parse(target.value);
-
 		selectedCourtId = selectedUnitData.courtId;
 		selectedUnitId = selectedUnitData.unitID;
-
 		selectedSubUnitIds = [];
-
-		if (selectedUnitData.subUnits && selectedUnitData.subUnits.length > 0) {
-			selectedSubUnitIds = selectedUnitData.subUnits.map((su: SubUnit) => su.id);
-		}
+		if (selectedUnitData.subUnits && selectedUnitData.subUnits.length > 0) selectedSubUnitIds = selectedUnitData.subUnits.map((su: SubUnit) => su.id);
 	}
 
 	function handleSubUnitToggle(subUnitId: number) {
 		const currentlySelected = selectedSubUnitIds.length;
 		const isSelected = selectedSubUnitIds.includes(subUnitId);
-
 		if (currentlySelected === 1 && isSelected) return;
-
-		if (isSelected) {
-			selectedSubUnitIds = selectedSubUnitIds.filter((id) => id !== subUnitId);
-		} else {
-			selectedSubUnitIds = [...selectedSubUnitIds, subUnitId];
-		}
+		isSelected ? selectedSubUnitIds = selectedSubUnitIds.filter((id) => id !== subUnitId) : selectedSubUnitIds = [...selectedSubUnitIds, subUnitId];
 	}
 
 	function calculateTotalPrice() {
@@ -227,18 +189,6 @@
 		totalPrice = selectedSubUnits.reduce((sum, subUnit) => sum + subUnit.price, 0) * durationHours;
 	}
 
-	function localTimeToUTC(date: Date, timeStr: string): string {
-		const [hours, minutes] = timeStr.split(':').map(Number);
-		const localDate = new Date(date);
-		localDate.setHours(hours, minutes, 0, 0);
-		return localDate.toISOString();
-	}
-
-	function getUnitsForBooking(): Unit[] {
-		return [
-			{ title: selectedUnit?.title!, unitID: selectedUnit?.unitID!, subUnits: selectedSubUnits }
-		];
-	}
 	// TODO - add a price check at the server.
 	async function handleBooking() {
 		const booking = {
@@ -250,7 +200,8 @@
 				minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration))
 			),
 			status: 'pending',
-			units: getUnitsForBooking()
+			units: [
+			{ title: selectedUnit?.title!, unitID: selectedUnit?.unitID!, subUnits: selectedSubUnits }]
 		};
 		saveBooking({
 			selectedCourtId,
