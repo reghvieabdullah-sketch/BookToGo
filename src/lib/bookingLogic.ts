@@ -24,7 +24,7 @@ export function hasBookingConflict(dayKey: string, daySettings: daySettingsType,
   const archivedConflict = conflictWithBookings(archived, attemptedStartMinutes, attemptedEndMinutes, attemptedCourtID, attemptedSubUnits);
   const flags = { currentConflict, archivedConflict, closureConflict, outsideHours };
 
-  for (const [key, val] of Object.entries(flags)) if (val) console.log(`Conflicted on ${key}`);
+  for (const [key, val] of Object.entries(flags)) if (val) console.warn(`Conflicted on ${key}`);
 
   return (currentConflict || archivedConflict || closureConflict || outsideHours)
 }
