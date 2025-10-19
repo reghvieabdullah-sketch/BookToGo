@@ -81,6 +81,15 @@ export function localTimeToUTC(date: Date, timeStr: string): string {
 		return localDate.toISOString();
 }
 
+export function combineUTCDateAndTime(date: Date, timeStr: string): string {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth(); // 0-based
+    const day = date.getUTCDate();
+
+    const combined = new Date(Date.UTC(year, month, day, hours, minutes, 0, 0));
+    return combined.toISOString();
+}
 
 export function doIntervalsOverlap(startA: number, endA: number, startB: number, endB: number): boolean {
   return startA < endB && endA > startB;

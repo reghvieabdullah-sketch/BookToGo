@@ -1,6 +1,6 @@
 <script lang="ts">
 	import BookIcon from '$lib/icons/BookIcon.svelte';
-	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate, parseTimeStringToUTCMinutes, localTimeToUTC } from '$lib/utils/timeUtils';
+	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate, parseTimeStringToUTCMinutes, localTimeToUTC, combineUTCDateAndTime } from '$lib/utils/timeUtils';
 	import GrabHandleIcon from '$lib/icons/GrabHandleIcon.svelte';
 	import { bookingDayData } from './bookingStore';
 	import { hasBookingConflict } from '$lib/bookingLogic';
@@ -194,8 +194,8 @@
 		const booking = {
 			courtStatus: selectedCourt?.approvalStatus!,
 			courtID: selectedCourtId!,
-			startTime: localTimeToUTC($bookingDayData.date, selectedTime),
-			endTime: localTimeToUTC(
+			startTime: combineUTCDateAndTime($bookingDayData.date, selectedTime),
+			endTime: combineUTCDateAndTime(
 				$bookingDayData.date,
 				minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration))
 			),
