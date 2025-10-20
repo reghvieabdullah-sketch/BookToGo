@@ -15,9 +15,6 @@ export const load: PageLoad = async ({ parent, fetch }) => {
         }
 
         const bookings: BookingDetails[] = await response.json();
-        console.log('Bookings loaded in +page.ts:', bookings);
-        console.log('Number of bookings:', bookings.length);
-
         return {
             bookings
         };

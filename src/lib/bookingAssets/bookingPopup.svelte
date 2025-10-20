@@ -139,12 +139,17 @@
 			[]
 	);
 
-	function generateTimeOptions() {
+function generateTimeOptions() {
+	const start = performance.now(); // start timer
+
+	try {
 		if (!settingsData?.daySettings || !$bookingDayData?.date) return timeOptions = [];
+
 		const dayName = $bookingDayData.date.toLocaleDateString('en-LK', { weekday: 'long' }).toLowerCase();
 		const daySettings = settingsData.daySettings[dayName];
 
-		if (!daySettings?.is_day_bookable || !daySettings.openTime || !daySettings.closeTime) return timeOptions = []
+		if (!daySettings?.is_day_bookable || !daySettings.openTime || !daySettings.closeTime)
+			return timeOptions = [];
 
 		const options: string[] = [];
 		const openingTime = parseTimeStringToUTCMinutes(daySettings.openTime);
@@ -154,12 +159,28 @@
 		let time = openingTime;
 
 		while (time <= closingTime - durationMinutes) {
-			const conflicts = hasBookingConflict( dayName, settingsData.daySettings, selectedCourtId!, selectedSubUnitIds, time, time + durationMinutes, $bookingDayData.entries, $bookingDayData.date.toDateString(), closureData)
-			conflicts? time += settingsData.bookingCoolDown! : options.push(minutesToHHMM(time));
+			const conflicts = hasBookingConflict(
+				dayName,
+				settingsData.daySettings,
+				selectedCourtId!,
+				selectedSubUnitIds,
+				time,
+				time + durationMinutes,
+				$bookingDayData.entries,
+				$bookingDayData.date.toDateString(),
+				closureData
+			);
+			conflicts ? time += settingsData.bookingCoolDown! : options.push(minutesToHHMM(time));
 			time += interval;
 		}
+
 		timeOptions = options;
+	} finally {
+		const end = performance.now();
+		console.log(`[PERF] generateTimeOptions executed in ${(end - start).toFixed(2)} ms`);
 	}
+}
+
 	$: (selectedDuration, $bookingDayData, selectedSubUnits, generateTimeOptions(), calculateTotalPrice());
 	$: if (timeOptions.length > 0 && !timeOptions.includes(selectedTime)) { selectedTime = timeOptions[0] }
 

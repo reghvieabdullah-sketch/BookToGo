@@ -18,8 +18,6 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 export const PUT: RequestHandler = async ({ locals, request, params }) => {
     const courtsJSON = await request.json();
     const { venueID } = params;
-    console.log('the url told to change is ', locals.venueURL);
-
     const cacheKeys = [`venue:${locals.venueURL}:courts`, `venue:${locals.venueURL}:bundled`];
     const result = await updateVenueCourts(locals.supabase, courtsJSON, venueID)
     if (result.error) {

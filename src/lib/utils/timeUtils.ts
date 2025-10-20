@@ -96,9 +96,10 @@ export function doIntervalsOverlap(startA: number, endA: number, startB: number,
   return startA < endB && endA > startB;
 }
 
-export function occursAtRecurrence(closureDateString: string, attemptedDateString: string, recurrenceType: recurrenceEnum | string): boolean {
+export function occursAtRecurrence(closureDateString: string, closureEndDateString: string, attemptedDateString: string, recurrenceType: recurrenceEnum | string): boolean {
   const closureDate = new Date(closureDateString)
   const attemptedDate = new Date(attemptedDateString)
+  const closureEndDate = new Date(closureEndDateString);
   const type = typeof recurrenceType === "string" ? recurrenceType : recurrenceType.valueOf();
   switch (type) {
     case recurrenceEnum.DAILY:
@@ -113,10 +114,20 @@ export function occursAtRecurrence(closureDateString: string, attemptedDateStrin
         closureDate.getUTCMonth() === attemptedDate.getUTCMonth()
       );
     case recurrenceEnum.ONCE:
-      return closureDate.toISOString().split('T')[0] === attemptedDate.toISOString().split('T')[0];
+      // Here WAS my damn problem. fixed that shit lol by just passing in the end time. now works for weeks. remove this line for merge.
+      return closureDate < attemptedDate && attemptedDate < closureEndDate;
     default:
       return false;
+
   }
+}
+
+
+export function addMinutesToUTCTimestamp(utcTimestamp: string, minutesToAdd: number): string {
+	const date = new Date(utcTimestamp);
+	if (isNaN(date.getTime())) throw new Error("Invalid UTC timestamp");
+	date.setUTCMinutes(date.getUTCMinutes() + minutesToAdd);
+	return date.toISOString();
 }
 
 
