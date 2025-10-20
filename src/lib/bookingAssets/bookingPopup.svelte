@@ -46,11 +46,12 @@
 				},
 				body: JSON.stringify(booking)
 			});
-			$bookingDayData.entries = [...$bookingDayData.entries, { details: booking }]; // even if its a failure, we add it to the list for now. since the user would keep seeing the same booking otherwise.
+			// $bookingDayData.entries = [...$bookingDayData.entries, { details: booking }]; // even if its a failure, we add it to the list for now. since the user would keep seeing the same booking otherwise.
 			// if (!response.ok) return false;
 			// Assume passed the insertion checks if we get a 200 response
 			const r = await response.json();
-			console.log(r, ' is the response');
+			console.log(r ?  ' booking confirmed' : 'not confirmed');
+			console.warn(r, ' is the insert recved state!');
 			return r;
 		} catch (error) {
 			console.log('Error: ', error);
