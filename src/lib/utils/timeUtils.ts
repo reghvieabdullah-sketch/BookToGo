@@ -148,3 +148,13 @@ export function laterTimestamp(t1: string, t2: string){
 export function isSameDay(t1: string, t2: string){
   return new Date(t1).toDateString() === new Date(t2).toDateString()
 }
+
+
+export function getStartEndDayOfTimeStamp(targetDate: Date | string | number) {
+  const date = targetDate instanceof Date ? targetDate : new Date(targetDate);
+
+  return {
+    startDate: new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0),
+    endDate: new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999),
+  };
+}

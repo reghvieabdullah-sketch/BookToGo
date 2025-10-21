@@ -46,12 +46,10 @@
 				},
 				body: JSON.stringify(booking)
 			});
-			// $bookingDayData.entries = [...$bookingDayData.entries, { details: booking }]; // even if its a failure, we add it to the list for now. since the user would keep seeing the same booking otherwise.
+			$bookingDayData.entries = [...$bookingDayData.entries, { details: booking }]; // even if its a failure, we add it to the list for now. since the user would keep seeing the same booking otherwise.
 			// if (!response.ok) return false;
 			// Assume passed the insertion checks if we get a 200 response
 			const r = await response.json();
-			console.log(r ?  ' booking confirmed' : 'not confirmed');
-			console.warn(r, ' is the insert recved state!');
 			return r;
 		} catch (error) {
 			console.log('Error: ', error);
@@ -160,25 +158,19 @@ function generateTimeOptions() {
 		let time = openingTime;
 
 		while (time <= closingTime - durationMinutes) {
-			const conflicts = hasBookingConflict(
+			const conflict = hasBookingConflict(
 				dayName,
 				settingsData.daySettings,
-				selectedCourtId!,
-				selectedSubUnitIds,
-				time,
-				time + durationMinutes,
 				$bookingDayData.entries,
-				$bookingDayData.date.toDateString(),
-				closureData
-			);
-			conflicts ? time += settingsData.bookingCoolDown! : options.push(minutesToHHMM(time));
+				{attemptedCourtID: selectedCourtId!, attemptedDate: $bookingDayData.date.toDateString(), attemptedEndMinutes: time + durationMinutes, attemptedStartMinutes: time, attemptedSubUnits: selectedSubUnitIds}, closureData)
+			conflict ? time += settingsData.bookingCoolDown! : options.push(minutesToHHMM(time));
 			time += interval;
 		}
 
 		timeOptions = options;
 	} finally {
 		const end = performance.now();
-		console.log(`[PERF] generateTimeOptions executed in ${(end - start).toFixed(2)} ms`);
+		// console.log(`[PERF] generateTimeOptions executed in ${(end - start).toFixed(2)} ms`);
 	}
 }
 
@@ -220,7 +212,6 @@ function generateTimeOptions() {
 			units: [
 			{ title: selectedUnit?.title!, unitID: selectedUnit?.unitID!, subUnits: selectedSubUnits }]
 		};
-		console.log(booking);
 		saveBooking({selectedCourtId, selectedUnitId, selectedSubUnitIds, selectedDuration, selectedTime});
 		showConfirmation = true;
 		pendingBooking = booking;

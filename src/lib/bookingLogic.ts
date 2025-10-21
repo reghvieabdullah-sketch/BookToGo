@@ -2,76 +2,90 @@ import type {
   BookingDetails,
   BookingEntry,
   Closure,
+  courtsType,
   CourtWithClosures,
   daySettingsType,
 } from "../types/bookingTypes";
 import { recurrenceEnum, courtStatusEnum } from "./constants/postgressFunctionConstants";
-import { utcToMinutes, parseTimeStringToUTCMinutes, doIntervalsOverlap, occursAtRecurrence, HHMMToMinutes, minutesToHHMM, addMinutesToUTCTimestamp } from "./utils/timeUtils";
+import { utcToMinutes, parseTimeStringToUTCMinutes, doIntervalsOverlap, occursAtRecurrence, addMinutesToUTCTimestamp } from "./utils/timeUtils";
+// TODO - move the common type and ensure args function to a utils class
+// TODO - also it seems that my goofy ass decided to allow multi bookihgs. which in of itself is fine. but everywhere i have done the [0] thing, rather get rid of it entirey
+// and if i ever need to have multi booking, refactor the entire logic, rather than the messy [0] shit i was doing
 
 
-
-// -------------------------
-// Master Validator
-// -------------------------
-export function hasBookingConflict(dayKey: string, daySettings: daySettingsType, attemptedCourtID: number, attemptedSubUnits: number[], attemptedStartMinutes: number, attemptedEndMinutes: number, bookings: BookingEntry[], attemptedDate: string,allCourtsWithClosures: CourtWithClosures[]) {
-  const closureConflict = conflictWithinClosures(allCourtsWithClosures, attemptedCourtID, attemptedStartMinutes, attemptedEndMinutes, attemptedDate);
-  const outsideHours = !withinOpenHours(daySettings, dayKey, attemptedStartMinutes, attemptedEndMinutes);
-  if (!bookings) bookings = []
-  const approved = bookings.filter((b) => b.details.courtStatus === courtStatusEnum.APPROVED).map((b) => b.details);
-  const archived = bookings.filter((b) => b.details.courtStatus === courtStatusEnum.ARCHIVED).map((b) => b.details);
-
-  const currentConflict = conflictWithBookings(approved, attemptedStartMinutes, attemptedEndMinutes, attemptedCourtID, attemptedSubUnits);
-  const archivedConflict = conflictWithBookings(archived, attemptedStartMinutes, attemptedEndMinutes, attemptedCourtID, attemptedSubUnits);
-  const flags = { currentConflict, archivedConflict, closureConflict, outsideHours };
-
-  // for (const [key, val] of Object.entries(flags)) if (val) console.warn(`Conflicted on ${key}`);
-
-  return (currentConflict || archivedConflict || closureConflict || outsideHours)
+// Not meant to be exported, for single use case ONLY
+interface bookingConflictType  {
+  attemptedCourtID: number;
+  attemptedSubUnits: number[];
+  attemptedStartMinutes: number;
+  attemptedEndMinutes: number;
+  attemptedDate: string;
 }
 
+export function ensureValidCredentialsForBooking(courts: courtsType, bookingJSON: BookingDetails): boolean {
+  const selectedCourt = courts.find(c => c.courtID === bookingJSON.courtID)
+  if (!selectedCourt) return false;
+  // Only allow single unit bookings (i.e like full court, half court. not half/full courts simultanously). Works tested :)
+  // NOTE: this removes the possiblity of multi unit bookings. then why tf do we allow multi bookings in the current format. if we do [0] everywhere already? its a mess. get rid of it
+  // TODO: get rid of the damn multi array for units for a booking already. 
+  // TODO: make this return some less that a true false
+  // TODO: remove ALL business logic from the backend. while most have been removed. some still have to be removed. and their is some trailing dependencies as well
+  if (!bookingJSON || !bookingJSON.units || bookingJSON.units.length > 1) return false;
+  const subUnitIDs = selectedCourt.units?.find(u => u.unitID === bookingJSON.units[0].unitID)?.subUnits;  
+  if (!subUnitIDs) return false;
+  if (!bookingJSON.units[0].subUnits.every(su => subUnitIDs.some(su2 => su2.id === su.id))) return false; // all the booking subunit ids must exist within that subunit array
+  return true;
+}
+// ------------------------- //
+//     Master Validator      //
+// ------------------------- //
+
+export function hasBookingConflict(dayKey: string, daySettings: daySettingsType, bookings: BookingEntry[], attemptedBooking: bookingConflictType, allCourtsWithClosures: CourtWithClosures[]) {
+  // TODO - remove bloated bookingEntry, and instead Booking entry where relevant, strip out BookingEntry wherever possible, and remove this ugly Mapping shit 
+  const closureConflict = conflictWithinClosures(allCourtsWithClosures, attemptedBooking);
+  const outsideHours = !withinOpenHours(daySettings, dayKey, attemptedBooking);
+  const bookingConflict = conflictWithBookings(bookings.map(x => x.details), attemptedBooking);
+  return  ( bookingConflict || closureConflict || outsideHours)
+}
 
 
 // --------------------------  //
 //      Conflict checkers      //
 // --------------------------  //
-
-function conflictWithClosure( closure: Closure, attemptedStart: number, attemptedEnd: number, attemptedDateString: string): boolean {
+function conflictWithClosure( closure: Closure, attemptedBooking: bookingConflictType): boolean {
   const closureStartMinutes = utcToMinutes(closure.startTimestamp);
   const closureEndMinutes = closureStartMinutes + (closure.durationMinutes || 0);
   const closureEndTimeStamp = addMinutesToUTCTimestamp(closure.startTimestamp, closure.durationMinutes);
-  const timeOverlap = closureStartMinutes < attemptedStart || attemptedEnd < closureEndMinutes;
-  const recurrenceMatch = occursAtRecurrence(closure.startTimestamp, closureEndTimeStamp, attemptedDateString, closure.recurringType as recurrenceEnum);
+  const timeOverlap = closureStartMinutes < attemptedBooking.attemptedStartMinutes || attemptedBooking.attemptedEndMinutes < closureEndMinutes;
+  const recurrenceMatch = occursAtRecurrence(closure.startTimestamp, closureEndTimeStamp, attemptedBooking.attemptedDate, closure.recurringType as recurrenceEnum);
   return timeOverlap && recurrenceMatch
 }
 
-function conflictWithinClosures(allClosures: CourtWithClosures[], attemptedCourtID: number, attemptedStart: number, attemptedEnd: number, attemptedDate: string): boolean {
-  const courtClosures = allClosures.find((c) => c.courtID === attemptedCourtID);
+function conflictWithinClosures(allClosures: CourtWithClosures[], attemptedBooking: bookingConflictType): boolean {
+  const courtClosures = allClosures.find((c) => c.courtID === attemptedBooking.attemptedCourtID);
   if (!courtClosures || !courtClosures.closures.length) return false;
-  return courtClosures.closures.some((closure) => conflictWithClosure( closure, attemptedStart, attemptedEnd, attemptedDate));
+  return courtClosures.closures.some((closure) => conflictWithClosure( closure, attemptedBooking));
 }
 
-function withinOpenHours(daySettings: daySettingsType, dayKey: string, startMinutes: number, endMinutes: number): boolean {
+function withinOpenHours(daySettings: daySettingsType, dayKey: string, attemptedBooking: bookingConflictType): boolean {
   const key = dayKey.toLowerCase();
   const settings = daySettings[key];
   if (!settings?.is_day_bookable) return false;
   const open = parseTimeStringToUTCMinutes(settings.openTime!);
   const close = parseTimeStringToUTCMinutes(settings.closeTime!);
-  return startMinutes >= open && endMinutes <= close;
+  return attemptedBooking.attemptedStartMinutes >= open && attemptedBooking.attemptedEndMinutes <= close;
 }
 
-function conflictWithBookings(bookings: BookingDetails[], attemptedStart: number, attemptedEnd: number, attemptedCourtID: number, attemptedSubUnitIDs: number[]): boolean {
+function conflictWithBookings(bookings: BookingDetails[], attemptedBooking: bookingConflictType): boolean {
+  // When a booking is archived, (when the owner updates the court details, say another unit is added or whatnot), they'd have different unitID's and/or may conflict with the current bookings. so for such bookings we ignore subunit overlap
   for (const booking of bookings) {
     const existingStart = utcToMinutes(booking.startTime);
     const existingEnd = utcToMinutes(booking.endTime);
-    const sameCourt = attemptedCourtID === booking.courtID;
-    const overlap = doIntervalsOverlap(attemptedStart, attemptedEnd, existingStart, existingEnd);
+    const overlap = doIntervalsOverlap(attemptedBooking.attemptedStartMinutes, attemptedBooking.attemptedEndMinutes, existingStart, existingEnd);
+    const sameCourt = attemptedBooking.attemptedCourtID === booking.courtID;
     const subunitIDs = booking.units[0]?.subUnits?.map((su) => su.id) ?? [];
-    const subunitOverlap = attemptedSubUnitIDs.some((id) =>subunitIDs.includes(id));
-
+    const subunitOverlap = attemptedBooking.attemptedSubUnits.some((id) =>subunitIDs.includes(id)) ||  booking.courtStatus !== courtStatusEnum.APPROVED;
     if (sameCourt && overlap && subunitOverlap) return true;
   }
-
   return false;
 }
-
-

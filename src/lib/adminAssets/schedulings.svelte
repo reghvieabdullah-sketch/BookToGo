@@ -122,7 +122,6 @@
 			});
 
 			if (response.ok) {
-				console.log('Closure saved successfully');
 				// Reset form
 				invalidate('layout:dashboard');
 				selectedCourtID = '';

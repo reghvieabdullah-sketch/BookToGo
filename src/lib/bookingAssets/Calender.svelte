@@ -9,8 +9,10 @@
 	import { onMount } from 'svelte';
 
 	let { bookingData, settingsData, venueData } = $props();
-	let currentMonth = $derived($bookingDayData.date?.getUTCMonth() ?? new Date().getUTCMonth());
-	let currentYear = $derived($bookingDayData.date?.getUTCFullYear() ?? new Date().getUTCFullYear());
+	
+	// Use state instead of derived for month/year navigation
+	let currentMonth = $state($bookingDayData.date?.getUTCMonth() ?? new Date().getUTCMonth());
+	let currentYear = $state($bookingDayData.date?.getUTCFullYear() ?? new Date().getUTCFullYear());
 	let calendarDays = $derived(generateCalendarDays(currentMonth, currentYear));
 
 	// --- Helper: format date in YYYY-MM-DD (UTC) ---
@@ -21,6 +23,8 @@
 	function setDayBooking(date: Date) {
 		const key = formatDateUTC(date);
 		const entries = bookingData ? (bookingData[key] ?? []) : [];
+		console.log(bookingData);
+		
 		$bookingDayData = { date, entries };
 	}
 
@@ -82,22 +86,23 @@
 	}
 
 	async function refetchBookingData() {
-		const startUTC = new Date(Date.UTC(currentYear, currentMonth, 1)).toISOString();
-		const endUTC = new Date(Date.UTC(currentYear, currentMonth + 1, 0)).toISOString();
 
-		bookingData = await fetch(
-			`/api/v1/bookings/${venueData?.venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startUTC}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endUTC}`
-		).then(res => res.json());
+		const startDate = new Date(currentYear, currentMonth, 1);
+		const endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+		console.warn(`refetching from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+		
+		const response = await fetch(
+			`/api/v1/bookings/${venueData?.venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}`
+		);
+		bookingData = await response.json();
+		console.log(bookingData);
+		
 	}
 
 	async function previousMonth() {
 		const todayUTC = new Date();
 		todayUTC.setUTCHours(0, 0, 0, 0);
 
-		if (
-			currentYear < todayUTC.getUTCFullYear() ||
-			(currentYear === todayUTC.getUTCFullYear() && currentMonth <= todayUTC.getUTCMonth())
-		) return;
 
 		if (currentMonth === 0) {
 			currentMonth = 11;
@@ -125,7 +130,7 @@
 
 	function bookedPercentageForDate(date: Date) {
 		if (!date) return 0;
-
+		
 		const weekday = date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' }).toLowerCase();
 		const daySettings = settingsData?.daySettings?.[weekday] ?? {};
 		const slotGenerationValue = settingsData?.slotGenerationInterval ?? 60;
@@ -208,13 +213,17 @@
 				>
 					<span class="z-10">{day?.day || ''}</span>
 
-					{#if day?.date && bookedPercentageForDate(day.date) > 0}
+					{#if day?.date}
+					{@const bookedPercent = bookedPercentageForDate(day.date)}
+						{#if bookedPercent > 0}
 						<span
 							class="pointer-events-none absolute bottom-0 left-0 z-0 w-full bg-primary/20"
-							style="height: {bookedPercentageForDate(day.date)}%;"
+							style="height: {bookedPercent}%;"
 							aria-hidden="true"
 						></span>
+						{/if}
 					{/if}
+
 				</button>
 			{/each}
 		</div>

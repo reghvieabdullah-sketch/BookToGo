@@ -22,9 +22,6 @@
 		return Object.values(bookingData).flat();
 	});
 
-	$effect(() => {
-		console.log('Flattened bookings:', flattenedBookings());
-	});
 
 	let selectedBooking = $state<BookingEntry | null>(null);
 	let isMobile = $state(false);

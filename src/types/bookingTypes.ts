@@ -111,7 +111,7 @@ export interface BookingEntry {
   payment?: PaymentInfo;
 }
 
-export interface BookingsByDate { date: Date, entries: BookingEntry[]; }
+export interface BookingsByDate { date: Date, entries: BookingEntry[]; } // for bookingDayDate
 
 // The return type of get_bookings_by_day_for_venue
 export interface BookingsForDateRange {
