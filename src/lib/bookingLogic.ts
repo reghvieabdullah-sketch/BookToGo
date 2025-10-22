@@ -37,8 +37,10 @@ export function hasBookingConflict(dayKey: string, daySettings: daySettingsType,
   const closureConflict = conflictWithinClosures(allCourtsWithClosures, attemptedBooking);
   const outsideHours = !withinOpenHours(daySettings, dayKey, attemptedBooking);
   const bookingConflict = conflictWithBookings(bookings.map(x => x.details), attemptedBooking);
-  
-  return ( bookingConflict || closureConflict || outsideHours)
+  const flags = {bookingConflict, closureConflict, outsideHours}
+  return {conflicts: ( bookingConflict || closureConflict || outsideHours),
+      flags: Object.entries(flags).values()
+  }
 }
 
 

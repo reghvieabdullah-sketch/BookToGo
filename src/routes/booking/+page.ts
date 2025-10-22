@@ -10,6 +10,8 @@ import type { PageLoad } from "./$types";
 import { bookingDayData } from "$lib/bookingAssets/bookingStore";
 import { getStartEndDayOfTimeStamp } from "$lib/utils/timeUtils";
 
+export const ssr = false;
+
 export const load: PageLoad = async ({ fetch, parent, url }) => {
   const parentData = await parent();
   let venueID = url.searchParams.get(QUERY_PARAM_VENUE_ID);
@@ -20,14 +22,17 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
   const dateParam = url.searchParams.get(QUERY_PARAM_BOOKING_DATE);
   const targetDate = dateParam ? new Date(dateParam) : new Date();
   const { startDate, endDate } = getStartEndDayOfTimeStamp(targetDate);
+  console.warn('got start end days as ', startDate, ' AND ', endDate);
+  
+  // maybe consider adding a possible date check when passed via url
   const response = await fetch(
     `/api/v1/bundler/${venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}`
-  );
-  const { bookingData, closureData } = await response.json();
-  if (isBrowser()) bookingDayData.set({ date: targetDate, entries: [] });
-  console.log(bookingData, closureData);
+  );3
   
-  return {
+  const { bookingData, closureData } = await response.json();
+  console.log(`for ${startDate.toISOString()} to ${endDate.toISOString()} we got ${bookingData}`);
+  if (isBrowser()) bookingDayData.set({ date: targetDate, entries: [] });
+    return {
     bookingData: bookingData as BookingsForDateRange,
     closureData: closureData as CourtWithClosures[],
   };

@@ -46,9 +46,7 @@
     const sign = offsetMinutes <= 0 ? "+" : "-";
 
     // Return ISO-like time string with local timezone
-    const r_ = `${hoursStr.padStart(2,'0')}:${minutesStr.padStart(2,'0')}:00${sign}${offsetHours}:${offsetMins}`;
-	console.log('we got the timestamped updated as: ', r_);
-	return r_;
+	return `${hoursStr.padStart(2,'0')}:${minutesStr.padStart(2,'0')}:00${sign}${offsetHours}:${offsetMins}`;
 	
 }
 

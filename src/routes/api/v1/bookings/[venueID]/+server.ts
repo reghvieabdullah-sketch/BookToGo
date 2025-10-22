@@ -13,7 +13,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
     if (!dateStart || !dateEnd) console.error('Invalid dates ', dateStart, ' ', dateEnd);
     
     const cacheKey = `booking:${locals.venueURL}:${dateStart}:${dateEnd}`;
-
+    
     const cached = await getCachedData(cacheKey);
     if (cached) return json(cached)
     const result = await getVenueBookingsForDateRange(locals.supabase, venueID, dateStart, dateEnd);

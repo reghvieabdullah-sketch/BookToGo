@@ -44,8 +44,9 @@ export async function insertVenueBookingWithPossibilityCheck(supabase: SupabaseC
   if (!isSameDay(bookingJSON.startTime, bookingJSON.endTime)) return { data: null, error: "Multi-day booking not supported." };
   const possible = ensureValidCredentialsForBooking(venueRes.data.courtsData, bookingJSON);
   if (!possible) return { data: null, error: 'Credentials do not match on the server' };
-  const conflict = hasBookingConflict(timeStampToDayKey(bookingJSON.startTime), venueRes.data.settingsData.daySettings, Object.values(bookingRes.data.bookingData ?? {}).flat() as BookingEntry[], { attemptedCourtID: bookingJSON.courtID, attemptedDate: timeStampToDateString(bookingJSON.startTime),attemptedEndMinutes: HHMMToMinutes(bookingJSON.endTime.split("T")[1]), attemptedStartMinutes: HHMMToMinutes(bookingJSON.startTime.split("T")[1]), attemptedSubUnits: bookingJSON.units.subUnits.map(c => c.id)}, bookingRes.data.closureData)
-  if (conflict) return { data: false, error: null };
+  // TODO - show what actually conflicted
+  const conflictHandler = hasBookingConflict(timeStampToDayKey(bookingJSON.startTime), venueRes.data.settingsData.daySettings, Object.values(bookingRes.data.bookingData ?? {}).flat() as BookingEntry[], { attemptedCourtID: bookingJSON.courtID, attemptedDate: timeStampToDateString(bookingJSON.startTime),attemptedEndMinutes: HHMMToMinutes(bookingJSON.endTime.split("T")[1]), attemptedStartMinutes: HHMMToMinutes(bookingJSON.startTime.split("T")[1]), attemptedSubUnits: bookingJSON.units.subUnits.map(c => c.id)}, bookingRes.data.closureData)
+  if (conflictHandler.conflicts) return { data: conflictHandler.flags, error: null };
   return runRPC(supabase, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, { p_venue_id: venueID, p_attempted_booking: bookingJSON, p_user_id: userID });
 }
 

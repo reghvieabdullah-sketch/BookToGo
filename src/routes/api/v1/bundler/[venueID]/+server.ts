@@ -13,7 +13,6 @@ export const GET: RequestHandler = async ({ url, params, locals }) => {
     if (cache) return json(cache);
 
     const result = await getBookingClosureBundle(locals.supabase, venueID, dateStart, dateEnd);
-    console.log(result);
     
     if (result.error) return json({ error: result.error }, { status: 400 });
     await setCachedData(cacheKey, result.data, 36000);

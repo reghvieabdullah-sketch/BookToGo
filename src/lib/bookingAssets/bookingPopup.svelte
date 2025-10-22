@@ -161,7 +161,7 @@ function generateTimeOptions() {
 				dayName,
 				settingsData.daySettings,
 				$bookingDayData.entries,
-				{attemptedCourtID: selectedCourtId!, attemptedDate: $bookingDayData.date.toDateString(), attemptedEndMinutes: time + durationMinutes, attemptedStartMinutes: time, attemptedSubUnits: selectedSubUnitIds}, closureData)
+				{attemptedCourtID: selectedCourtId!, attemptedDate: $bookingDayData.date.toDateString(), attemptedEndMinutes: time + durationMinutes, attemptedStartMinutes: time, attemptedSubUnits: selectedSubUnitIds}, closureData).conflicts
 			conflict ? time += settingsData.bookingCoolDown! : options.push(minutesToHHMM(time));
 			time += interval;
 		}

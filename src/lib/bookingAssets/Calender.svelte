@@ -9,7 +9,7 @@
 	import { onMount } from 'svelte';
 
 	let { bookingData, settingsData, venueData } = $props();
-	
+	// TODO - fix the bug where when its directed to that page, and for that we have to pass in the bookingData acutally thru layouts
 	// Use state instead of derived for month/year navigation
 	let currentMonth = $state($bookingDayData.date?.getUTCMonth() ?? new Date().getUTCMonth());
 	let currentYear = $state($bookingDayData.date?.getUTCFullYear() ?? new Date().getUTCFullYear());
@@ -130,6 +130,7 @@
 
 	function bookedPercentageForDate(date: Date) {
 		if (!date) return 0;
+		console.log(`we are checking at ${date.toISOString()}`);
 		
 		const weekday = date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' }).toLowerCase();
 		const daySettings = settingsData?.daySettings?.[weekday] ?? {};
