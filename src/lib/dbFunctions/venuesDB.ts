@@ -1,24 +1,9 @@
 import type { Closure, courtsType, CourtWithClosures, VenueData, VenueSettings } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX } from "$lib/constants/postgressFunctionConstants";
+import { runRPC, ensureArgs, type DBResult } from "./commonServerTypesAndFuncs";
 
-// IMPORTANT: All update functions are protected at the database level with ownership checks. Thus adding ownership checks here is redundant.
-
-// Common return type for DB operations
-type DBResult<T> = { data: T | null; error: string | null };
-
-
-async function runRPC<T>( supabase: SupabaseClient, fn: string, params: Record<string, any>, errorPrefix = ""){
-    const { data, error } = await supabase.rpc(fn, params);
-    if (error) return { data: null, error: `${errorPrefix ?? 'Error'}-${error}`}
-    return { data, error: null };
-}
-
-function ensureArgs(args: Record<string, any>): string | null {
-    for (const [key, value] of Object.entries(args)) if (!value) return `Missing ${key}`
-    return null;
-}
-
+// IMPORTANT: All update functions are protected at the database level with ownership checks. Thus adding ownership checks here is redundant. well kindof but not for booking related logic, which is as to why its in a separate file
 
 
 /** Boolean returned indicating is the passed in userID is the ownersID. There is already a function at db level to check verification. But this is added for sake of completeness */

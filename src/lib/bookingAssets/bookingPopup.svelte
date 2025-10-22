@@ -156,7 +156,6 @@ function generateTimeOptions() {
 		const interval = settingsData.slotGenerationInterval || 60;
 		const durationMinutes = HHMMToMinutes(selectedDuration);
 		let time = openingTime;
-
 		while (time <= closingTime - durationMinutes) {
 			const conflict = hasBookingConflict(
 				dayName,
@@ -209,11 +208,13 @@ function generateTimeOptions() {
 				minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration))
 			),
 			status: 'pending',
-			units: [
-			{ title: selectedUnit?.title!, unitID: selectedUnit?.unitID!, subUnits: selectedSubUnits }]
+			units: 
+			{ title: selectedUnit?.title!, unitID: selectedUnit?.unitID!, subUnits: selectedSubUnits }
 		};
 		saveBooking({selectedCourtId, selectedUnitId, selectedSubUnitIds, selectedDuration, selectedTime});
 		showConfirmation = true;
+		console.error('sending this ', booking);
+		
 		pendingBooking = booking;
 	}
 

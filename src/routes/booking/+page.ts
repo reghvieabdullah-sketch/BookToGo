@@ -25,7 +25,8 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
   );
   const { bookingData, closureData } = await response.json();
   if (isBrowser()) bookingDayData.set({ date: targetDate, entries: [] });
-
+  console.log(bookingData, closureData);
+  
   return {
     bookingData: bookingData as BookingsForDateRange,
     closureData: closureData as CourtWithClosures[],

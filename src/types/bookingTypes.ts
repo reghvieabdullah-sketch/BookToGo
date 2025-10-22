@@ -82,7 +82,7 @@ export interface BookingDetails {
   startTime: string; // ISO timestamp
   endTime: string;   // ISO timestamp
   status: string;
-  units: Unit[]; // single unit per booking
+  units: Unit; // single unit per booking
 }
 
 // The user info

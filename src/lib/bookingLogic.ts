@@ -8,9 +8,6 @@ import type {
 } from "../types/bookingTypes";
 import { recurrenceEnum, courtStatusEnum } from "./constants/postgressFunctionConstants";
 import { utcToMinutes, parseTimeStringToUTCMinutes, doIntervalsOverlap, occursAtRecurrence, addMinutesToUTCTimestamp } from "./utils/timeUtils";
-// TODO - move the common type and ensure args function to a utils class
-// TODO - also it seems that my goofy ass decided to allow multi bookihgs. which in of itself is fine. but everywhere i have done the [0] thing, rather get rid of it entirey
-// and if i ever need to have multi booking, refactor the entire logic, rather than the messy [0] shit i was doing
 
 
 // Not meant to be exported, for single use case ONLY
@@ -25,15 +22,10 @@ interface bookingConflictType  {
 export function ensureValidCredentialsForBooking(courts: courtsType, bookingJSON: BookingDetails): boolean {
   const selectedCourt = courts.find(c => c.courtID === bookingJSON.courtID)
   if (!selectedCourt) return false;
-  // Only allow single unit bookings (i.e like full court, half court. not half/full courts simultanously). Works tested :)
-  // NOTE: this removes the possiblity of multi unit bookings. then why tf do we allow multi bookings in the current format. if we do [0] everywhere already? its a mess. get rid of it
-  // TODO: get rid of the damn multi array for units for a booking already. 
-  // TODO: make this return some less that a true false
-  // TODO: remove ALL business logic from the backend. while most have been removed. some still have to be removed. and their is some trailing dependencies as well
-  if (!bookingJSON || !bookingJSON.units || bookingJSON.units.length > 1) return false;
-  const subUnitIDs = selectedCourt.units?.find(u => u.unitID === bookingJSON.units[0].unitID)?.subUnits;  
+  if (!bookingJSON || !bookingJSON.units) return false;
+  const subUnitIDs = selectedCourt.units?.find(u => u.unitID === bookingJSON.units.unitID)?.subUnits;  
   if (!subUnitIDs) return false;
-  if (!bookingJSON.units[0].subUnits.every(su => subUnitIDs.some(su2 => su2.id === su.id))) return false; // all the booking subunit ids must exist within that subunit array
+  if (!bookingJSON.units.subUnits.every(su => subUnitIDs.some(su2 => su2.id === su.id))) return false; // all the booking subunit ids must exist within that subunit array
   return true;
 }
 // ------------------------- //
@@ -45,7 +37,8 @@ export function hasBookingConflict(dayKey: string, daySettings: daySettingsType,
   const closureConflict = conflictWithinClosures(allCourtsWithClosures, attemptedBooking);
   const outsideHours = !withinOpenHours(daySettings, dayKey, attemptedBooking);
   const bookingConflict = conflictWithBookings(bookings.map(x => x.details), attemptedBooking);
-  return  ( bookingConflict || closureConflict || outsideHours)
+  
+  return ( bookingConflict || closureConflict || outsideHours)
 }
 
 
@@ -83,7 +76,7 @@ function conflictWithBookings(bookings: BookingDetails[], attemptedBooking: book
     const existingEnd = utcToMinutes(booking.endTime);
     const overlap = doIntervalsOverlap(attemptedBooking.attemptedStartMinutes, attemptedBooking.attemptedEndMinutes, existingStart, existingEnd);
     const sameCourt = attemptedBooking.attemptedCourtID === booking.courtID;
-    const subunitIDs = booking.units[0]?.subUnits?.map((su) => su.id) ?? [];
+    const subunitIDs = booking.units.subUnits?.map((su) => su.id) ?? [];
     const subunitOverlap = attemptedBooking.attemptedSubUnits.some((id) =>subunitIDs.includes(id)) ||  booking.courtStatus !== courtStatusEnum.APPROVED;
     if (sameCourt && overlap && subunitOverlap) return true;
   }
