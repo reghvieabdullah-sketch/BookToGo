@@ -21,7 +21,7 @@ export const PUT: RequestHandler = async ({ locals, request, params }) => {
     const { venueID } = params;
     const closuresJSON = await request.json();
     const result = await updateVenueClosures(locals.supabase, venueID, closuresJSON);
-    const cacheKey = [`closures:${locals.venueURL}`, `bookingclosures:${locals.venueURL}:bundled`];
+    const cacheKey = [`closures:${locals.venueURL}`];
     if (result.error) {
         return json({ error: result.error }, { status: 400 });
     }
@@ -32,7 +32,7 @@ export const PUT: RequestHandler = async ({ locals, request, params }) => {
 export const DELETE: RequestHandler = async ({ locals, url }) => {
     const closureID = url.searchParams.get(QUERY_PARAM_VENUE_CLOSURE_ID);
     const result = await deleteVenueClosure(locals.supabase, closureID);
-    const cacheKey = [`closures:${locals.venueURL}`, `bookingclosures:${locals.venueURL}:bundled`];
+    const cacheKey = [`closures:${locals.venueURL}`];
     if (result.error) {
         return json({ error: result.error }, { status: 400 });
     }

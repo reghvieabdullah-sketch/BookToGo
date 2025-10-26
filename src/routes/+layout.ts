@@ -20,7 +20,7 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
   const supabaseInitEnd = performance.now();
 
   // --- Parallelized section ---
-  const venueURL = 'stmarybball'; // TODO: derive dynamically
+  const venueURL = 'stmarybball'; // NOTE: derive dynamically
 
   const parallelStart = performance.now();
   const [sessionRes, userRes, venueRes] = await Promise.all([

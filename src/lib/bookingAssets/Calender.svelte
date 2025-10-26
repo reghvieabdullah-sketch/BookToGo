@@ -9,7 +9,6 @@
 	import { onMount } from 'svelte';
 
 	let { bookingData, settingsData, venueData } = $props();
-	// TODO - fix the bug where when its directed to that page, and for that we have to pass in the bookingData acutally thru layouts
 	// Use state instead of derived for month/year navigation
 	let currentMonth = $state($bookingDayData.date?.getUTCMonth() ?? new Date().getUTCMonth());
 	let currentYear = $state($bookingDayData.date?.getUTCFullYear() ?? new Date().getUTCFullYear());
@@ -23,7 +22,7 @@
 	function setDayBooking(date: Date) {
 		const key = formatDateUTC(date);
 		const entries = bookingData ? (bookingData[key] ?? []) : [];
-		console.log(bookingData);
+		// console.log(bookingData);
 		
 		$bookingDayData = { date, entries };
 	}
@@ -130,19 +129,20 @@
 
 	function bookedPercentageForDate(date: Date) {
 		if (!date) return 0;
-		console.log(`we are checking at ${date.toISOString()}`);
 		
 		const weekday = date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' }).toLowerCase();
 		const daySettings = settingsData?.daySettings?.[weekday] ?? {};
 		const slotGenerationValue = settingsData?.slotGenerationInterval ?? 60;
-
+		// are fallbacks needed for slotgeneration, what if the owner does some shit yet doesnt want 60 min bookings
 		const openTime = daySettings.openTime ?? '00:00';
 		const closeTime = daySettings.closeTime ?? '23:59';
 
 		const totalSlots = (HHMMToMinutes(closeTime) - HHMMToMinutes(openTime)) / slotGenerationValue;
+		
 		const bookedSlots = bookingData?.[formatDateUTC(date)]?.length ?? 0;
-
+		
 		if (totalSlots === 0) return 0;
+		
 		return (bookedSlots / totalSlots) * 100;
 	}
 

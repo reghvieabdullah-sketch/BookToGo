@@ -48,6 +48,7 @@ export type VenueSettings = {
   maxBookingNoticeMinutes: number | null; // an input giving the maximum time in days to allow a booking to be booked. say (2 months before that time comes around)
   maxCancellationNoticeMinutes: number | null; // an input giving the maximum time in hours to allow a booking to be cancelled. say (1 hour before that time comes around)
   daySettings: daySettingsType | null; // this one we already handled
+  currency: string | null;
 };
 
 export type courtType = {
@@ -111,7 +112,7 @@ export interface BookingEntry {
   payment?: PaymentInfo;
 }
 
-export interface BookingsByDate { date: Date, entries: BookingEntry[]; } // for bookingDayDate
+export interface BookingsByDate { date: Date, entries: BookingDetails[]; } // for bookingDayDate
 
 // The return type of get_bookings_by_day_for_venue
 export interface BookingsForDateRange {

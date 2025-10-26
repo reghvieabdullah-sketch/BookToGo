@@ -1,6 +1,6 @@
 import type { BookingDetails, BookingEntry } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { FN_BOOKING_CLOSURE_GET, FN_VENUE_BOOKING_GET, FN_VENUE_BOOKING_INSERT, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, FN_VENUE_BOOKING_LIMIT, FN_VENUE_USER_BOOKINGS_GET } from "$lib/constants/postgressFunctionConstants";
+import { FN_BOOKING_CLOSURE_GET, FN_VENUE_BOOKING_GET, FN_VENUE_BOOKING_GET_FOR_DASHBOARD, FN_VENUE_BOOKING_INSERT, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, FN_VENUE_BOOKING_LIMIT, FN_VENUE_USER_BOOKINGS_GET } from "$lib/constants/postgressFunctionConstants";
 import { ensureValidCredentialsForBooking, hasBookingConflict } from "$lib/bookingLogic";
 import { getVenueBundled, getVenueSettings } from "./venuesDB";
 import { HHMMToMinutes, isSameDay, timeStampToDateString, timeStampToDayKey, utcToMinutes } from "$lib/utils/timeUtils";
@@ -42,12 +42,12 @@ export async function insertVenueBookingWithPossibilityCheck(supabase: SupabaseC
   if (bookingRes.error) return bookingRes;
   if (venueRes.error || !venueRes.data?.settingsData.daySettings) return venueRes;
   if (!isSameDay(bookingJSON.startTime, bookingJSON.endTime)) return { data: null, error: "Multi-day booking not supported." };
-  const possible = ensureValidCredentialsForBooking(venueRes.data.courtsData, bookingJSON);
-  if (!possible) return { data: null, error: 'Credentials do not match on the server' };
-  // TODO - show what actually conflicted
-  const conflictHandler = hasBookingConflict(timeStampToDayKey(bookingJSON.startTime), venueRes.data.settingsData.daySettings, Object.values(bookingRes.data.bookingData ?? {}).flat() as BookingEntry[], { attemptedCourtID: bookingJSON.courtID, attemptedDate: timeStampToDateString(bookingJSON.startTime),attemptedEndMinutes: HHMMToMinutes(bookingJSON.endTime.split("T")[1]), attemptedStartMinutes: HHMMToMinutes(bookingJSON.startTime.split("T")[1]), attemptedSubUnits: bookingJSON.units.subUnits.map(c => c.id)}, bookingRes.data.closureData)
+  const possible = ensureValidCredentialsForBooking(venueRes.data.courtsData, bookingJSON, venueRes.data.settingsData.currency);
+  if (!possible) return { data: null, error: 'Requirements do not match on the server!' };
+  const conflictHandler = hasBookingConflict(timeStampToDayKey(bookingJSON.startTime), venueRes.data.settingsData.daySettings, Object.values(bookingRes.data.bookingData ?? {}).flat() as BookingDetails[], { attemptedCourtID: bookingJSON.courtID, attemptedDate: timeStampToDateString(bookingJSON.startTime),attemptedEndMinutes: HHMMToMinutes(bookingJSON.endTime.split("T")[1]), attemptedStartMinutes: HHMMToMinutes(bookingJSON.startTime.split("T")[1]), attemptedSubUnits: bookingJSON.units.subUnits.map(c => c.id)}, bookingRes.data.closureData)
   if (conflictHandler.conflicts) return { data: conflictHandler.flags, error: null };
-  return runRPC(supabase, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, { p_venue_id: venueID, p_attempted_booking: bookingJSON, p_user_id: userID });
+  const { data, error } = await runRPC(supabase, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, { p_venue_id: venueID, p_attempted_booking: bookingJSON, p_user_id: userID });
+  return (error || data === false) ? { data: null, error: 'Booking insert failed!'} : { data: possible, error: null }
 }
 
 
@@ -58,6 +58,13 @@ export async function getVenueBookingsForDateRange(supabase: SupabaseClient, ven
     return runRPC(supabase, FN_VENUE_BOOKING_GET, {p_venue_id: venueID, p_start_date: dateStart, p_end_date: dateEnd});
 }
 
+
+/**Gets a specific venue's booking by date range. No auth or type/null checks done.*/
+export async function getVenueBookingsForDateRangeAndDashboard(supabase: SupabaseClient, venueID: string | undefined, dateStart: string, dateEnd: string): Promise<DBResult<any>> {
+    const missing = ensureArgs({ p_venue_id: venueID, p_start_date: dateStart, p_end_date: dateEnd});
+    if (missing) return { data: null, error: missing };
+    return runRPC(supabase, FN_VENUE_BOOKING_GET_FOR_DASHBOARD, {p_venue_id: venueID, p_start_date: dateStart, p_end_date: dateEnd});
+}
 export async function getBookingClosureBundle(supabase: SupabaseClient, venueID: string | undefined, dateStart: string, dateEnd: string): Promise<DBResult<any>> {
     const missing = ensureArgs({ p_venue_id: venueID, p_start_date: dateStart, p_end_date: dateEnd });
     if (missing) return { data: null, error: missing};

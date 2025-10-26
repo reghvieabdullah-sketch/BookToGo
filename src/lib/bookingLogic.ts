@@ -1,3 +1,4 @@
+import { error } from "@sveltejs/kit";
 import type {
   BookingDetails,
   BookingEntry,
@@ -19,24 +20,31 @@ interface bookingConflictType  {
   attemptedDate: string;
 }
 
-export function ensureValidCredentialsForBooking(courts: courtsType, bookingJSON: BookingDetails): boolean {
-  const selectedCourt = courts.find(c => c.courtID === bookingJSON.courtID)
+export function ensureValidCredentialsForBooking(courts: courtsType, bookingJSON: BookingDetails, currency?: string): boolean | string {
+  if (!bookingJSON || !bookingJSON.units || !currency) return false;
+  const selectedCourt = courts.find(c => c.courtID === bookingJSON.courtID);
   if (!selectedCourt) return false;
-  if (!bookingJSON || !bookingJSON.units) return false;
-  const subUnitIDs = selectedCourt.units?.find(u => u.unitID === bookingJSON.units.unitID)?.subUnits;  
+  const subUnitIDs = selectedCourt.units?.find(u => u.unitID === bookingJSON.units.unitID)?.subUnits;
   if (!subUnitIDs) return false;
-  if (!bookingJSON.units.subUnits.every(su => subUnitIDs.some(su2 => su2.id === su.id))) return false; // all the booking subunit ids must exist within that subunit array
-  return true;
+  const bookingSubUnits = bookingJSON.units.subUnits;
+  if (!bookingSubUnits.length || !bookingSubUnits.every(su => subUnitIDs.some(su2 => su2.id === su.id))) return false;
+  const commonObjects = bookingSubUnits.filter(su => subUnitIDs.some(su2 => su2.id === su.id));
+  if (commonObjects.length === 0) return false;
+  const totalPrice = commonObjects.reduce((sum, item) => {
+    const price = Number(item.price);
+    return isNaN(price) ? sum : sum + price;
+  }, 0);
+  return totalPrice > 0 ? `${currency}-${totalPrice}` : false;
 }
+
 // ------------------------- //
 //     Master Validator      //
 // ------------------------- //
 
-export function hasBookingConflict(dayKey: string, daySettings: daySettingsType, bookings: BookingEntry[], attemptedBooking: bookingConflictType, allCourtsWithClosures: CourtWithClosures[]) {
-  // TODO - remove bloated bookingEntry, and instead Booking entry where relevant, strip out BookingEntry wherever possible, and remove this ugly Mapping shit 
+export function hasBookingConflict(dayKey: string, daySettings: daySettingsType, bookings: BookingDetails[], attemptedBooking: bookingConflictType, allCourtsWithClosures: CourtWithClosures[]) {
   const closureConflict = conflictWithinClosures(allCourtsWithClosures, attemptedBooking);
   const outsideHours = !withinOpenHours(daySettings, dayKey, attemptedBooking);
-  const bookingConflict = conflictWithBookings(bookings.map(x => x.details), attemptedBooking);
+  const bookingConflict = conflictWithBookings(bookings, attemptedBooking);
   const flags = {bookingConflict, closureConflict, outsideHours}
   return {conflicts: ( bookingConflict || closureConflict || outsideHours),
       flags: Object.entries(flags).values()

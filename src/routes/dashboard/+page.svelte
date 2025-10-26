@@ -38,7 +38,7 @@
 		return formData;
 	}
 	async function updateVenueConfig() {
-		// TODO - add better error handling and progress indicators, showing the update progress, additionally add reactive updates IF all responses return true
+		// NOTE - add better error handling and progress indicators, showing the update progress, additionally add reactive updates IF all responses return true
 		isUpdatingConfig = true;
 		finishedUpdating = false;
 		try {

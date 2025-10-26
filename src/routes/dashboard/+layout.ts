@@ -10,7 +10,7 @@ export const load: LayoutLoad = async ({ fetch, parent, depends, url }) => {
   depends('layout:dashboard')
   const dateParam = url.searchParams.get(QUERY_PARAM_BOOKING_DATE);
   const targetDate = dateParam ? new Date(dateParam) : new Date();
-
+  
   const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
   const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
 

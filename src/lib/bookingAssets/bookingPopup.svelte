@@ -17,15 +17,12 @@
 	import {
 		courtStatusEnum,
 		QUERY_PARAM_BOOKING_DATE,
-
-		QUERY_PARAM_BOOKING_INSERT_WITH_CHECK
-
 	} from '$lib/constants/postgressFunctionConstants';
 
 	export const onclose = () => {};
 
 	// Booking states
-	export let isLoggedIn = false; // TODO - change that to reflect from the store
+	export let isLoggedIn = false; 
 	export let venueData: VenueData;
 	export let settingsData: VenueSettings;
 	export let courtsData: courtsType;
@@ -39,17 +36,12 @@
 
 	async function attemptBooking(booking: BookingDetails): Promise<any> {
 		try {
-			const response = await fetch(`/api/v1/bookings/${venueData.venueID}?${QUERY_PARAM_BOOKING_INSERT_WITH_CHECK}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(booking)
-			});
-			$bookingDayData.entries = [...$bookingDayData.entries, { details: booking }]; // even if its a failure, we add it to the list for now. since the user would keep seeing the same booking otherwise.
-			// if (!response.ok) return false;
+			const response = await fetch(`/api/v1/bookings/${venueData.venueID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(booking) });
+			// Maybe its unnecessary to keep it like this, since below we only need the details, so maybe make the server only bookingdetails only, except when the owner goes to the dashboard.
+			$bookingDayData.entries = [...$bookingDayData.entries, booking]; // even if its a failure, we add it to the list for now. since the user would keep seeing the same booking otherwise.
 			// Assume passed the insertion checks if we get a 200 response
-			const r = await response.json();
+			const r =  await response.json();
+			console.log(r);
 			return r;
 		} catch (error) {
 			console.log('Error: ', error);
@@ -76,7 +68,9 @@
 			);
 		isConfirming = true;
 		const bookingPossible = await attemptBooking(pendingBooking);
-		if (typeof bookingPossible === 'boolean' && bookingPossible) {
+		console.log(bookingPossible);
+		
+		if (typeof bookingPossible === 'string') {
 			bookingResult = 'success';
 			bookingMessage = 'Your booking has been confirmed successfully! Redirecting...';
 			showConfirmation = false;
@@ -161,7 +155,7 @@ function generateTimeOptions() {
 				dayName,
 				settingsData.daySettings,
 				$bookingDayData.entries,
-				{attemptedCourtID: selectedCourtId!, attemptedDate: $bookingDayData.date.toDateString(), attemptedEndMinutes: time + durationMinutes, attemptedStartMinutes: time, attemptedSubUnits: selectedSubUnitIds}, closureData).conflicts
+				{attemptedCourtID: selectedCourtId!, attemptedDate: $bookingDayData.date.toISOString().split('T')[0], attemptedEndMinutes: time + durationMinutes, attemptedStartMinutes: time, attemptedSubUnits: selectedSubUnitIds}, closureData).conflicts
 			conflict ? time += settingsData.bookingCoolDown! : options.push(minutesToHHMM(time));
 			time += interval;
 		}
@@ -213,7 +207,6 @@ function generateTimeOptions() {
 		};
 		saveBooking({selectedCourtId, selectedUnitId, selectedSubUnitIds, selectedDuration, selectedTime});
 		showConfirmation = true;
-		console.error('sending this ', booking);
 		
 		pendingBooking = booking;
 	}
