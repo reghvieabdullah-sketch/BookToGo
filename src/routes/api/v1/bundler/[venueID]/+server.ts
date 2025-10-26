@@ -9,6 +9,8 @@ export const GET: RequestHandler = async ({ url, params, locals }) => {
     const dateStart = url.searchParams.get(QUERY_PARAM_VENUE_BOOKING_DATE_START) as string;
     const dateEnd = url.searchParams.get(QUERY_PARAM_VENUE_BOOKING_DATE_END) as string;
     const result = await getBookingClosureBundle(locals.supabase, venueID, dateStart, dateEnd);
+    console.log(JSON.stringify(result.data, null, 2));
+    
     if (result.error) return json({ error: result.error }, { status: 400 });
     return json(result.data, { status: 200 });
 };

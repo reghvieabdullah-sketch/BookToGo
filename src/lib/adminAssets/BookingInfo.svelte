@@ -22,8 +22,8 @@
 					<span class="font-semibold">Booking #{booking.details.bookingID}</span>
 					<span class="badge {getStatusBadgeClass(booking.details.status)}">{booking.details.status}</span>
 				</div>
-				<div class="mt-1 text-sm opacity-70">Type: {booking.details.unitName}</div>
-				<div class="mt-1 text-sm opacity-70">Units: {booking.details.units.join(', ')}</div>
+				<div class="mt-1 text-sm opacity-70">Type: {booking.details.units.title}</div>
+				<div class="mt-1 text-sm opacity-70">Units: {booking.details.units.subUnits.map(s => s.description).join(', ')}</div>
 			</div>
 			<div class="divider my-2"></div>
 			<div class="space-y-1 text-sm">
@@ -40,24 +40,26 @@
 				</div>
 			</div>
 			<div class="divider my-2"></div>
-			<div>
-				<h4 class="mb-2 text-sm font-semibold">Payment</h4>
-				<div class="space-y-1 text-sm">
-					<div class="flex items-center justify-between">
-						<strong>Amount:</strong>
-						<span class="font-mono">{booking.payment.currency} {booking.payment.amount.toFixed(2)}</span>
-					</div>
-					<div class="flex items-center justify-between">
-						<strong>Method:</strong> <span>{booking.payment.paymentMethod}</span>
-					</div>
-					<div class="flex items-center justify-between">
-						<strong>Status:</strong>
-						<span class="badge badge-sm {getPaymentStatusBadgeClass(booking.payment.status)}">
-							{booking.payment.status}
-						</span>
+			{#if booking.payment}
+				<div>
+					<h4 class="mb-2 text-sm font-semibold">Payment</h4>
+					<div class="space-y-1 text-sm">
+						<div class="flex items-center justify-between">
+							<strong>Amount:</strong>
+							<span class="font-mono">{booking.payment.currency} {booking.payment.amount?.toFixed(2)}</span>
+						</div>
+						<div class="flex items-center justify-between">
+							<strong>Method:</strong> <span>{booking.payment.paymentMethod}</span>
+						</div>
+						<div class="flex items-center justify-between">
+							<strong>Status:</strong>
+							<span class="badge badge-sm {getPaymentStatusBadgeClass(booking.payment.status)}">
+								{booking.payment.status}
+							</span>
+						</div>
 					</div>
 				</div>
-			</div>
+			{/if}
 			<div class="divider my-2"></div>
 			<div class="flex flex-row gap-2">
 				<button class="btn flex-1 btn-sm btn-error" on:click={handleCancel}> Cancel </button>
