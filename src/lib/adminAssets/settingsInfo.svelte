@@ -1,5 +1,4 @@
 <script lang="ts">
-	// TODO - add a check if the owner accidently set open time > close time, which cannot be possible
 	// TODO - create a home page.
 	// TODO - add the payment creds detail info into the dashboard page
 	import { dayNamesFull } from '$lib/constants/dayMonthconstants';

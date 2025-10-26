@@ -53,13 +53,13 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 
   const totalEnd = performance.now();
 
-  console.log(`[layout timings]
-  Supabase init: ${(supabaseInitEnd - supabaseInitStart).toFixed(2)} ms
-  Parallel block (session + user + venue fetch): ${(parallelEnd - parallelStart).toFixed(2)} ms
-  response.json(): ${(jsonParseEnd - jsonParseStart).toFixed(2)} ms
-  Store set: ${(storeEnd - storeStart).toFixed(2)} ms
-  TOTAL layout load: ${(totalEnd - t0).toFixed(2)} ms
-  `);
+  // console.log(`[layout timings]
+  // Supabase init: ${(supabaseInitEnd - supabaseInitStart).toFixed(2)} ms
+  // Parallel block (session + user + venue fetch): ${(parallelEnd - parallelStart).toFixed(2)} ms
+  // response.json(): ${(jsonParseEnd - jsonParseStart).toFixed(2)} ms
+  // Store set: ${(storeEnd - storeStart).toFixed(2)} ms
+  // TOTAL layout load: ${(totalEnd - t0).toFixed(2)} ms
+  // `);
 
   return {
     session,

@@ -26,7 +26,7 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
   );
   console.log(`find for ${startDate.toISOString()} to ${endDate.toISOString()} and got...`);
   const { bookingData, closureData } = await response.json();
-  console.log(bookingData );
+  console.log(bookingData, closureData, ' is fixed');
   
   if (isBrowser()) bookingDayData.set({ date: targetDate, entries: [] });
     return {

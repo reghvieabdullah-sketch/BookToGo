@@ -135,7 +135,6 @@
 function generateTimeOptions() {
 	const start = performance.now(); // start timer
 
-	try {
 		if (!settingsData?.daySettings || !$bookingDayData?.date) return timeOptions = [];
 
 		const dayName = $bookingDayData.date.toLocaleDateString('en-LK', { weekday: 'long' }).toLowerCase();
@@ -143,7 +142,8 @@ function generateTimeOptions() {
 
 		if (!daySettings?.is_day_bookable || !daySettings.openTime || !daySettings.closeTime)
 			return timeOptions = [];
-
+		console.log(bookingDayData, closureData, ' hi bois');
+		
 		const options: string[] = [];
 		const openingTime = parseTimeStringToUTCMinutes(daySettings.openTime);
 		const closingTime = parseTimeStringToUTCMinutes(daySettings.closeTime);
@@ -161,10 +161,6 @@ function generateTimeOptions() {
 		}
 
 		timeOptions = options;
-	} finally {
-		const end = performance.now();
-		// console.log(`[PERF] generateTimeOptions executed in ${(end - start).toFixed(2)} ms`);
-	}
 }
 
 	$: (selectedDuration, $bookingDayData, selectedSubUnits, generateTimeOptions(), calculateTotalPrice());
@@ -191,7 +187,6 @@ function generateTimeOptions() {
 		totalPrice = selectedSubUnits.reduce((sum, subUnit) => sum + subUnit.price, 0) * durationHours;
 	}
 
-	// TODO - add a price check at the server.
 	async function handleBooking() {
 		const booking = {
 			courtStatus: selectedCourt?.approvalStatus!,
