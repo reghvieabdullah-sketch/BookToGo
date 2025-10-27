@@ -1,6 +1,6 @@
 <script lang="ts">
 	import BookIcon from '$lib/icons/BookIcon.svelte';
-	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate, parseTimeStringToUTCMinutes, localTimeToUTC, combineUTCDateAndTime } from '$lib/utils/timeUtils';
+	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate, parseTimeStringToUTCMinutes, localTimeToUTC, combineUTCDateAndTime, timeStringToLocal } from '$lib/utils/timeUtils';
 	import GrabHandleIcon from '$lib/icons/GrabHandleIcon.svelte';
 	import { bookingDayData } from './bookingStore';
 	import { hasBookingConflict } from '$lib/bookingLogic';
@@ -279,7 +279,7 @@ function generateTimeOptions() {
 				</label>
 				<select id="time-select" bind:value={selectedTime} class="select-bordered select select-sm">
 					{#each timeOptions as timeOption}
-						<option value={timeOption}>{to12HourFormat(timeOption)}</option>
+						<option value={timeOption}>{timeStringToLocal(timeOption)}</option>
 					{/each}
 				</select>
 			</div>

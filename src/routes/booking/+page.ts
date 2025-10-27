@@ -24,9 +24,7 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
   const response = await fetch(
     `/api/v1/bundler/${venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}`
   );
-  console.log(`find for ${startDate.toISOString()} to ${endDate.toISOString()} and got...`);
   const { bookingData, closureData } = await response.json();
-  console.log(bookingData, closureData, ' is fixed');
   
   if (isBrowser()) bookingDayData.set({ date: targetDate, entries: [] });
     return {

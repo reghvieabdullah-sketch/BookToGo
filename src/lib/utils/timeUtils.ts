@@ -158,3 +158,19 @@ export function getStartEndDayOfTimeStamp(targetDate: Date | string | number) {
     endDate: new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999),
   };
 }
+
+export function timeStringToLocal(timeString) {
+    const [hours, minutes, seconds] = timeString.split(':').map(Number);
+    const now = new Date();
+    const utcDate = new Date(Date.UTC(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        hours,
+        minutes,
+        seconds || 0
+    ));
+    
+    // Format without seconds, 12-hour clock with AM/PM
+    return utcDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+}
