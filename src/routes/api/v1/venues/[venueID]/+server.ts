@@ -7,17 +7,17 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 // In your API route - Much cleaner!
 export const GET: RequestHandler = async ({ locals, params, url }) => {
     const { venueID } = params;
-    const getBundledData = url.searchParams.get(QUERY_PARAM_VENUE_GET_BUNDLE);
-    const requestedBundle = getBundledData === '1';
+    const requestedBundle = QUERY_PARAM_VENUE_GET_BUNDLE in url.searchParams;
     const cacheKey = `venue:${locals.venueURL}:${requestedBundle ? 'bundled' : 'general'}`;
-
+    
     const cached = await getCachedData(cacheKey);
     if (cached) return json(cached);
 
-    const result = requestedBundle
+    const result = !requestedBundle
         ? await getVenueBundled(locals.supabase, venueID)
         : await getVenueGeneralSettings(locals.supabase, venueID);
-
+    console.log(result);
+    
     if (result.error) return json({ error: result.error }, { status: 400 });
     await setCachedData(cacheKey, result.data, 3600); // Cache for 10 hours
     return json(result.data, { status: 200 });

@@ -26,7 +26,7 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
   const [sessionRes, userRes, venueRes] = await Promise.all([
     supabase.auth.getSession(),
     supabase.auth.getUser(),
-    fetch(`/api/v1/venues/${venueURL}?${QUERY_PARAM_VENUE_GET_BUNDLE}=1`)
+    fetch(`/api/v1/venues/${venueURL}?${QUERY_PARAM_VENUE_GET_BUNDLE}`)
   ]);
   const parallelEnd = performance.now();
 
@@ -39,9 +39,10 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
   } = userRes;
 
   const jsonParseStart = performance.now();
-  const { venueData, courtsData, settingsData } = await venueRes.json();
+  const r = await venueRes.json();
+  const { venueData, courtsData, settingsData } = r
   const jsonParseEnd = performance.now();
-
+  
   const storeStart = performance.now();
   if (isBrowser()) {
     venueDataStore.set(venueData);
