@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	const onTestMode = import.meta.env.VITE_TEST_MODE;
+	const onTestMode = false;
 	let carouselElement: HTMLDivElement;
 	let showStickyButton = $state(false);
 	let heroSection: HTMLElement;
