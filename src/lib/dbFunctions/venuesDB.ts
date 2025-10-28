@@ -51,6 +51,8 @@ export async function uploadVenueImages(supabase: SupabaseClient, venueID: strin
             .getPublicUrl(`${venueID}/${fileName}`).data.publicUrl;
         urls.push(publicUrl);
     }
+    console.log(`we got urls as ${urls}`);
+    
     return urls;
 }
 

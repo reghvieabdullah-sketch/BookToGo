@@ -3,16 +3,75 @@
 	let selectedFiles: File[] = [];
 	export let imageBlobs: Blob[];
 
+	// Exported list of allowed formats (extensions without dot). Parent can override.
+	export let allowedImageFormats: string[] = ['jpg', 'webp'];
+
+	// TODO - import and create the record from the allowed formats within the postgress constants file.
+	const extToAccept: Record<string, string[]> = {
+		jpg: ['.jpg', '.jpeg', 'image/jpeg'],
+		jpeg: ['.jpg', '.jpeg', 'image/jpeg'],
+		png: ['.png', 'image/png'],
+		webp: ['.webp', 'image/webp'],
+		gif: ['.gif', 'image/gif'],
+		svg: ['.svg', 'image/svg+xml'],
+		bmp: ['.bmp', 'image/bmp'],
+		avif: ['.avif', 'image/avif'],
+		ico: ['.ico', 'image/vnd.microsoft.icon']
+	};
+
+	// Build the accept string from allowedImageFormats
+	function buildAcceptString(formats: string[]) {
+		const tokens = new Set<string>();
+		for (const f of formats) {
+			const key = f.toLowerCase().replace(/^\./, '');
+			if (extToAccept[key]) {
+				extToAccept[key].forEach((t) => tokens.add(t));
+			} else {
+				// fallback to extension token
+				tokens.add('.' + key);
+			}
+		}
+		return Array.from(tokens).join(',');
+	}
+
+	const acceptString = buildAcceptString(allowedImageFormats);
+
+	function fileAllowed(file: File) {
+		const lowerType = (file.type || '').toLowerCase();
+		const name = file.name.toLowerCase();
+
+		// check mime type first
+		for (const fmt of allowedImageFormats) {
+			const key = fmt.toLowerCase().replace(/^\./, '');
+			const tokens = extToAccept[key] ?? ['.' + key];
+			if (tokens.some((t) => t.startsWith('image/') && lowerType === t)) return true;
+		}
+
+		// fallback to extension check
+		return allowedImageFormats.some((fmt) => {
+			const ext = fmt.toLowerCase().replace(/^\./, '');
+			return name.endsWith('.' + ext) || (ext === 'jpg' && (name.endsWith('.jpeg')));
+		});
+	}
+
 	async function addHomePageImage() {
 		const input = document.createElement('input');
 		input.type = 'file';
 		input.multiple = true;
-		input.accept = 'image/*';
+		input.accept = acceptString;
 		input.onchange = async (e) => {
 			const target = e.target as HTMLInputElement;
 			if (!target.files) return;
 
-			const newFiles = Array.from(target.files);
+			const incoming = Array.from(target.files);
+			// filter to allowed formats
+			const newFiles = incoming.filter((f) => fileAllowed(f));
+
+			if (newFiles.length === 0) {
+				// nothing allowed — you could show a UI toast here instead
+				return;
+			}
+
 			selectedFiles.push(...newFiles);
 
 			// wait until all FileReader tasks finish

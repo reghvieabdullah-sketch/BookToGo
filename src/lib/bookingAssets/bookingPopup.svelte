@@ -315,7 +315,7 @@ function generateTimeOptions() {
 					</p>
 				</div>
 				<div class="text-xl font-bold text-primary">
-					LKR {totalPrice}
+					{settingsData.currency} {totalPrice}
 				</div>
 			</div>
 		</div>
