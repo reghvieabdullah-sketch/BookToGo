@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { VENUE_IMAGE_BUCKET_FORMATS } from "$lib/constants/postgressFunctionConstants";
+
 	export let homePageImages: string[] = [];
 	let selectedFiles: File[] = [];
 	export let imageBlobs: Blob[];
@@ -6,18 +8,39 @@
 	// Exported list of allowed formats (extensions without dot). Parent can override.
 	export let allowedImageFormats: string[] = ['jpg', 'webp'];
 
-	// TODO - import and create the record from the allowed formats within the postgress constants file.
-	const extToAccept: Record<string, string[]> = {
-		jpg: ['.jpg', '.jpeg', 'image/jpeg'],
-		jpeg: ['.jpg', '.jpeg', 'image/jpeg'],
-		png: ['.png', 'image/png'],
-		webp: ['.webp', 'image/webp'],
-		gif: ['.gif', 'image/gif'],
-		svg: ['.svg', 'image/svg+xml'],
-		bmp: ['.bmp', 'image/bmp'],
-		avif: ['.avif', 'image/avif'],
-		ico: ['.ico', 'image/vnd.microsoft.icon']
+	const IMAGE_MIME_MAP: Record<string, string> = {
+		jpg: 'image/jpeg',
+		jpeg: 'image/jpeg',
+		png: 'image/png',
+		webp: 'image/webp',
+		gif: 'image/gif',
+		svg: 'image/svg+xml',
+		bmp: 'image/bmp',
+		avif: 'image/avif',
+		ico: 'image/vnd.microsoft.icon'
 	};
+
+
+	// TODO - import and create the record from the allowed formats within the postgress constants file.
+	function generateExtToAccept(formats: string[]): Record<string, string[]> {
+		const extToAccept: Record<string, string[]> = {};
+
+		for (const ext of formats) {
+			const mime = IMAGE_MIME_MAP[ext];
+			if (!mime) continue;
+
+			// handle jpg/jpeg grouping
+			if (ext === 'jpg' || ext === 'jpeg') {
+				extToAccept[ext] = ['.jpg', '.jpeg', 'image/jpeg'];
+			} else {
+				extToAccept[ext] = [`.${ext}`, mime];
+			}
+		}
+
+		return extToAccept;
+	}
+
+	const extToAccept = generateExtToAccept(VENUE_IMAGE_BUCKET_FORMATS);
 
 	// Build the accept string from allowedImageFormats
 	function buildAcceptString(formats: string[]) {

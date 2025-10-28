@@ -1,7 +1,9 @@
 <script lang="ts">
 	import AddIcon from '$lib/icons/AddIcon.svelte';
 	import CrossIcon from '$lib/icons/CrossIcon.svelte';
-
+	import MaiIcon from '$lib/icons/maiIcon.svelte';
+	import PhoneIcon from '$lib/icons/phoneIcon.svelte';
+	import type { Component, ComponentType } from 'svelte';
 	let showAddContactModal = false;
 	export let contactDetails: {
 		icon: string;
@@ -11,11 +13,18 @@
 
 	let newContactType = 'phone';
 	let newContactDescription = '';
-
+	const components: Record<string, Component> = {
+		mail: MaiIcon,
+		phone: PhoneIcon
+	};
 	function openAddContactModal() {
 		showAddContactModal = true;
 		newContactType = 'phone';
 		newContactDescription = '';
+	}
+
+	export function getComponent(key: string): Component | null {
+		return components[key] ?? null;
 	}
 
 	const contactTypes = [
@@ -60,11 +69,18 @@
 		{#if contactDetails.length > 0}
 			<div class="space-y-3 sm:space-y-4">
 				{#each contactDetails as contact, index}
+					{@const component = getComponent(contact.icon)}
 					<div class="card border border-base-300 bg-base-200">
 						<div class="card-body p-3 sm:p-4">
 							<div class="flex items-center justify-between gap-2">
 								<div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-									<span class="text-xl sm:text-3xl flex-shrink-0">{contact.icon}</span>
+									<span class="text-xl sm:text-3xl flex-shrink-0">
+										{#if component}
+											<svelte:component this={component} />
+										{:else}
+											{contact.icon}
+										{/if}
+									 </span>
 									<div class="min-w-0 flex-1">
 										<h4 class="text-xs sm:text-sm font-semibold text-primary">{contact.title}</h4>
 										<p class="text-sm sm:text-lg text-base-content break-words">{contact.description}</p>
