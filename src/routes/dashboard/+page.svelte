@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import AllBookings from '$lib/adminAssets/allBookings.svelte';
+	import PaymentsInfo from '$lib/adminAssets/paymentsInfo.svelte';
 	import Schedulings from '$lib/adminAssets/schedulings.svelte';
 	import SettingsInfo from '$lib/adminAssets/settingsInfo.svelte';
 	import ContactDetails from '$lib/configAssets/contactDetails.svelte';
@@ -126,6 +127,12 @@
 			name: 'Settings',
 			component: SettingsInfo,
 			props: { settings: venueSettingsCopy }
+		}, 
+			{
+			id: 'payment',
+			name: 'payment',
+			component: PaymentsInfo,
+			props: {  }
 		}
 	];
 

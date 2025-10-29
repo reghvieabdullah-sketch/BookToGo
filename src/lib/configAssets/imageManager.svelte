@@ -21,7 +21,6 @@
 	};
 
 
-	// TODO - import and create the record from the allowed formats within the postgress constants file.
 	function generateExtToAccept(formats: string[]): Record<string, string[]> {
 		const extToAccept: Record<string, string[]> = {};
 
