@@ -19,7 +19,7 @@
 			return bookingData;
 		}
 		// If it's an object grouped by date, flatten it
-		return Object.values(bookingData).flat();
+		return Object.values(bookingData ?? {}).flat();
 	});
 
 
