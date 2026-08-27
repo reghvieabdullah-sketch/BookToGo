@@ -25,6 +25,7 @@ export const FN_VENUE_SETTINGS_UPDATE = 'update_venue_settings';
 
 
 export const FN_BOOKING_CLOSURE_GET = 'get_booking_closure_bundle';
+export const FN_BOOKING_CLOSURE_GET_OWNER_DASHBOARD = 'get_booking_closure_bundle_dashboard';
 
 export const FN_VENUE_CLOSURES_GET = 'get_venue_closures'
 export const FN_VENUE_CLOSURES_UPDATE = 'update_all_venue_court_closures'
@@ -41,6 +42,7 @@ export const QUERY_PARAM_VENUE_BOOKING_DATE_START = 'p_start_date';
 export const QUERY_PARAM_VENUE_BOOKING_DATE_END = 'p_end_date';
 export const QUERY_PARAM_VENUE_CLOSURE_ID = 'p_closure_id';
 export const QUERY_PARAM_BOOKING_DATE = 'p_booking_date';
+export const QUERY_PARAM_BOOKING_CLOSURE_BUNDLE_DASHBOARD_TYPE = 'p_get_bookings_for_owner'
 export const QUERY_PARAM_BOOKING_DASHBOARD_TYPE = 'p_get_bookings_for_owner'
 export const FN_VENUE_BOOKING_GET_FOR_DASHBOARD = 'get_bookings_by_day_for_venue_for_dashboard'
 

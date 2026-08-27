@@ -161,7 +161,7 @@ function generateTimeOptions() {
 		
 		timeOptions = options;
 }
-	$: ($bookingDayData, $bookingPopupVisible, generateTimeOptions(), calculateTotalPrice(), console.log("WHAT THE FUCK IS GOING ON LOOK HERE", $bookingDayData.entries));
+	$: ($bookingDayData, $bookingPopupVisible, selectedCourt, selectedDuration, selectedSubUnits,  generateTimeOptions(), calculateTotalPrice(), console.log("WHAT THE FUCK IS GOING ON LOOK HERE", $bookingDayData.entries));
 
 	onMount(() => {
 		

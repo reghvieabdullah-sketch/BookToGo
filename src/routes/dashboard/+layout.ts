@@ -1,4 +1,4 @@
-import { QUERY_PARAM_VENUE_ID, QUERY_PARAM_BOOKING_DATE, QUERY_PARAM_VENUE_BOOKING_DATE_START, QUERY_PARAM_VENUE_BOOKING_DATE_END } from "$lib/constants/postgressFunctionConstants";
+import { QUERY_PARAM_VENUE_ID, QUERY_PARAM_BOOKING_DATE, QUERY_PARAM_VENUE_BOOKING_DATE_START, QUERY_PARAM_VENUE_BOOKING_DATE_END, QUERY_PARAM_BOOKING_CLOSURE_BUNDLE_DASHBOARD_TYPE } from "$lib/constants/postgressFunctionConstants";
 import type { LayoutLoad } from './$types'
 
 export const load: LayoutLoad = async ({ fetch, parent, depends, url }) => {
@@ -15,7 +15,7 @@ export const load: LayoutLoad = async ({ fetch, parent, depends, url }) => {
   const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
 
   const response = await fetch(
-    `/api/v1/bundler/${venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}`
+    `/api/v1/bundler/${venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}&${QUERY_PARAM_BOOKING_CLOSURE_BUNDLE_DASHBOARD_TYPE}=true`
   );
 
 
