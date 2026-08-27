@@ -229,7 +229,7 @@ function generateTimeOptions() {
 					{formatDate($bookingDayData.date.toLocaleDateString('en-LK').split('T')[0])}
 				</div>
 				<div class="px-3 py-1 text-base">
-					{to12HourFormat(selectedTime)} - {to12HourFormat(
+					{timeStringToLocal(selectedTime)} - {timeStringToLocal(
 						minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration))
 					)}
 				</div>
@@ -282,7 +282,7 @@ function generateTimeOptions() {
 				</label>
 				<select id="time-select" bind:value={selectedTime} class="select-bordered select select-sm">
 					{#each timeOptions as timeOption}
-						<option value={timeOption}>{timeOption}</option>
+						<option value={timeOption}>{timeStringToLocal(timeOption)}</option>
 					{/each}
 				</select>
 			</div>
