@@ -21,12 +21,11 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
   const targetDate = dateParam ? new Date(dateParam) : new Date();
   const { startDate, endDate } = getStartEndDayOfTimeStamp(targetDate);
   
-  const response = await fetch(
-    `/api/v1/bundler/${venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}`
-  );
-  const { bookingData, closureData } = await response.json();
+  const queryPath = `/api/v1/bundler/${venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}`;
   
-  if (isBrowser()) bookingDayData.set({ date: targetDate, entries: [] });
+  const response = await fetch( queryPath );
+  const { bookingData, closureData } = await response.json();
+  if (isBrowser()) bookingDayData.set({ date: targetDate, entries: bookingData[targetDate.toISOString().split('T')[0]] });
     return {
     bookingData: bookingData as BookingsForDateRange,
     closureData: closureData as CourtWithClosures[],

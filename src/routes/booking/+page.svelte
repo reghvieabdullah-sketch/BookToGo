@@ -4,6 +4,7 @@
 	import {
 		bookingPopupVisible,
 		fadeDuration,
+		isLoading,
 		scaleDuration
 	} from '$lib/bookingAssets/bookingStore.js';
 	import Calender from '$lib/bookingAssets/Calender.svelte';
@@ -19,7 +20,9 @@
 		settingsData={data.settingsData}
 		venueData={data.venueData}
 	/>
-	{#if $bookingPopupVisible || (browser && window.innerWidth > 780)}
+	{#if ($bookingPopupVisible || (browser && window.innerWidth > 780))}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			on:click={(e) => e.target === e.currentTarget && ($bookingPopupVisible = false)}
 			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 md:static md:bg-transparent md:p-0"

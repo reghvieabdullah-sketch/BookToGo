@@ -37,7 +37,8 @@ export async function insertVenueBookingWithPossibilityCheck(supabase: SupabaseC
       `${bookingJSON.endTime.split("T")[0]}T23:59:59Z`
     ),
   ]);
-
+  console.log(bookingRes);
+  
   if (limitRes.error || limitRes.data) return { data: null, error: limitRes.error || "Past limits" };
   if (bookingRes.error) return bookingRes;
   if (venueRes.error || !venueRes.data?.settingsData.daySettings) return venueRes;
@@ -68,6 +69,9 @@ export async function getVenueBookingsForDateRangeAndDashboard(supabase: Supabas
 export async function getBookingClosureBundle(supabase: SupabaseClient, venueID: string | undefined, dateStart: string, dateEnd: string): Promise<DBResult<any>> {
     const missing = ensureArgs({ p_venue_id: venueID, p_start_date: dateStart, p_end_date: dateEnd });
     if (missing) return { data: null, error: missing};
+    // console.log("this is da shit");
+    console.log(dateStart, dateEnd);
+    
     return runRPC(supabase, FN_BOOKING_CLOSURE_GET, { p_venue_id: venueID, p_start_date: dateStart, p_end_date: dateEnd })
 }
 

@@ -46,9 +46,10 @@ export function hasBookingConflict(dayKey: string, daySettings: daySettingsType,
   const outsideHours = !withinOpenHours(daySettings, dayKey, attemptedBooking);
   const bookingConflict = conflictWithBookings(bookings, attemptedBooking);
   const flags = {bookingConflict, closureConflict, outsideHours}
-  return {conflicts: ( bookingConflict || closureConflict || outsideHours),
-      flags: Object.entries(flags).values()
-  }
+  return {
+      conflicts: bookingConflict || closureConflict || outsideHours,
+      flags
+  };
 }
 
 
@@ -92,6 +93,7 @@ function conflictWithBookings(bookings: BookingDetails[], attemptedBooking: book
     if (sameCourt && overlap && subunitOverlap) return true;
     } catch(e){
       // console.log(booking);
+      return false;
     }
   }
   

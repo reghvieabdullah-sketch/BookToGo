@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { dayNamesShort, monthNames } from '$lib/constants/dayMonthconstants';
-	import { bookingDayData, bookingPopupVisible } from './bookingStore';
+	import { bookingDayData, bookingPopupVisible, isLoading } from './bookingStore';
 	import { HHMMToMinutes } from '$lib/utils/timeUtils';
 	import {
 		QUERY_PARAM_VENUE_BOOKING_DATE_END,
@@ -25,6 +25,7 @@
 		// console.log(bookingData);
 		
 		$bookingDayData = { date, entries };
+		// isLoading.set(false);
 	}
 
 	function getIsBookableDay(date: Date) {

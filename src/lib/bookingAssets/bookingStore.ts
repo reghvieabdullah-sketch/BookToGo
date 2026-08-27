@@ -3,6 +3,7 @@ import { type courtsType, type BookingsByDate, type VenueSettings, type VenueDat
 
 export const bookingPopupVisible = writable<boolean>(false);
 export const bookingDayData = writable<BookingsByDate>({ date: new Date(), entries: [] });
+export const isLoading = writable<boolean>(true);
 export const fadeDuration = 200;
 export const scaleDuration = 250;
 

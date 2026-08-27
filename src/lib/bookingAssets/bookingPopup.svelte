@@ -2,7 +2,7 @@
 	import BookIcon from '$lib/icons/BookIcon.svelte';
 	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate, parseTimeStringToUTCMinutes, localTimeToUTC, combineUTCDateAndTime, timeStringToLocal } from '$lib/utils/timeUtils';
 	import GrabHandleIcon from '$lib/icons/GrabHandleIcon.svelte';
-	import { bookingDayData } from './bookingStore';
+	import { bookingDayData, bookingPopupVisible, isLoading } from './bookingStore';
 	import { hasBookingConflict } from '$lib/bookingLogic';
 	import type {
 		BookingDetails,
@@ -18,6 +18,7 @@
 		courtStatusEnum,
 		QUERY_PARAM_BOOKING_DATE,
 	} from '$lib/constants/postgressFunctionConstants';
+	import { onMount } from 'svelte';
 
 	export const onclose = () => {};
 
@@ -132,17 +133,15 @@
 			[]
 	);
 
+		
 function generateTimeOptions() {
-	const start = performance.now(); // start timer
-
+	
 		if (!settingsData?.daySettings || !$bookingDayData?.date) return timeOptions = [];
-
+		
 		const dayName = $bookingDayData.date.toLocaleDateString('en-LK', { weekday: 'long' }).toLowerCase();
 		const daySettings = settingsData.daySettings[dayName];
-
 		if (!daySettings?.is_day_bookable || !daySettings.openTime || !daySettings.closeTime)
 			return timeOptions = [];
-		console.log(bookingDayData, closureData, ' hi bois');
 		
 		const options: string[] = [];
 		const openingTime = parseTimeStringToUTCMinutes(daySettings.openTime);
@@ -159,11 +158,15 @@ function generateTimeOptions() {
 			conflict ? time += settingsData.bookingCoolDown! : options.push(minutesToHHMM(time));
 			time += interval;
 		}
-
+		
 		timeOptions = options;
 }
+	$: ($bookingDayData, $bookingPopupVisible, generateTimeOptions(), calculateTotalPrice(), console.log("WHAT THE FUCK IS GOING ON LOOK HERE", $bookingDayData.entries));
 
-	$: (selectedDuration, $bookingDayData, selectedSubUnits, generateTimeOptions(), calculateTotalPrice());
+	onMount(() => {
+		
+		generateTimeOptions();
+	});
 	$: if (timeOptions.length > 0 && !timeOptions.includes(selectedTime)) { selectedTime = timeOptions[0] }
 
 	function handleUnitSelection(event: Event) {
