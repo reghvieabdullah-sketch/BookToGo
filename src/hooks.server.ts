@@ -43,10 +43,12 @@ const authGuard: Handle = async ({ event, resolve }) => {
     // Also make it possible to pass in venueID using locals
     if (!session && event.url.pathname.startsWith('/dashboard')) {
         throw redirect(303, '/auth?next=' + encodeURIComponent(event.url.pathname));
-    } else if ( !isUserVenueOwner(event.locals.supabase, event.locals.venueURL)) {
+    } else if (session && event.url.pathname.startsWith('/dashboard')) {
         console.log("Redirecting to home page");
-        
-        throw redirect(303, '/');
+        const isOnwer = await isUserVenueOwner(event.locals.supabase, event.locals.venueURL);
+        if (!isOnwer) {
+            throw redirect(303, '/');
+        }
     }
      else if (session && event.url.pathname.startsWith('/auth')) {
         throw redirect(303, '/');
