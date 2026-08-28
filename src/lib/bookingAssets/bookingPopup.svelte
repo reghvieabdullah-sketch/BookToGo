@@ -357,8 +357,8 @@ function generateTimeOptions() {
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-sm font-medium">Time</span>
 				<span class="text-sm font-semibold">
-					{to12HourFormat(selectedTime)} - {to12HourFormat(
-						minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration))
+					{to12HourFormat(timeStringToLocal(selectedTime))} - {to12HourFormat(timeStringToLocal(
+						minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration)))
 					)}
 				</span>
 			</div>

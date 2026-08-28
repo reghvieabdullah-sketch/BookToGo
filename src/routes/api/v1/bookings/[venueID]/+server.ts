@@ -15,7 +15,8 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
     if (!dateStart || !dateEnd) console.error('Invalid dates ', dateStart, ' ', dateEnd);
     if (QUERY_PARAM_BOOKING_DASHBOARD_TYPE in url.searchParams) return json(await getVenueBookingsForDateRangeAndDashboard(locals.supabase, venueID, dateStart, dateEnd));
     
-    const cacheKey = `booking:${locals.venueURL}:${dateStart}:${dateEnd}`;
+    const { startDate, endDate } = getStartEndDayOfTimeStamp(dateStart);
+    const cacheKey = `booking:${locals.venueURL}:${startDate.toISOString().split('T')[0]}:${endDate.toISOString().split('T')[0]}`;
     
     const cached = await getCachedData(cacheKey);
     if (cached) return json(cached)
@@ -31,7 +32,9 @@ export const PUT: RequestHandler = async ({ locals, request, params, url }) => {
     const { venueID } = params;
     const bookingJSON = await request.json() as BookingDetails;
     const { startDate, endDate } = getStartEndDayOfTimeStamp(bookingJSON.startTime);
-    const cacheKey = [`booking:${locals.venueURL}:${startDate.toISOString()}:${endDate.toISOString()}` , `booking:${locals.venueURL}:${startDate.toISOString()}:${endDate.toISOString()}`];
+    const cacheKey = [`booking:${locals.venueURL}:${startDate.toISOString().split('T')[0]}:${endDate.toISOString().split('T')[0]}` , `booking:${locals.venueURL}:${startDate.toISOString().split('T')[0]}:${endDate.toISOString().split('T')[0]}`];
+    console.warn("cacheKey: ", cacheKey);
+    
     const result = await insertVenueBookingWithPossibilityCheck(locals.supabase, venueID!, locals.session?.user.id!, bookingJSON, locals.venueURL);
     if (result.error) {
         return json({ error: result.error }, { status: 400 });
