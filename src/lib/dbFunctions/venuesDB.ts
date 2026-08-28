@@ -7,12 +7,12 @@ import { runRPC, ensureArgs, type DBResult } from "./commonServerTypesAndFuncs";
 
 
 /** Boolean returned indicating is the passed in userID is the ownersID. There is already a function at db level to check verification. But this is added for sake of completeness */
-export async function isVenueOwner(supabase: SupabaseClient, venueID: string | null | undefined, userID: string | undefined): Promise<boolean> {
-    if (!venueID || isNaN(parseInt(venueID))) return false;
+export async function isVenueOwner(supabase: SupabaseClient, venueURL: string | null | undefined, userID: string | undefined): Promise<boolean> {
+    if (!venueURL) return false;
     const { data: venueData, error: venueError } = await supabase
         .from('venue')
         .select('owner_id')
-        .eq('venue_id', venueID)
+        .eq('venue_url', venueURL)
         .single();
     return !venueError && venueData.owner_id === userID;
 }

@@ -3,6 +3,7 @@ import { type Handle, redirect } from '@sveltejs/kit'
 import { sequence } from "@sveltejs/kit/hooks";
 
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
+import { isVenueOwner } from "$lib/dbFunctions/venuesDB";
 
 const supabase: Handle = async ({ event, resolve }) => {
     const host = event.request.headers.get('host') ?? '';
@@ -42,7 +43,10 @@ const authGuard: Handle = async ({ event, resolve }) => {
     // Also make it possible to pass in venueID using locals
     if (!session && event.url.pathname.startsWith('/dashboard')) {
         throw redirect(303, '/auth?next=' + encodeURIComponent(event.url.pathname));
-    } else if (session && event.url.pathname.startsWith('/auth')) {
+    } else if (session && !isVenueOwner(event.locals.supabase, event.locals.venueURL, user?.id)) {
+        throw redirect(303, '/');
+    }
+     else if (session && event.url.pathname.startsWith('/auth')) {
         throw redirect(303, '/');
     }
     return resolve(event);
