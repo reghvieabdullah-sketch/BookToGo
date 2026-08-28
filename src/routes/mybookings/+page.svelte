@@ -8,7 +8,17 @@
 	// Extract bookings with a fallback
 	let bookings: BookingDetails[] = $derived(data.bookings || []);
 	let venueID: string = $derived(data.venueID || '');
-	
+
+	// Cancel-confirmation dialog state
+	let showConfirmDialog = $state(false);
+	let bookingPendingCancel: BookingDetails | null = $state(null);
+	let isCancelling = $state(false);
+
+	// Result dialog state
+	let showResultDialog = $state(false);
+	let resultSuccess = $state(false);
+	let resultMessage = $state('');
+
 	function formatDate(isoString: string): string {
 		const date = new Date(isoString);
 		return date.toLocaleDateString('en-US', {
@@ -47,27 +57,58 @@
 		return statusMap[status.toLowerCase()] || 'badge-ghost';
 	}
 
-	async function cancelBooking(booking: BookingDetails) {
-		console.log("IM MEOW MAXXING RN");
-		
+	// Step 1: user clicks "Cancel Booking" -> open confirmation dialog
+	function requestCancel(booking: BookingDetails) {
+		bookingPendingCancel = booking;
+		showConfirmDialog = true;
+	}
+
+	function dismissConfirmDialog() {
+		if (isCancelling) return;
+		showConfirmDialog = false;
+		bookingPendingCancel = null;
+	}
+
+	// Step 2: user confirms in the dialog -> actually call the API
+	async function confirmCancel() {
+		if (!bookingPendingCancel) return;
+		const booking = bookingPendingCancel;
 		const bookingID = booking.bookingID;
 		if (!bookingID) return;
-		console.log("GIGACHAD WHITE CAT");
 
-		const confirmed = confirm(`Are you sure you want to cancel booking #${bookingID}?`);
-		if (!confirmed) return;
-		console.log("SAYS U STINK LIKE A POO POO HEAD");
+		isCancelling = true;
 		try {
-			// Replace with your actual API call
-			const data = {bookingID: bookingID };
-			const response = await fetch(`/api/v1/bookings/${venueID}`, { method: 'DELETE', body: JSON.stringify(data) });
-			const result = await response.json();
-			console.log(result);
-			bookings = bookings.filter((b) => b.bookingID !== bookingID);
-			alert('Booking cancelled successfully!');
+			const payload = { bookingID };
+			const response = await fetch(`/api/v1/bookings/${venueID}`, {
+				method: 'DELETE',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
+
+			// API returns a plain boolean indicating whether deletion succeeded
+			const success: boolean = await response.json();
+
+			if (success) {
+				bookings = bookings.filter((b) => b.bookingID !== bookingID);
+				resultSuccess = true;
+				resultMessage = `Booking #${bookingID} has been cancelled.`;
+			} else {
+				resultSuccess = false;
+				resultMessage = `We couldn't cancel booking #${bookingID}. Please try again.`;
+			}
 		} catch (error) {
-			alert('Failed to cancel booking. Please try again.');
+			resultSuccess = false;
+			resultMessage = 'Something went wrong while cancelling your booking. Please try again.';
+		} finally {
+			isCancelling = false;
+			showConfirmDialog = false;
+			bookingPendingCancel = null;
+			showResultDialog = true;
 		}
+	}
+
+	function closeResultDialog() {
+		showResultDialog = false;
 	}
 </script>
 
@@ -177,11 +218,7 @@
 								{#if booking.status!.toLowerCase() === 'upcoming' || booking.status!.toLowerCase() === 'active' || booking.status!.toLowerCase() === 'pending'}
 									<button
 										class="btn mt-auto w-full btn-outline btn-sm btn-error"
-										onclick={() => {
-											console.log("Cancel booking clicked for booking ID:", booking.bookingID);
-											cancelBooking(booking);
-											}
-										}
+										onclick={() => requestCancel(booking)}
 									>
 										Cancel Booking
 									</button>
@@ -194,3 +231,96 @@
 		</div>
 	</div>
 </div>
+
+<!-- Confirmation Dialog -->
+<dialog class="modal" class:modal-open={showConfirmDialog}>
+	<div class="modal-box">
+		<div class="mb-4 flex items-start gap-3">
+			<div class="rounded-full bg-warning/15 p-2 text-warning">
+				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 9v3.75m0 3.75h.007v.008H12v-.008zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					/>
+				</svg>
+			</div>
+			<div>
+				<h3 class="text-lg font-bold">Cancel this booking?</h3>
+				{#if bookingPendingCancel}
+					<p class="mt-1 text-sm text-base-content/70">
+						Booking #{bookingPendingCancel.bookingID} on {formatDate(
+							bookingPendingCancel.startTime
+						)} at {formatTime(bookingPendingCancel.startTime)} will be cancelled. This can't be
+						undone.
+					</p>
+				{/if}
+			</div>
+		</div>
+
+		<div class="modal-action">
+			<button class="btn btn-ghost" onclick={dismissConfirmDialog} disabled={isCancelling}>
+				Keep Booking
+			</button>
+			<button class="btn btn-error" onclick={confirmCancel} disabled={isCancelling}>
+				{#if isCancelling}
+					<span class="loading loading-sm loading-spinner"></span>
+					Cancelling...
+				{:else}
+					Yes, Cancel It
+				{/if}
+			</button>
+		</div>
+	</div>
+	<button
+		class="modal-backdrop"
+		aria-label="Close dialog"
+		onclick={dismissConfirmDialog}
+		disabled={isCancelling}
+	></button>
+</dialog>
+
+<!-- Result Dialog -->
+<dialog class="modal" class:modal-open={showResultDialog}>
+	<div class="modal-box">
+		<div class="mb-2 flex items-start gap-3">
+			{#if resultSuccess}
+				<div class="rounded-full bg-success/15 p-2 text-success">
+					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 12.75l2.25 2.25 4.5-4.5m4.5 2.25a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+				</div>
+			{:else}
+				<div class="rounded-full bg-error/15 p-2 text-error">
+					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+						/>
+					</svg>
+				</div>
+			{/if}
+			<div>
+				<h3 class="text-lg font-bold">
+					{resultSuccess ? 'Booking Cancelled' : 'Cancellation Failed'}
+				</h3>
+				<p class="mt-1 text-sm text-base-content/70">{resultMessage}</p>
+			</div>
+		</div>
+
+		<div class="modal-action">
+			<button class="btn {resultSuccess ? 'btn-success' : 'btn-error'}" onclick={closeResultDialog}>
+				Done
+			</button>
+		</div>
+	</div>
+	<button class="modal-backdrop" aria-label="Close dialog" onclick={closeResultDialog}></button>
+</dialog>
