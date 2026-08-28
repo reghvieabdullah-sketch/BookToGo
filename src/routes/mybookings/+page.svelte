@@ -47,11 +47,14 @@
 	}
 
 	async function cancelBooking(bookingID: number | undefined) {
+		console.log("IM MEOW MAXXING RN");
+		
 		if (!bookingID) return;
+		console.log("GIGACHAD WHITE CAT");
 
 		const confirmed = confirm(`Are you sure you want to cancel booking #${bookingID}?`);
 		if (!confirmed) return;
-
+		console.log("SAYS U STINK LIKE A POO POO HEAD");
 		try {
 			// Replace with your actual API call
 			// await fetch(`/api/bookings/${bookingID}/cancel`, { method: 'POST' });

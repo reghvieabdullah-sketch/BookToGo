@@ -1,5 +1,5 @@
 import { QUERY_PARAM_BOOKING_DASHBOARD_TYPE, QUERY_PARAM_VENUE_BOOKING_DATE_END, QUERY_PARAM_VENUE_BOOKING_DATE_START, QUERY_PARAM_VENUE_ID } from "$lib/constants/postgressFunctionConstants";
-import { getVenueBookingsForDateRange, getVenueBookingsForDateRangeAndDashboard, insertVenueBookingWithPossibilityCheck } from "$lib/dbFunctions/bookingsDB";
+import { deleteBookingByID, getVenueBookingsForDateRange, getVenueBookingsForDateRangeAndDashboard, insertVenueBookingWithPossibilityCheck } from "$lib/dbFunctions/bookingsDB";
 import { deleteCachedData, getCachedData, setCachedData } from "$lib/dbFunctions/cacheHandler";
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { getStartEndDayOfTimeStamp } from "$lib/utils/timeUtils";
@@ -42,3 +42,13 @@ export const PUT: RequestHandler = async ({ locals, request, params, url }) => {
     // await deleteCachedData(cacheKey)
     return json(result.data, { status: 200 });
 };
+
+export const DELETE: RequestHandler = async ({ locals, request, params, url }) => {
+    const { venueID } = params;
+    const bookingID = await request.json() as string;
+    const result = await deleteBookingByID(locals.supabase, venueID, bookingID);
+    if (result.error) {
+        return json({ error: result.error }, { status: 400 });
+    }
+    return json(result.data, { status: 200 });
+}
