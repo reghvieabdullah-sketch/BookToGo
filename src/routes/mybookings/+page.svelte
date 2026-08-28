@@ -173,7 +173,11 @@
 								{#if booking.status!.toLowerCase() === 'upcoming' || booking.status!.toLowerCase() === 'active' || booking.status!.toLowerCase() === 'pending'}
 									<button
 										class="btn mt-auto w-full btn-outline btn-sm btn-error"
-										onclick={() => cancelBooking(booking.bookingID)}
+										onclick={() => {
+											console.log("Cancel booking clicked for booking ID:", booking.bookingID);
+											cancelBooking(booking.bookingID);
+											}
+										}
 									>
 										Cancel Booking
 									</button>
