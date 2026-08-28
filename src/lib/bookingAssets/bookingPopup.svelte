@@ -78,7 +78,7 @@
 			pendingBooking = null;
 
 			setTimeout(() => {
-				// goto('/bookings');
+				goto('/mybookings');
 			}, 2000);
 		} else {
 			bookingResult = 'error';

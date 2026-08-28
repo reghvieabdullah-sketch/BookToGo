@@ -4,7 +4,6 @@ import { getVenueBundled } from "$lib/dbFunctions/venuesDB";
 import { getVenueGeneralSettings, updateVenueGeneralSettings } from "$lib/dbFunctions/venuesDB";
 import { json, type RequestHandler } from "@sveltejs/kit";
 
-// In your API route - Much cleaner!
 export const GET: RequestHandler = async ({ locals, params, url }) => {
     const { venueID } = params;
     const requestedBundle = QUERY_PARAM_VENUE_GET_BUNDLE in url.searchParams;
@@ -27,6 +26,7 @@ export const PUT: RequestHandler = async ({ locals, request, params }) => {
     const venueData = await request.json();
     const { venueID } = params;
     const cacheKeys = [`venue:${locals.venueURL}:general`, `venue:${locals.venueURL}:bundled`];
+    const result = await updateVenueGeneralSettings(locals.supabase, venueData);
     await deleteCachedData(cacheKeys);
-    return json(await updateVenueGeneralSettings(locals.supabase, venueData))
+    return json(result);
 };

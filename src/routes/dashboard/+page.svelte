@@ -128,12 +128,12 @@
 			component: SettingsInfo,
 			props: { settings: venueSettingsCopy }
 		}, 
-			{
-			id: 'payment',
-			name: 'payment',
-			component: PaymentsInfo,
-			props: {  }
-		}
+			// {
+			// id: 'payment',
+			// name: 'payment',
+			// component: PaymentsInfo,
+			// props: {  }
+		// }
 	];
 
 	// General configuration sections (dropdown)
