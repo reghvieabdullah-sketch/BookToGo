@@ -154,7 +154,7 @@ function generateTimeOptions() {
 				dayName,
 				settingsData.daySettings,
 				$bookingDayData.entries,
-				{attemptedCourtID: selectedCourtId!, attemptedDate: $bookingDayData.date.toISOString().split('T')[0], attemptedEndMinutes: time + durationMinutes, attemptedStartMinutes: time, attemptedSubUnits: selectedSubUnitIds}, closureData).conflicts
+				{courtID: selectedCourtId!, startTime:combineUTCDateAndTime($bookingDayData.date, minutesToHHMM(time)), endTime: combineUTCDateAndTime($bookingDayData.date, minutesToHHMM(time + durationMinutes)), units: { unitID: selectedUnitId!, subUnits: selectedSubUnits }}, closureData).conflicts
 			conflict ? time += settingsData.bookingCoolDown! : options.push(minutesToHHMM(time));
 			time += interval;
 		}
@@ -187,13 +187,14 @@ function generateTimeOptions() {
 
 	function calculateTotalPrice() {
 		const durationHours = Math.round(HHMMToMinutes(selectedDuration) / 60);
-		totalPrice = selectedSubUnits.reduce((sum, subUnit) => sum + subUnit.price, 0) * durationHours;
+		totalPrice = selectedSubUnits.reduce((sum, subUnit) => sum + subUnit.price!, 0) * durationHours;
 	}
 
 	async function handleBooking() {
 		const booking = {
 			courtStatus: selectedCourt?.approvalStatus!,
 			courtID: selectedCourtId!,
+			attemptedUnitID: selectedUnitId!,
 			startTime: combineUTCDateAndTime($bookingDayData.date, selectedTime),
 			endTime: combineUTCDateAndTime(
 				$bookingDayData.date,
@@ -205,6 +206,7 @@ function generateTimeOptions() {
 		};
 		saveBooking({selectedCourtId, selectedUnitId, selectedSubUnitIds, selectedDuration, selectedTime});
 		showConfirmation = true;
+		console.log(booking);
 		
 		pendingBooking = booking;
 	}

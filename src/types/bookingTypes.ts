@@ -64,25 +64,25 @@ export type courtsType = courtType[];
 // A sub-unit of a venue (things inside a unit that can be booked individually)
 export type SubUnit = {
   id: number;
-  description: string;
-  price: number;
+  description?: string;
+  price?: number;
 };
 
 // A unit is a main resource (court, hall, etc.)
 export type Unit = {
   unitID: number;
-  title: string;
+  title?: string;
   subUnits: SubUnit[];
 };
 
 // What `get_units_from_booking` returns
 export interface BookingDetails {
   bookingID?: number;
-  courtStatus: string;
+  courtStatus?: string;
   courtID: number;
   startTime: string; // ISO timestamp
   endTime: string;   // ISO timestamp
-  status: string;
+  status?: string;
   units: Unit; // single unit per booking
 }
 

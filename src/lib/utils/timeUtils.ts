@@ -159,7 +159,7 @@ export function getStartEndDayOfTimeStamp(targetDate: Date | string | number) {
   };
 }
 
-export function timeStringToLocal(timeString) {
+export function timeStringToLocal(timeString: string) {
     const [hours, minutes, seconds] = timeString.split(':').map(Number);
     const now = new Date();
     const utcDate = new Date(Date.UTC(

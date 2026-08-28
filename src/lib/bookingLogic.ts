@@ -1,4 +1,3 @@
-import { error } from "@sveltejs/kit";
 import type {
   BookingDetails,
   BookingEntry,
@@ -11,14 +10,7 @@ import { recurrenceEnum, courtStatusEnum } from "./constants/postgressFunctionCo
 import { utcToMinutes, parseTimeStringToUTCMinutes, doIntervalsOverlap, occursAtRecurrence, addMinutesToUTCTimestamp } from "./utils/timeUtils";
 
 
-// Not meant to be exported, for single use case ONLY
-interface bookingConflictType  {
-  attemptedCourtID: number;
-  attemptedSubUnits: number[];
-  attemptedStartMinutes: number;
-  attemptedEndMinutes: number;
-  attemptedDate: string;
-}
+
 
 export function ensureValidCredentialsForBooking(courts: courtsType, bookingJSON: BookingDetails, currency?: string): boolean | string {
   if (!bookingJSON || !bookingJSON.units || !currency) return false;
@@ -41,7 +33,7 @@ export function ensureValidCredentialsForBooking(courts: courtsType, bookingJSON
 //     Master Validator      //
 // ------------------------- //
 
-export function hasBookingConflict(dayKey: string, daySettings: daySettingsType, bookings: BookingDetails[], attemptedBooking: bookingConflictType, allCourtsWithClosures: CourtWithClosures[]) {
+export function hasBookingConflict(dayKey: string, daySettings: daySettingsType, bookings: BookingDetails[], attemptedBooking: BookingDetails, allCourtsWithClosures: CourtWithClosures[]) {
   const closureConflict = conflictWithinClosures(allCourtsWithClosures, attemptedBooking);
   const outsideHours = !withinOpenHours(daySettings, dayKey, attemptedBooking);
   const bookingConflict = conflictWithBookings(bookings, attemptedBooking);
@@ -56,40 +48,41 @@ export function hasBookingConflict(dayKey: string, daySettings: daySettingsType,
 // --------------------------  //
 //      Conflict checkers      //
 // --------------------------  //
-function conflictWithClosure( closure: Closure, attemptedBooking: bookingConflictType): boolean {
+function conflictWithClosure( closure: Closure, attemptedBooking: BookingDetails): boolean {
   const closureStartMinutes = utcToMinutes(closure.startTimestamp);
   const closureEndMinutes = closureStartMinutes + (closure.durationMinutes || 0);
   const closureEndTimeStamp = addMinutesToUTCTimestamp(closure.startTimestamp, closure.durationMinutes);
-  const timeOverlap = closureStartMinutes < attemptedBooking.attemptedStartMinutes || attemptedBooking.attemptedEndMinutes < closureEndMinutes;
-  const recurrenceMatch = occursAtRecurrence(closure.startTimestamp, closureEndTimeStamp, attemptedBooking.attemptedDate, closure.recurringType as recurrenceEnum);
+  const timeOverlap = closureStartMinutes < utcToMinutes(attemptedBooking.startTime) || utcToMinutes(attemptedBooking.endTime) < closureEndMinutes;
+  const recurrenceMatch = occursAtRecurrence(closure.startTimestamp, closureEndTimeStamp, attemptedBooking.startTime.split('T')[0], closure.recurringType as recurrenceEnum);
   return timeOverlap && recurrenceMatch
 }
 
-function conflictWithinClosures(allClosures: CourtWithClosures[], attemptedBooking: bookingConflictType): boolean {
-  const courtClosures = allClosures.find((c) => c.courtID === attemptedBooking.attemptedCourtID);
+function conflictWithinClosures(allClosures: CourtWithClosures[], attemptedBooking: BookingDetails): boolean {
+  const courtClosures = allClosures.find((c) => c.courtID === attemptedBooking.courtID);
   if (!courtClosures || !courtClosures.closures.length) return false;
   return courtClosures.closures.some((closure) => conflictWithClosure( closure, attemptedBooking));
 }
 
-function withinOpenHours(daySettings: daySettingsType, dayKey: string, attemptedBooking: bookingConflictType): boolean {
+function withinOpenHours(daySettings: daySettingsType, dayKey: string, attemptedBooking: BookingDetails): boolean {
   const key = dayKey.toLowerCase();
   const settings = daySettings[key];
   if (!settings?.is_day_bookable) return false;
   const open = parseTimeStringToUTCMinutes(settings.openTime!);
   const close = parseTimeStringToUTCMinutes(settings.closeTime!);
-  return attemptedBooking.attemptedStartMinutes >= open && attemptedBooking.attemptedEndMinutes <= close;
+  return utcToMinutes(attemptedBooking.startTime) >= open && utcToMinutes(attemptedBooking.endTime) <= close;
 }
 
-function conflictWithBookings(bookings: BookingDetails[], attemptedBooking: bookingConflictType): boolean {
+function conflictWithBookings(bookings: BookingDetails[], attemptedBooking: BookingDetails): boolean {
   // When a booking is archived, (when the owner updates the court details, say another unit is added or whatnot), they'd have different unitID's and/or may conflict with the current bookings. so for such bookings we ignore subunit overlap
   for (const booking of bookings) {
     try{
     const existingStart = utcToMinutes(booking.startTime);
     const existingEnd = utcToMinutes(booking.endTime);
-    const overlap = doIntervalsOverlap(attemptedBooking.attemptedStartMinutes, attemptedBooking.attemptedEndMinutes, existingStart, existingEnd);
-    const sameCourt = attemptedBooking.attemptedCourtID === booking.courtID;
+    const overlap = doIntervalsOverlap(utcToMinutes(attemptedBooking.startTime), utcToMinutes(attemptedBooking.endTime), existingStart, existingEnd);
+    const sameCourt = attemptedBooking.courtID === booking.courtID;
     const subunitIDs = booking.units.subUnits?.map((su) => su.id) ?? [];
-    const subunitOverlap = attemptedBooking.attemptedSubUnits.some((id) =>subunitIDs.includes(id)) ||  booking.courtStatus !== courtStatusEnum.APPROVED;
+    const subunitOverlap = attemptedBooking.units.subUnits?.some((sunit) =>subunitIDs.includes(sunit.id)) ||  booking.courtStatus !== courtStatusEnum.APPROVED;
+    if (sameCourt && overlap && booking.units.unitID !== attemptedBooking.units.unitID) return true; // if the unitID's are different, then the booking is archived and we ignore subunit overlap
     if (sameCourt && overlap && subunitOverlap) return true;
     } catch(e){
       // console.log(booking);
