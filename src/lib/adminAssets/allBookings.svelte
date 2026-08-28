@@ -6,20 +6,20 @@
 	import BookingInfo from './BookingInfo.svelte';
 
 	let {
-		bookingData,
+		bookingDataDashboard,
 		venueID
 	}: {
-		bookingData: Record<string, BookingEntry[]> | BookingEntry[];
+		bookingDataDashboard: Record<string, BookingEntry[]> | BookingEntry[];
 		venueID: number;
 	} = $props();
 
 	// Flatten bookings if they're grouped by date
 	const flattenedBookings = $derived(() => {
-		if (Array.isArray(bookingData)) {
-			return bookingData;
+		if (Array.isArray(bookingDataDashboard)) {
+			return bookingDataDashboard;
 		}
 		// If it's an object grouped by date, flatten it
-		return Object.values(bookingData ?? {}).flat();
+		return Object.values(bookingDataDashboard ?? {}).flat();
 	});
 
 
