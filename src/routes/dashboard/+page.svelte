@@ -242,7 +242,7 @@
 								bind:imageBlobs
 								bind:venueSettings={venueSettingsCopy}
 								bind:closureData={data.closureData}
-								bind:bookingDataDashboard={data.bookingDataDashboard}
+								bind:bookingData={data.bookingData}
 							/>
 						{/if}
 					</div>
