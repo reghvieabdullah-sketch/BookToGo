@@ -45,7 +45,7 @@ export const PUT: RequestHandler = async ({ locals, request, params, url }) => {
 
 export const DELETE: RequestHandler = async ({ locals, request, params, url }) => {
     const { venueID } = params;
-    const bookingID = await request.json() as string;
+    const { bookingID } = await request.json();
     const result = await deleteBookingByID(locals.supabase, venueID, bookingID);
     if (result.error) {
         return json({ error: result.error }, { status: 400 });

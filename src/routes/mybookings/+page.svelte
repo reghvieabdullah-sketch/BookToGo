@@ -7,6 +7,7 @@
 
 	// Extract bookings with a fallback
 	let bookings: BookingDetails[] = $derived(data.bookings || []);
+	let venueID: string = $derived(data.venueID || '');
 	
 	function formatDate(isoString: string): string {
 		const date = new Date(isoString);
@@ -46,9 +47,10 @@
 		return statusMap[status.toLowerCase()] || 'badge-ghost';
 	}
 
-	async function cancelBooking(bookingID: number | undefined) {
+	async function cancelBooking(booking: BookingDetails) {
 		console.log("IM MEOW MAXXING RN");
 		
+		const bookingID = booking.bookingID;
 		if (!bookingID) return;
 		console.log("GIGACHAD WHITE CAT");
 
@@ -57,8 +59,9 @@
 		console.log("SAYS U STINK LIKE A POO POO HEAD");
 		try {
 			// Replace with your actual API call
-			// await fetch(`/api/bookings/${bookingID}/cancel`, { method: 'POST' });
-
+			const data = {bookingID: bookingID };
+			const result = await fetch(`/api/v1/bookings/${venueID}`, { method: 'DELETE', body: JSON.stringify(data) });
+			console.log(result);
 			bookings = bookings.filter((b) => b.bookingID !== bookingID);
 			alert('Booking cancelled successfully!');
 		} catch (error) {
@@ -175,7 +178,7 @@
 										class="btn mt-auto w-full btn-outline btn-sm btn-error"
 										onclick={() => {
 											console.log("Cancel booking clicked for booking ID:", booking.bookingID);
-											cancelBooking(booking.bookingID);
+											cancelBooking(booking);
 											}
 										}
 									>
