@@ -1,20 +1,17 @@
 import type { Closure, courtsType, CourtWithClosures, VenueData, VenueSettings } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX } from "$lib/constants/postgressFunctionConstants";
+import { FN_IS_VENUE_OWNER, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX } from "$lib/constants/postgressFunctionConstants";
 import { runRPC, ensureArgs, type DBResult } from "./commonServerTypesAndFuncs";
 
 // IMPORTANT: All update functions are protected at the database level with ownership checks. Thus adding ownership checks here is redundant. well kindof but not for booking related logic, which is as to why its in a separate file
 
 
 /** Boolean returned indicating is the passed in userID is the ownersID. There is already a function at db level to check verification. But this is added for sake of completeness */
-export async function isVenueOwner(supabase: SupabaseClient, venueURL: string | null | undefined, userID: string | undefined): Promise<boolean> {
-    if (!venueURL) return false;
-    const { data: venueData, error: venueError } = await supabase
-        .from('venue')
-        .select('owner_id')
-        .eq('venue_url', venueURL)
-        .single();
-    return !venueError && venueData.owner_id === userID;
+export async function isUserVenueOwner(supabase: SupabaseClient, venueID: string | undefined, userID: string | undefined) {
+    const missing = ensureArgs({ p_venue_id: venueID, p_user_id: userID })
+    if (missing) return false;
+    const { data, error } = await runRPC(supabase, FN_IS_VENUE_OWNER, { p_venue_id: venueID, p_user_id: userID });
+    return !error && data === true;
 }
 
 /**Returns list of image paths under the venue specific bucket. */

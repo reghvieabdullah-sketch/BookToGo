@@ -1,6 +1,6 @@
 import type { BookingDetails, BookingEntry } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { FN_BOOKING_CLOSURE_GET, FN_BOOKING_CLOSURE_GET_OWNER_DASHBOARD, FN_VENUE_BOOKING_DELETE, FN_VENUE_BOOKING_GET, FN_VENUE_BOOKING_GET_FOR_DASHBOARD, FN_VENUE_BOOKING_INSERT, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, FN_VENUE_BOOKING_LIMIT, FN_VENUE_USER_BOOKINGS_GET } from "$lib/constants/postgressFunctionConstants";
+import { FN_BOOKING_CLOSURE_GET, FN_BOOKING_CLOSURE_GET_OWNER_DASHBOARD, FN_IS_VENUE_OWNER, FN_VENUE_BOOKING_DELETE, FN_VENUE_BOOKING_GET, FN_VENUE_BOOKING_GET_FOR_DASHBOARD, FN_VENUE_BOOKING_INSERT, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, FN_VENUE_BOOKING_LIMIT, FN_VENUE_USER_BOOKINGS_GET } from "$lib/constants/postgressFunctionConstants";
 import { ensureValidCredentialsForBooking, hasBookingConflict } from "$lib/bookingLogic";
 import { getVenueBundled, getVenueSettings } from "./venuesDB";
 import { HHMMToMinutes, isSameDay, timeStampToDateString, timeStampToDayKey, utcToMinutes } from "$lib/utils/timeUtils";
@@ -91,3 +91,4 @@ export async function deleteBookingByID(supabase: SupabaseClient, venueID: strin
     if (missing) return { data: null, error: missing };
     return runRPC(supabase, FN_VENUE_BOOKING_DELETE, { p_venue_id: venueID, p_booking_id: bookingID });
 }
+
