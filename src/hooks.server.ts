@@ -44,6 +44,8 @@ const authGuard: Handle = async ({ event, resolve }) => {
     if (!session && event.url.pathname.startsWith('/dashboard')) {
         throw redirect(303, '/auth?next=' + encodeURIComponent(event.url.pathname));
     } else if (session && event.url.pathname.startsWith('/dashboard') && !isUserVenueOwner(event.locals.supabase, event.locals.venueURL)) {
+        console.log("Redirecting to home page");
+        
         throw redirect(303, '/');
     }
      else if (session && event.url.pathname.startsWith('/auth')) {
