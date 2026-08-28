@@ -18,15 +18,14 @@ export const load: LayoutLoad = async ({ fetch, parent, depends, url }) => {
     `/api/v1/bundler/${venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}&${QUERY_PARAM_BOOKING_CLOSURE_BUNDLE_DASHBOARD_TYPE}=true`
 );
 
-const result = await response.json();
+const { bookingDataDashboard, closureData } = await response.json();
 
 console.log(
     'BUNDLER',
     typeof window === 'undefined' ? 'SSR' : 'CLIENT',
-    result
+    bookingDataDashboard
 );
 
-  const { bookingDataDashboard, closureData } = await response.json();
 
   return {
     session,
