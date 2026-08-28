@@ -8,11 +8,11 @@ import { runRPC, ensureArgs, type DBResult } from "./commonServerTypesAndFuncs";
 
 /** Boolean returned indicating is the passed in userID is the ownersID. There is already a function at db level to check verification. But this is added for sake of completeness */
 export async function isUserVenueOwner(supabase: SupabaseClient, venueURL: string) {
-    console.log("Chimpanzini banini");
+    console.log("Chimpanzini banini, ", venueURL);
     
     const { data, error } = await runRPC(supabase, FN_IS_VENUE_OWNER, { p_venue_url: venueURL });
     console.log(data, error);
-    
+    console.log("Donkey kong");
     return !error && data === true;
 }
 
