@@ -6,7 +6,7 @@
 	let { data }: { data: PageData } = $props();
 
 	// Extract bookings with a fallback
-	let bookings = $derived(data.bookings || []);
+	let bookings: BookingDetails[] = $derived(data.bookings || []);
 	
 	function formatDate(isoString: string): string {
 		const date = new Date(isoString);
@@ -102,7 +102,7 @@
 										<div class="text-lg font-semibold">Booking #{booking.bookingID}</div>
 										<div class="text-sm text-base-content/60">Court ID: {booking.courtID}</div>
 									</div>
-									<div class="badge {getStatusColor(booking.status)} badge-sm">
+									<div class="badge {getStatusColor(booking.status!)} badge-sm">
 										{booking.status}
 									</div>
 								</div>
@@ -149,16 +149,18 @@
 								<!-- Units -->
 								<div class="mb-3">
 									<div class="mb-1 text-xs text-base-content/60">Units:</div>
-									{#each booking.units as unit}
-										<div class="mb-1">
-											<div class="mb-1 badge badge-outline badge-sm">{unit.title}</div>
-											<ul class="ml-4 list-disc text-xs text-base-content/70">
-												{#each unit.subUnits as sub}
-													<li>{sub.description} - Rs.{sub.price}</li>
-												{/each}
-											</ul>
+
+									<div class="mb-1">
+										<div class="mb-1 badge badge-outline badge-sm">
+											{booking.units.title}
 										</div>
-									{/each}
+
+										<ul class="ml-4 list-disc text-xs text-base-content/70">
+											{#each booking.units.subUnits as sub}
+												<li>{sub.description} - Rs.{sub.price}</li>
+											{/each}
+										</ul>
+									</div>
 								</div>
 
 								<!-- Court Status -->
@@ -168,7 +170,7 @@
 								</div>
 
 								<!-- Cancel Button -->
-								{#if booking.status.toLowerCase() === 'upcoming' || booking.status.toLowerCase() === 'active' || booking.status.toLowerCase() === 'pending'}
+								{#if booking.status!.toLowerCase() === 'upcoming' || booking.status!.toLowerCase() === 'active' || booking.status!.toLowerCase() === 'pending'}
 									<button
 										class="btn mt-auto w-full btn-outline btn-sm btn-error"
 										onclick={() => cancelBooking(booking.bookingID)}
