@@ -14,14 +14,21 @@
 	} = $props();
 
 	// Flatten bookings if they're grouped by date
-	const flattenedBookings = $derived(() => {
-		if (Array.isArray(bookingData)) {
-			return bookingData;
+	function flatten(data: Record<string, BookingEntry[]> | BookingEntry[]) {
+		if (Array.isArray(data)) {
+			return data;
 		}
-		// If it's an object grouped by date, flatten it
-		return Object.values(bookingData ?? {}).flat();
-	});
+		return Object.values(data ?? {}).flat();
+	}
 
+	// Local, mutable copy so we can remove entries after delete
+	// without waiting on a full page invalidate/reload
+	let bookings = $state<BookingEntry[]>(flatten(bookingData));
+
+	// Keep local state in sync if the prop changes (e.g. after navigation)
+	$effect(() => {
+		bookings = flatten(bookingData);
+	});
 
 	let selectedBooking = $state<BookingEntry | null>(null);
 	let isMobile = $state(false);
@@ -54,7 +61,6 @@
 
 	function formatDate(isoString: string | number | Date) {
 		return (
-			// new Date(isoString).toLocaleDateString() +
 			' ' + new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 		);
 	}
@@ -86,27 +92,44 @@
 	}
 
 	async function handleCancel() {
-		if (!selectedBooking) return;
-
+		// if (!selectedBooking) return;
+		selectedBooking = null;
 		// Implement your cancel logic here
 		// After successful cancellation:
-		await invalidate('layout:dashboard');
+		// await invalidate('layout:dashboard');
 	}
 
-	async function handleEdit() {
+	async function handleDelete() {
 		if (!selectedBooking) return;
+		const bookingID = selectedBooking.details.bookingID;
 
-		// Implement your edit logic here
-		// After successful edit:
-		await invalidate('layout:dashboard');
+		try {
+			const payload = { bookingID };
+			const response = await fetch(`/api/v1/bookings/${venueID}`, {
+				method: 'DELETE',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
+
+			// API returns a plain boolean indicating whether deletion succeeded
+			const success: boolean = await response.json();
+
+			if (success) {
+				bookings = bookings.filter((b) => b.details.bookingID !== bookingID);
+				selectedBooking = null;
+				showMobileDetails = false;
+			}
+		} catch (error) {
+			console.log(error);
+		}
 	}
 </script>
 
 <div class="flex h-full flex-row gap-4">
 	<div class="min-w-0 flex-1">
 		<div class="flex flex-row flex-wrap gap-4 p-2">
-			{#if flattenedBookings().length > 0}
-				{#each flattenedBookings() as booking}
+			{#if bookings.length > 0}
+				{#each bookings as booking (booking.details.bookingID)}
 					<BookingCard
 						{booking}
 						selected={selectedBooking?.details.bookingID === booking.details.bookingID && !isMobile}
@@ -132,7 +155,7 @@
 					{getPaymentStatusBadgeClass}
 					{formatDate}
 					{handleCancel}
-					{handleEdit}
+					{handleDelete}
 				/>
 			</div>
 		</div>
@@ -149,7 +172,7 @@
 			{getPaymentStatusBadgeClass}
 			{formatDate}
 			{handleCancel}
-			{handleEdit}
+			{handleDelete}
 		/>
 	</div>
 {/if}

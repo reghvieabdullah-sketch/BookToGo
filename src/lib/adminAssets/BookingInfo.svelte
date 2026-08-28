@@ -7,7 +7,7 @@
 	export let getPaymentStatusBadgeClass;
 	export let formatDate;
 	export let handleCancel;
-	export let handleEdit;
+	export let handleDelete;
 </script>
 
 <div class="card max-h-[90vh] w-full max-w-md overflow-y-auto bg-base-100">
@@ -63,7 +63,7 @@
 			<div class="divider my-2"></div>
 			<div class="flex flex-row gap-2">
 				<button class="btn flex-1 btn-sm btn-error" on:click={handleCancel}> Cancel </button>
-				<button class="btn flex-1 btn-sm btn-primary" on:click={handleEdit}> Edit </button>
+				<button class="btn flex-1 btn-sm btn-primary" on:click={handleDelete}> Delete </button>
 			</div>
 		</div>
 	</div>
