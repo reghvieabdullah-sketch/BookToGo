@@ -60,7 +60,8 @@
 		try {
 			// Replace with your actual API call
 			const data = {bookingID: bookingID };
-			const result = await fetch(`/api/v1/bookings/${venueID}`, { method: 'DELETE', body: JSON.stringify(data) });
+			const response = await fetch(`/api/v1/bookings/${venueID}`, { method: 'DELETE', body: JSON.stringify(data) });
+			const result = await response.json();
 			console.log(result);
 			bookings = bookings.filter((b) => b.bookingID !== bookingID);
 			alert('Booking cancelled successfully!');
