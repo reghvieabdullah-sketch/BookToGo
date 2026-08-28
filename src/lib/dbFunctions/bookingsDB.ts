@@ -69,7 +69,10 @@ export async function getVenueBookingsForDateRangeAndDashboard(supabase: Supabas
 export async function getBookingClosureBundle(supabase: SupabaseClient, venueID: string | undefined, dateStart: string, dateEnd: string, forDashboard: boolean): Promise<DBResult<any>> {
     const missing = ensureArgs({ p_venue_id: venueID, p_start_date: dateStart, p_end_date: dateEnd });
     if (missing) return { data: null, error: missing};
-    if (forDashboard) return runRPC(supabase, FN_BOOKING_CLOSURE_GET_OWNER_DASHBOARD, { p_venue_id: venueID, p_start_date: dateStart, p_end_date: dateEnd });
+    if (forDashboard) {
+      console.log("HRUMPHHH. IDKKK??");
+      return runRPC(supabase, FN_BOOKING_CLOSURE_GET_OWNER_DASHBOARD, { p_venue_id: venueID, p_start_date: dateStart, p_end_date: dateEnd });
+    } 
     return runRPC(supabase, FN_BOOKING_CLOSURE_GET, { p_venue_id: venueID, p_start_date: dateStart, p_end_date: dateEnd })
 }
 
