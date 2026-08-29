@@ -55,6 +55,8 @@
 						body: JSON.stringify(courtDataCopy)
 					})
 				);
+
+				// archive bookings that are no longer valid due to court status changes
 			}
 			if (!equal(data.venueData, venueDataCopy)) {
 				responses.push(
