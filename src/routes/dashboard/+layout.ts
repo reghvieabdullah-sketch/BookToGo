@@ -20,12 +20,6 @@ export const load: LayoutLoad = async ({ fetch, parent, depends, url }) => {
 
 const { bookingData, closureData } = await response.json();
 
-console.log(
-    'BUNDLER',
-    typeof window === 'undefined' ? 'SSR' : 'CLIENT',
-    bookingData
-);
-
 
   return {
     session,

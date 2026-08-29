@@ -37,18 +37,13 @@ const authGuard: Handle = async ({ event, resolve }) => {
     const { session, user } = await event.locals.safeGetSession();
     event.locals.session = session;
     event.locals.user = user;
-
-
-    // TODO - make it so that the venue owner can go to the dashboard and normal users cant
+    event.locals.isUserOwner = user ? await isUserVenueOwner(event.locals.supabase, event.locals.venueURL) : false;    
+    
     // Also make it possible to pass in venueID using locals
     if (!session && event.url.pathname.startsWith('/dashboard')) {
         throw redirect(303, '/auth?next=' + encodeURIComponent(event.url.pathname));
-    } else if (session && event.url.pathname.startsWith('/dashboard')) {
-        console.log("Redirecting to home page");
-        const isOnwer = await isUserVenueOwner(event.locals.supabase, event.locals.venueURL);
-        if (!isOnwer) {
-            throw redirect(303, '/');
-        }
+    } else if (session && event.url.pathname.startsWith('/dashboard') && !event.locals.isUserOwner) {
+        throw redirect(303, '/');
     }
      else if (session && event.url.pathname.startsWith('/auth')) {
         throw redirect(303, '/');

@@ -3,18 +3,12 @@
 	// import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
 	import { goto, invalidate } from '$app/navigation';
-	import {
-		venueDataStore,
-		courtDataStore,
-		venueSettingsStore
-	} from '$lib/bookingAssets/bookingStore';
 
 	let { data, children } = $props();
-	let { session, supabase, venueData, courtsData, settingsData } = $derived(data);
+	let { session, supabase, venueData, isVenueOwner } = $derived(data);
 	function handleServerDownOrVenueIdFailure(error?: Error) {
 		error ? goto(`/error?${error.message.replaceAll(' ', '_')}`) : goto('/');
 	}
-	let isOwner = false;
 	$effect(() => {
 		console.log(venueData);
 	});
@@ -51,13 +45,11 @@
 		</ul>
 	</div> -->
 	<div class="navbar-end gap-2">
-		{#await isOwner then isOwnerValue}
-			{#if isOwnerValue}
+			{#if isVenueOwner}
 				<a href="/dashboard" class="btn btn-outline btn-primary">Dashboard</a>
 			{:else}
 				<a href="/mybookings" class="btn btn-primary">My Bookings</a>
 			{/if}
-		{/await}
 	</div>
 </header>
 

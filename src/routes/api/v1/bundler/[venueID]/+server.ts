@@ -8,15 +8,7 @@ export const GET: RequestHandler = async ({ url, params, locals }) => {
     const dateStart = url.searchParams.get(QUERY_PARAM_VENUE_BOOKING_DATE_START) as string;
     const dateEnd = url.searchParams.get(QUERY_PARAM_VENUE_BOOKING_DATE_END) as string;
     const dashboardType = url.searchParams.get(QUERY_PARAM_BOOKING_CLOSURE_BUNDLE_DASHBOARD_TYPE);
-    // console.log(url);
-    
-    if (dashboardType === 'true') {
-        console.log("Dashboard bookings requested");
-    } else { 
-        console.log("Regular bookings requested");
-    }
     const result = await getBookingClosureBundle(locals.supabase, venueID, dateStart, dateEnd, dashboardType === 'true');
-    console.warn(result);
     if (result.error) return json({ error: result.error }, { status: 400 });
     return json(result.data, { status: 200 });
 };

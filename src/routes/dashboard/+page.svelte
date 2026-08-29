@@ -39,13 +39,16 @@
 		return formData;
 	}
 	async function updateVenueConfig() {
+		
 		// NOTE - add better error handling and progress indicators, showing the update progress, additionally add reactive updates IF all responses return true
 		isUpdatingConfig = true;
 		finishedUpdating = false;
 		try {
+			
 			let responses: Response[] = [];
 			const venueID = data.venueData.venueID;
 			if (!equal(data.courtsData, courtDataCopy)) {
+				
 				responses.push(
 					await fetch(`/api/v1/venues/${venueID}/courts`, {
 						method: 'PUT',

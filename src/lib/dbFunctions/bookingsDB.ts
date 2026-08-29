@@ -37,7 +37,6 @@ export async function insertVenueBookingWithPossibilityCheck(supabase: SupabaseC
       `${bookingJSON.endTime.split("T")[0]}T23:59:59Z`, false
     ),
   ]);
-  console.log(bookingRes);
   
   if (limitRes.error || limitRes.data) return { data: null, error: limitRes.error || "Past limits" };
   if (bookingRes.error) return bookingRes;

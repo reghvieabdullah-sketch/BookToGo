@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 export const PUT: RequestHandler = async ({ locals, request, params }) => {
     const venueData = await request.json();
     const { venueID } = params;
-    const cacheKeys = [`venue:${locals.venueURL}:general`, `venue:${locals.venueURL}:bundled`];
+    const cacheKeys = [`venue:${locals.venueURL}:general`, `venue:${locals.venueURL}:bundled`, `venue:${locals.venueURL}:settings`];
     const result = await updateVenueGeneralSettings(locals.supabase, venueData);
     await deleteCachedData(cacheKeys);
     return json(result);

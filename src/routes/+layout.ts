@@ -16,7 +16,8 @@ function getVenueURL(hostname: string): string | null {
 
 export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
   // const venueURL = getVenueURL(url.hostname);
-  const venueURL = 'stmarybbal';
+  
+  const venueURL = 'stmarybball';
   depends('supabase:auth');
   depends(INVALIDATE_PARENT_LAYOUT_CODE);
 
@@ -47,5 +48,6 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
     userLoggedInStore.set(!!user);
   }
 
-  return { session, supabase, venueID: venueData.venueID, venueData, courtsData, settingsData, userLoggedIn: !!user };
+
+  return { session, supabase, venueID: venueData.venueID, venueData, courtsData, settingsData, userLoggedIn: !!user, isVenueOwner: data.isVenueOwner };
 };

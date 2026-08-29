@@ -5,6 +5,7 @@
 	let carouselElement: HTMLDivElement;
 	let showStickyButton = $state(false);
 	let heroSection: HTMLElement;
+	let isNavigating = $state(false);
 
 	let { data } = $props();
 	let {  venueData } = $derived(data);
@@ -48,13 +49,33 @@
 	let end = '';
 	let error = '';
 
-	function submit(e: Event) {
+	async function submit(e: Event) {
 		e.preventDefault();
 
-		// Navigate to /booking with query params
-		goto(
-			`/booking?${QUERY_PARAM_VENUE_ID}=${venueData?.venueID || ''}&${QUERY_PARAM_BOOKING_DATE}=${new Date().toISOString().split('T')[0]}`
-		);
+		if (isNavigating) return;
+		isNavigating = true;
+
+		try {
+			// Navigate to /booking with query params
+			await goto(
+				`/booking?${QUERY_PARAM_VENUE_ID}=${venueData?.venueID || ''}&${QUERY_PARAM_BOOKING_DATE}=${new Date().toISOString().split('T')[0]}`
+			);
+		} finally {
+			isNavigating = false;
+		}
+	}
+
+	async function goToBooking(e: Event) {
+		e.preventDefault();
+
+		if (isNavigating) return;
+		isNavigating = true;
+
+		try {
+			await goto('/booking');
+		} finally {
+			isNavigating = false;
+		}
 	}
 	// why so much error handling? cause the venue owner are just dumb and will most likely
 	// not provide all the venueData needed to render the page properly
@@ -95,7 +116,7 @@
 
 				<div class="flex flex-col gap-3 sm:flex-row">
 					<!-- Start -->
-					<select class="select select-primary">
+					<select class="select select-primary" disabled={isNavigating}>
 						<option>Half Court</option>
 						<option>Full Court</option>
 					</select>
@@ -104,17 +125,22 @@
 						type="submit"
 						class="btn flex shrink-0 items-center gap-3 px-5 btn-primary"
 						aria-label="Next — go to booking"
+						disabled={isNavigating}
 					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-5 w-5"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-							stroke-width="2"
-						>
-							<path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-						</svg>
+						{#if isNavigating}
+							<span class="loading loading-sm loading-spinner"></span>
+						{:else}
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-5 w-5"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+								stroke-width="2"
+							>
+								<path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+							</svg>
+						{/if}
 					</button>
 				</div>
 
@@ -254,26 +280,31 @@
 			style="backdrop-filter: blur(8px);"
 		>
 			<div class="mx-auto max-w-sm">
-				<a
-					href="/booking"
+				<button
+					on:click={goToBooking}
+					disabled={isNavigating}
 					class="btn w-full transform gap-2 shadow-lg transition-all duration-200 btn-lg btn-primary hover:scale-105 hover:shadow-xl"
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-5 w-5"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
-						/>
-					</svg>
-					Book Court
-				</a>
+					{#if isNavigating}
+						<span class="loading loading-md loading-spinner"></span>
+					{:else}
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-5 w-5"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
+							/>
+						</svg>
+					{/if}
+					{isNavigating ? 'Loading...' : 'Book Court'}
+				</button>
 			</div>
 		</div>
 	{/if}

@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 export const PUT: RequestHandler = async ({ locals, request, params }) => {
     const courtsJSON = await request.json();
     const { venueID } = params;
-    const cacheKeys = [`venue:${locals.venueURL}:courts`, `venue:${locals.venueURL}:bundled`];
+    const cacheKeys = [`venue:${locals.venueURL}:courts`, `venue:${locals.venueURL}:bundled`, `venue:${locals.venueURL}:general`];
     const result = await updateVenueCourts(locals.supabase, courtsJSON, venueID)
     if (result.error) {
         return json({ error: result.error }, { status: 400 });

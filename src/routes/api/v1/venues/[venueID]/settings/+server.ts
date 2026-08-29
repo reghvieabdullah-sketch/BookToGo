@@ -20,7 +20,7 @@ export const PUT: RequestHandler = async ({ locals, request, params }) => {
     const settingsJSON = await request.json();
     const { venueID } = params;
     const result = await updateVenueSettings(locals.supabase, settingsJSON, venueID);
-    const cacheKeys = [`venue:${locals.venueURL}:settings`, `venue:${locals.venueURL}:bundled`];
+    const cacheKeys = [`venue:${locals.venueURL}:settings`, `venue:${locals.venueURL}:bundled`, `venue:${locals.venueURL}:general`];
     if (result.error) {
         return json({ error: result.error }, { status: 400 });
     };
