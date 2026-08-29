@@ -1,331 +1,377 @@
 <script lang="ts">
-	import { courtStatusEnum } from '$lib/constants/postgressFunctionConstants';
 	import type { courtsType } from '../../types/bookingTypes';
 
 	export let courts: courtsType;
+
 	let showAddUnitModal = false;
 	let showAddSubUnitModal = false;
 	let showAddCourtModal = false;
-	let showPendingWarningModal = false;
 	let showDeleteCourtModal = false;
+
 	let courtToDelete = 0;
 	let currentCourtId = 0;
 	let currentUnitId = 0;
+
 	let newUnitTitle = '';
 	let newSubUnitDescription = '';
 	let newSubUnitPrice = 0;
 	let newCourtName = '';
-	let isAddingWithUnit = false;
 
-	$: hasPendingCourts = courts.some((c) => c.approvalStatus === courtStatusEnum.PENDING);
+	let isSavingCourt = false;
+	let isDeletingCourt = false;
+	let isArchiving = false;
+	let errorMessage = '';
+
+	// --- API calls -------------------------------------------------------
+	// TODO: point these at your real endpoints / shared API client.
+
+	async function createCourt(payload: { name: string }) {
+		const res = await fetch('/api/courts', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(payload)
+		});
+		if (!res.ok) throw new Error('Failed to create court');
+		return res.json(); // expected: { courtID, name, units }
+	}
+
+	async function archiveCourtBookings(courtId: number) {
+		const res = await fetch(`/api/courts/${courtId}/archive-bookings`, {
+			method: 'POST'
+		});
+		if (!res.ok) throw new Error('Failed to archive bookings');
+	}
+
+	// --- Court: add / delete ----------------------------------------------
 
 	function openAddCourtModal() {
 		newCourtName = '';
+		errorMessage = '';
 		showAddCourtModal = true;
 	}
 
-	function addNewCourt() {
+	async function addNewCourt() {
 		if (!newCourtName.trim()) return;
 
-		const newId = Math.max(...courts.map((c) => c.courtID)) + 1;
-		courts = [
-			...courts,
-			{
-				courtID: newId,
-				name: newCourtName.trim(),
-				units: [],
-				approvalStatus: courtStatusEnum.PENDING
-			}
-		];
-		showAddCourtModal = false;
+		isSavingCourt = true;
+		errorMessage = '';
+		try {
+			const created = await createCourt({ name: newCourtName.trim() });
+			courts = [...courts, { ...created, units: created.units ?? [] }];
+			showAddCourtModal = false;
+		} catch {
+			errorMessage = 'Failed to create court. Please try again.';
+		} finally {
+			isSavingCourt = false;
+		}
 	}
 
 	function openDeleteCourtModal(courtId: number) {
 		courtToDelete = courtId;
+		errorMessage = '';
 		showDeleteCourtModal = true;
 	}
 
-	function deleteCourt() {
-		courts = courts.filter((c) => c.courtID !== courtToDelete);
-		showDeleteCourtModal = false;
-		courtToDelete = 0;
+	async function deleteCourt() {
+		isDeletingCourt = true;
+		errorMessage = '';
+		try {
+			await archiveCourtBookings(courtToDelete);
+			courts = courts.filter((c) => c.courtID !== courtToDelete);
+			showDeleteCourtModal = false;
+			courtToDelete = 0;
+		} catch {
+			errorMessage = 'Failed to archive bookings for this court. Please try again.';
+		} finally {
+			isDeletingCourt = false;
+		}
 	}
 
+	// --- Units / sub-units -------------------------------------------------
+
 	function openAddUnitModal(courtId: number) {
-		const court = courts.find((c) => c.courtID === courtId);
-		if (court?.approvalStatus === courtStatusEnum.APPROVED && hasPendingCourts) {
-			showPendingWarningModal = true;
-			return;
-		}
 		currentCourtId = courtId;
 		newUnitTitle = '';
 		newSubUnitDescription = '';
 		newSubUnitPrice = 0;
-		isAddingWithUnit = true;
+		errorMessage = '';
 		showAddUnitModal = true;
 	}
 
 	function openAddSubUnitModal(courtId: number, unitId: number) {
-		const court = courts.find((c) => c.courtID === courtId);
-		if (court?.approvalStatus === courtStatusEnum.APPROVED && hasPendingCourts) {
-			showPendingWarningModal = true;
-			return;
-		}
 		currentCourtId = courtId;
 		currentUnitId = unitId;
 		newSubUnitDescription = '';
 		newSubUnitPrice = 0;
-		isAddingWithUnit = false;
+		errorMessage = '';
 		showAddSubUnitModal = true;
 	}
 
-	function addNewUnit() {
+	async function addNewUnit() {
 		if (!newUnitTitle.trim() || !newSubUnitDescription.trim()) return;
 
 		const court = courts.find((c) => c.courtID === currentCourtId);
 		if (!court) return;
 
-		const newUnitId = Math.max(...court.units!.map((u) => u.unitID)) + 1;
-		court.units!.push({
-			unitID: newUnitId,
-			title: newUnitTitle.trim(),
-			subUnits: [{ id: 1, description: newSubUnitDescription.trim(), price: newSubUnitPrice }]
-		});
+		isArchiving = true;
+		errorMessage = '';
+		try {
+			await archiveCourtBookings(court.courtID);
+		} catch {
+			errorMessage = 'Failed to archive bookings for this court. Please try again.';
+			isArchiving = false;
+			return;
+		}
+		isArchiving = false;
+
+		const newUnitId =
+			(court.units?.length ? Math.max(...court.units.map((u) => u.unitID)) : 0) + 1;
+		court.units = [
+			...(court.units ?? []),
+			{
+				unitID: newUnitId,
+				title: newUnitTitle.trim(),
+				subUnits: [{ id: 1, description: newSubUnitDescription.trim(), price: newSubUnitPrice }]
+			}
+		];
 		courts = [...courts];
 		showAddUnitModal = false;
 	}
 
-	function addNewSubUnit() {
+	async function addNewSubUnit() {
 		if (!newSubUnitDescription.trim()) return;
 
 		const court = courts.find((c) => c.courtID === currentCourtId);
-		const unit = court?.units!.find((u) => u.unitID === currentUnitId);
-		if (!unit) return;
+		const unit = court?.units?.find((u) => u.unitID === currentUnitId);
+		if (!court || !unit) return;
+
+		isArchiving = true;
+		errorMessage = '';
+		try {
+			await archiveCourtBookings(court.courtID);
+		} catch {
+			errorMessage = 'Failed to archive bookings for this court. Please try again.';
+			isArchiving = false;
+			return;
+		}
+		isArchiving = false;
 
 		const newSubUnitId = Math.max(...unit.subUnits.map((s) => s.id)) + 1;
-		unit.subUnits.push({
-			id: newSubUnitId,
-			description: newSubUnitDescription.trim(),
-			price: newSubUnitPrice
-		});
+		unit.subUnits = [
+			...unit.subUnits,
+			{ id: newSubUnitId, description: newSubUnitDescription.trim(), price: newSubUnitPrice }
+		];
 		courts = [...courts];
 		showAddSubUnitModal = false;
 	}
 
-	function removeSubUnit(courtId: number, unitId: number, subUnitId: number) {
+	async function removeSubUnit(courtId: number, unitId: number, subUnitId: number) {
 		const court = courts.find((c) => c.courtID === courtId);
-		if (court?.approvalStatus === courtStatusEnum.APPROVED && hasPendingCourts) {
-			showPendingWarningModal = true;
+		const unit = court?.units?.find((u) => u.unitID === unitId);
+		if (!court || !unit) return;
+
+		errorMessage = '';
+		try {
+			await archiveCourtBookings(court.courtID);
+		} catch {
+			errorMessage = 'Failed to archive bookings for this court. Please try again.';
 			return;
 		}
-		const unit = court?.units.find((u) => u.unitID === unitId);
-		if (unit) {
-			if (unit.subUnits.length > 1) {
-				unit.subUnits = unit.subUnits.filter((s) => s.id !== subUnitId);
-			} else if (unit.subUnits.length === 1 && unit.subUnits[0].id === subUnitId) {
-				court.units = court.units.filter((u) => u.unitID !== unitId);
-			}
-			courts = [...courts];
+
+		if (unit.subUnits.length > 1) {
+			unit.subUnits = unit.subUnits.filter((s) => s.id !== subUnitId);
+		} else {
+			court.units = court.units!.filter((u) => u.unitID !== unitId);
 		}
+		courts = [...courts];
 	}
 </script>
 
 <div class="card bg-base-100 md:shadow-xl">
 	<div class="card-body p-0!">
-		<div class="card bg-base-100 md:shadow-xl">
-			{#each courts as court}
-				<div class="flex w-full flex-row-reverse justify-center gap-2">
-					<div class="flex w-full items-center justify-between">
-						<div></div>
-						<div class="mx-auto badge w-fit badge-secondary">{court.approvalStatus}</div>
-					</div>
-				</div>
-				<div class="card-body bg-base-200 p-4 sm:m-4 sm:p-6">
-					<div class="flex w-full justify-between">
-						<h3 class="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">{court.name}</h3>
-						<button
-							on:click={() => openDeleteCourtModal(court.courtID)}
-							class="btn btn-error"
-							title="Delete court"
-						>
-							DELETE
-						</button>
-					</div>
+		{#if errorMessage}
+			<div class="alert alert-error mx-4 mt-4 sm:mx-6">{errorMessage}</div>
+		{/if}
 
-					<!-- Desktop Table View -->
-					<div class="hidden overflow-x-auto md:block">
-						<table class="table w-full">
-							<thead>
-								<tr>
-									<th class="w-fit">Unit</th>
-									<th class="w-max">Sub-units</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each court.units as unit}
-									<tr class="border-b">
-										<td class="py-4 align-top">
-											<div class="font-medium">{unit.title}</div>
-										</td>
-										<td class="py-4">
-											<div class="flex flex-wrap items-start gap-2">
-												{#each unit.subUnits as subUnit}
-													<div class="card w-fit bg-base-200 shadow-sm">
-														<div class="card-body p-4">
-															<div class="flex items-start justify-between">
-																<div class="flex-1">
-																	<h4 class="text-sm font-medium">{subUnit.description}</h4>
-																	<p class="text-lg font-bold text-primary">
-																		Rs. {subUnit.price}
-																	</p>
-																</div>
-																<button
-																	on:click={() =>
-																		removeSubUnit(court.courtID, unit.unitID, subUnit.id)}
-																	class="btn btn-circle self-start btn-ghost btn-xs"
-																	class:hidden={court.approvalStatus !== courtStatusEnum.APPROVED}
-																>
-																	<svg
-																		xmlns="http://www.w3.org/2000/svg"
-																		class="h-3 w-3"
-																		fill="none"
-																		viewBox="0 0 24 24"
-																		stroke="currentColor"
-																	>
-																		<path
-																			stroke-linecap="round"
-																			stroke-linejoin="round"
-																			stroke-width="2"
-																			d="M6 18L18 6M6 6l12 12"
-																		/>
-																	</svg>
-																</button>
+		{#each courts as court}
+			<div class="card-body bg-base-200 p-4 sm:m-4 sm:p-6">
+				<div class="flex w-full justify-between">
+					<h3 class="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">{court.name}</h3>
+					<button
+						on:click={() => openDeleteCourtModal(court.courtID)}
+						class="btn btn-error"
+						title="Delete court"
+					>
+						DELETE
+					</button>
+				</div>
+
+				<!-- Desktop Table View -->
+				<div class="hidden overflow-x-auto md:block">
+					<table class="table w-full">
+						<thead>
+							<tr>
+								<th class="w-fit">Unit</th>
+								<th class="w-max">Sub-units</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each court.units as unit}
+								<tr class="border-b">
+									<td class="py-4 align-top">
+										<div class="font-medium">{unit.title}</div>
+									</td>
+									<td class="py-4">
+										<div class="flex flex-wrap items-start gap-2">
+											{#each unit.subUnits as subUnit}
+												<div class="card w-fit bg-base-200 shadow-sm">
+													<div class="card-body p-4">
+														<div class="flex items-start justify-between">
+															<div class="flex-1">
+																<h4 class="text-sm font-medium">{subUnit.description}</h4>
+																<p class="text-lg font-bold text-primary">
+																	Rs. {subUnit.price}
+																</p>
 															</div>
+															<button
+																on:click={() =>
+																	removeSubUnit(court.courtID, unit.unitID, subUnit.id)}
+																class="btn btn-circle self-start btn-ghost btn-xs"
+															>
+																<svg
+																	xmlns="http://www.w3.org/2000/svg"
+																	class="h-3 w-3"
+																	fill="none"
+																	viewBox="0 0 24 24"
+																	stroke="currentColor"
+																>
+																	<path
+																		stroke-linecap="round"
+																		stroke-linejoin="round"
+																		stroke-width="2"
+																		d="M6 18L18 6M6 6l12 12"
+																	/>
+																</svg>
+															</button>
 														</div>
 													</div>
-												{/each}
-												<button
-													on:click={() => openAddSubUnitModal(court.courtID, unit.unitID)}
-													class="btn ml-auto btn-circle btn-sm btn-primary"
-													class:hidden={court.approvalStatus !== courtStatusEnum.APPROVED}
-												>
-													<svg
-														xmlns="http://www.w3.org/2000/svg"
-														class="h-4 w-4"
-														fill="none"
-														viewBox="0 0 24 24"
-														stroke="currentColor"
-													>
-														<path
-															stroke-linecap="round"
-															stroke-linejoin="round"
-															stroke-width="2"
-															d="M12 4v16m8-8H4"
-														/>
-													</svg>
-												</button>
-											</div>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-
-					<!-- Mobile Card View -->
-					<div class="space-y-4 md:hidden">
-						{#each court.units! as unit}
-							<div class="card bg-base-200">
-								<div class="card-body p-3 sm:p-4">
-									<div class="flex w-full flex-row items-center align-middle">
-										<h4 class="grow text-base font-medium sm:text-lg">{unit.title}</h4>
-										<button
-											on:click={() => openAddSubUnitModal(court.courtID, unit.unitID)}
-											class="btn m-1! mt-3 h-fit w-fit grow-0 border-2 p-1! btn-outline btn-sm btn-primary sm:w-auto"
-											class:hidden={court.approvalStatus !== courtStatusEnum.APPROVED}
-										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												class="h-4 w-4"
-												fill="none"
-												viewBox="0 0 24 24"
-												stroke="currentColor"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M12 4v16m8-8H4"
-												/>
-											</svg>
-										</button>
-									</div>
-									<div class="space-y-2">
-										{#each unit.subUnits as subUnit}
-											<div
-												class="flex items-center justify-between rounded-lg bg-base-100 p-2 sm:p-3"
-											>
-												<div class="min-w-0 flex-1">
-													<p class="truncate text-sm font-medium">{subUnit.description}</p>
-													<p class="text-sm font-bold text-primary sm:text-base">
-														Rs. {subUnit.price}
-													</p>
 												</div>
-												<button
-													on:click={() => removeSubUnit(court.courtID, unit.unitID, subUnit.id)}
-													class="btn ml-2 btn-circle flex-shrink-0 btn-ghost btn-xs"
-													class:hidden={court.approvalStatus !== courtStatusEnum.APPROVED}
+											{/each}
+											<button
+												on:click={() => openAddSubUnitModal(court.courtID, unit.unitID)}
+												class="btn ml-auto btn-circle btn-sm btn-primary"
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="h-4 w-4"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke="currentColor"
 												>
-													<svg
-														xmlns="http://www.w3.org/2000/svg"
-														class="h-3 w-3"
-														fill="none"
-														viewBox="0 0 24 24"
-														stroke="currentColor"
-													>
-														<path
-															stroke-linecap="round"
-															stroke-linejoin="round"
-															stroke-width="2"
-															d="M6 18L18 6M6 6l12 12"
-														/>
-													</svg>
-												</button>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M12 4v16m8-8H4"
+													/>
+												</svg>
+											</button>
+										</div>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+
+				<!-- Mobile Card View -->
+				<div class="space-y-4 md:hidden">
+					{#each court.units ?? [] as unit}
+						<div class="card bg-base-200">
+							<div class="card-body p-3 sm:p-4">
+								<div class="flex w-full flex-row items-center align-middle">
+									<h4 class="grow text-base font-medium sm:text-lg">{unit.title}</h4>
+									<button
+										on:click={() => openAddSubUnitModal(court.courtID, unit.unitID)}
+										class="btn m-1! mt-3 h-fit w-fit grow-0 border-2 p-1! btn-outline btn-sm btn-primary sm:w-auto"
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="h-4 w-4"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M12 4v16m8-8H4"
+											/>
+										</svg>
+									</button>
+								</div>
+								<div class="space-y-2">
+									{#each unit.subUnits as subUnit}
+										<div class="flex items-center justify-between rounded-lg bg-base-100 p-2 sm:p-3">
+											<div class="min-w-0 flex-1">
+												<p class="truncate text-sm font-medium">{subUnit.description}</p>
+												<p class="text-sm font-bold text-primary sm:text-base">
+													Rs. {subUnit.price}
+												</p>
 											</div>
-										{/each}
-									</div>
+											<button
+												on:click={() => removeSubUnit(court.courtID, unit.unitID, subUnit.id)}
+												class="btn ml-2 btn-circle flex-shrink-0 btn-ghost btn-xs"
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="h-3 w-3"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke="currentColor"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M6 18L18 6M6 6l12 12"
+													/>
+												</svg>
+											</button>
+										</div>
+									{/each}
 								</div>
 							</div>
-						{/each}
-					</div>
-
-					<div class="mt-4 flex w-full justify-end">
-						<button
-							on:click={() => openAddUnitModal(court.courtID)}
-							class="btn w-full border-2 text-xs uppercase btn-outline btn-primary sm:w-auto sm:text-sm"
-							class:hidden={court.approvalStatus !== courtStatusEnum.APPROVED}
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="h-4 w-4 sm:h-5 sm:w-5"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 4v16m8-8H4"
-								/>
-							</svg>
-							<span class="hidden sm:inline">Add divisable unit</span>
-							<span class="sm:hidden">Add Unit</span>
-						</button>
-					</div>
+						</div>
+					{/each}
 				</div>
-			{/each}
-		</div>
+
+				<div class="mt-4 flex w-full justify-end">
+					<button
+						on:click={() => openAddUnitModal(court.courtID)}
+						class="btn w-full border-2 text-xs uppercase btn-outline btn-primary sm:w-auto sm:text-sm"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-4 w-4 sm:h-5 sm:w-5"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 4v16m8-8H4"
+							/>
+						</svg>
+						<span class="hidden sm:inline">Add divisable unit</span>
+						<span class="sm:hidden">Add Unit</span>
+					</button>
+				</div>
+			</div>
+		{/each}
 
 		<button class="btn mt-10 w-full btn-primary" on:click={openAddCourtModal}>New Court</button>
 	</div>
@@ -348,10 +394,18 @@
 			</div>
 
 			<div class="modal-action">
-				<button class="btn btn-sm sm:btn-md" on:click={() => (showAddCourtModal = false)}
-					>Cancel</button
+				<button
+					class="btn btn-sm sm:btn-md"
+					disabled={isSavingCourt}
+					on:click={() => (showAddCourtModal = false)}>Cancel</button
 				>
-				<button class="btn btn-sm btn-primary sm:btn-md" on:click={addNewCourt}>Add Court</button>
+				<button
+					class="btn btn-sm btn-primary sm:btn-md"
+					disabled={isSavingCourt}
+					on:click={addNewCourt}
+				>
+					{isSavingCourt ? 'Adding...' : 'Add Court'}
+				</button>
 			</div>
 		</div>
 	</div>
@@ -399,10 +453,18 @@
 			</div>
 
 			<div class="modal-action">
-				<button class="btn btn-sm sm:btn-md" on:click={() => (showAddUnitModal = false)}
-					>Cancel</button
+				<button
+					class="btn btn-sm sm:btn-md"
+					disabled={isArchiving}
+					on:click={() => (showAddUnitModal = false)}>Cancel</button
 				>
-				<button class="btn btn-sm btn-primary sm:btn-md" on:click={addNewUnit}>Add Unit</button>
+				<button
+					class="btn btn-sm btn-primary sm:btn-md"
+					disabled={isArchiving}
+					on:click={addNewUnit}
+				>
+					{isArchiving ? 'Saving...' : 'Add Unit'}
+				</button>
 			</div>
 		</div>
 	</div>
@@ -435,30 +497,18 @@
 				/>
 			</div>
 			<div class="modal-action">
-				<button class="btn btn-sm sm:btn-md" on:click={() => (showAddSubUnitModal = false)}
-					>Cancel</button
+				<button
+					class="btn btn-sm sm:btn-md"
+					disabled={isArchiving}
+					on:click={() => (showAddSubUnitModal = false)}>Cancel</button
 				>
-				<button class="btn btn-sm btn-primary sm:btn-md" on:click={addNewSubUnit}
-					>Add Sub-unit</button
-				>
-			</div>
-		</div>
-	</div>
-{/if}
-
-{#if showPendingWarningModal}
-	<div class="modal-open modal">
-		<div class="modal-box mx-4 max-w-sm sm:max-w-lg">
-			<h3 class="mb-4 text-lg font-bold text-warning">Cannot Edit Approved Courts</h3>
-			<p class="mb-4">
-				You cannot edit approved courts while there are pending courts. Please delete all pending
-				courts first to make changes to approved courts.
-			</p>
-			<div class="modal-action">
 				<button
 					class="btn btn-sm btn-primary sm:btn-md"
-					on:click={() => (showPendingWarningModal = false)}>OK</button
+					disabled={isArchiving}
+					on:click={addNewSubUnit}
 				>
+					{isArchiving ? 'Saving...' : 'Add Sub-unit'}
+				</button>
 			</div>
 		</div>
 	</div>
@@ -468,12 +518,23 @@
 	<div class="modal-open modal">
 		<div class="modal-box mx-4 max-w-sm sm:max-w-lg">
 			<h3 class="mb-4 text-lg font-bold text-error">Delete Court</h3>
-			<p class="mb-4">Are you sure you want to delete this court? This action cannot be undone.</p>
+			<p class="mb-4">
+				Are you sure you want to delete this court? Its bookings will be archived first. This
+				action cannot be undone.
+			</p>
 			<div class="modal-action">
-				<button class="btn btn-sm sm:btn-md" on:click={() => (showDeleteCourtModal = false)}
-					>Cancel</button
+				<button
+					class="btn btn-sm sm:btn-md"
+					disabled={isDeletingCourt}
+					on:click={() => (showDeleteCourtModal = false)}>Cancel</button
 				>
-				<button class="btn btn-sm btn-error sm:btn-md" on:click={deleteCourt}>Delete</button>
+				<button
+					class="btn btn-sm btn-error sm:btn-md"
+					disabled={isDeletingCourt}
+					on:click={deleteCourt}
+				>
+					{isDeletingCourt ? 'Deleting...' : 'Delete'}
+				</button>
 			</div>
 		</div>
 	</div>
