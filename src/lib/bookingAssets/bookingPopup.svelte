@@ -203,7 +203,6 @@
 		selectedSubUnits;
 		generateTimeOptions();
 		calculateTotalPrice();
-		console.log('WHAT THE FUCK IS GOING ON LOOK HERE', $bookingDayData.entries);
 	});
 
 	$effect(() => {

@@ -53,8 +53,11 @@ function conflictWithClosure( closure: Closure, attemptedBooking: BookingDetails
   const closureEndMinutes = closureStartMinutes + (closure.durationMinutes || 0);
   const closureEndTimeStamp = addMinutesToUTCTimestamp(closure.startTimestamp, closure.durationMinutes);
   const timeOverlap = closureStartMinutes < utcToMinutes(attemptedBooking.startTime) || utcToMinutes(attemptedBooking.endTime) < closureEndMinutes;
+  // Discovered issue, its with the timeOverlap logic
+  
   const recurrenceMatch = occursAtRecurrence(closure.startTimestamp, closureEndTimeStamp, attemptedBooking.startTime.split('T')[0], closure.recurringType as recurrenceEnum);
-  return timeOverlap && recurrenceMatch
+  
+  return !timeOverlap && recurrenceMatch
 }
 
 function conflictWithinClosures(allClosures: CourtWithClosures[], attemptedBooking: BookingDetails): boolean {
@@ -74,9 +77,7 @@ function withinOpenHours(daySettings: daySettingsType, dayKey: string, attempted
 
 function conflictWithBookings(bookings: BookingDetails[], attemptedBooking: BookingDetails): boolean {
   // When a booking is archived, (when the owner updates the court details, say another unit is added or whatnot), they'd have different unitID's and/or may conflict with the current bookings. so for such bookings we ignore subunit overlap
-  console.log('checking for ', attemptedBooking);
-  console.log('against ', bookings);
-  
+
   for (const booking of bookings) {
     try{
     const existingStart = utcToMinutes(booking.startTime);

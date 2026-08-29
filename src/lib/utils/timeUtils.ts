@@ -98,8 +98,9 @@ export function doIntervalsOverlap(startA: number, endA: number, startB: number,
 
 export function occursAtRecurrence(closureDateString: string, closureEndDateString: string, attemptedDateString: string, recurrenceType: recurrenceEnum | string): boolean {
   const closureDate = new Date(closureDateString)
-  const attemptedDate = new Date(attemptedDateString)
+  const attemptedDate = new Date(attemptedDateString);
   const closureEndDate = new Date(closureEndDateString);
+  // if (closureDate < attemptedDate) return false; // If the closure starts before the attempted booking, it can't be a conflict
   const type = typeof recurrenceType === "string" ? recurrenceType : recurrenceType.valueOf();
   switch (type) {
     case recurrenceEnum.DAILY:
