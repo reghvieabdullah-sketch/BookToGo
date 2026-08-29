@@ -17,84 +17,46 @@
 	let newSubUnitPrice = 0;
 	let newCourtName = '';
 
-	let isSavingCourt = false;
-	let isDeletingCourt = false;
-	let isArchiving = false;
-	let errorMessage = '';
-
-	// --- API calls -------------------------------------------------------
-	// TODO: point these at your real endpoints / shared API client.
-
-	async function createCourt(payload: { name: string }) {
-		const res = await fetch('/api/courts', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(payload)
-		});
-		if (!res.ok) throw new Error('Failed to create court');
-		return res.json(); // expected: { courtID, name, units }
-	}
-
-	async function archiveCourtBookings(courtId: number) {
-		const res = await fetch(`/api/courts/${courtId}/archive-bookings`, {
-			method: 'POST'
-		});
-		if (!res.ok) throw new Error('Failed to archive bookings');
-	}
-
-	// --- Court: add / delete ----------------------------------------------
+	// --- Court: add / delete ------------------------------------------------
 
 	function openAddCourtModal() {
 		newCourtName = '';
-		errorMessage = '';
 		showAddCourtModal = true;
 	}
 
-	async function addNewCourt() {
+	function addNewCourt() {
 		if (!newCourtName.trim()) return;
 
-		isSavingCourt = true;
-		errorMessage = '';
-		try {
-			const created = await createCourt({ name: newCourtName.trim() });
-			courts = [...courts, { ...created, units: created.units ?? [] }];
-			showAddCourtModal = false;
-		} catch {
-			errorMessage = 'Failed to create court. Please try again.';
-		} finally {
-			isSavingCourt = false;
-		}
+		const newId = courts.length ? Math.max(...courts.map((c) => c.courtID)) + 1 : 1;
+		courts = [
+			...courts,
+			{
+				courtID: newId,
+				name: newCourtName.trim(),
+				units: []
+			}
+		];
+		showAddCourtModal = false;
 	}
 
 	function openDeleteCourtModal(courtId: number) {
 		courtToDelete = courtId;
-		errorMessage = '';
 		showDeleteCourtModal = true;
 	}
 
-	async function deleteCourt() {
-		isDeletingCourt = true;
-		errorMessage = '';
-		try {
-			await archiveCourtBookings(courtToDelete);
-			courts = courts.filter((c) => c.courtID !== courtToDelete);
-			showDeleteCourtModal = false;
-			courtToDelete = 0;
-		} catch {
-			errorMessage = 'Failed to archive bookings for this court. Please try again.';
-		} finally {
-			isDeletingCourt = false;
-		}
+	function deleteCourt() {
+		courts = courts.filter((c) => c.courtID !== courtToDelete);
+		showDeleteCourtModal = false;
+		courtToDelete = 0;
 	}
 
-	// --- Units / sub-units -------------------------------------------------
+	// --- Units / sub-units ---------------------------------------------------
 
 	function openAddUnitModal(courtId: number) {
 		currentCourtId = courtId;
 		newUnitTitle = '';
 		newSubUnitDescription = '';
 		newSubUnitPrice = 0;
-		errorMessage = '';
 		showAddUnitModal = true;
 	}
 
@@ -103,26 +65,14 @@
 		currentUnitId = unitId;
 		newSubUnitDescription = '';
 		newSubUnitPrice = 0;
-		errorMessage = '';
 		showAddSubUnitModal = true;
 	}
 
-	async function addNewUnit() {
+	function addNewUnit() {
 		if (!newUnitTitle.trim() || !newSubUnitDescription.trim()) return;
 
 		const court = courts.find((c) => c.courtID === currentCourtId);
 		if (!court) return;
-
-		isArchiving = true;
-		errorMessage = '';
-		try {
-			await archiveCourtBookings(court.courtID);
-		} catch {
-			errorMessage = 'Failed to archive bookings for this court. Please try again.';
-			isArchiving = false;
-			return;
-		}
-		isArchiving = false;
 
 		const newUnitId =
 			(court.units?.length ? Math.max(...court.units.map((u) => u.unitID)) : 0) + 1;
@@ -138,23 +88,12 @@
 		showAddUnitModal = false;
 	}
 
-	async function addNewSubUnit() {
+	function addNewSubUnit() {
 		if (!newSubUnitDescription.trim()) return;
 
 		const court = courts.find((c) => c.courtID === currentCourtId);
 		const unit = court?.units?.find((u) => u.unitID === currentUnitId);
-		if (!court || !unit) return;
-
-		isArchiving = true;
-		errorMessage = '';
-		try {
-			await archiveCourtBookings(court.courtID);
-		} catch {
-			errorMessage = 'Failed to archive bookings for this court. Please try again.';
-			isArchiving = false;
-			return;
-		}
-		isArchiving = false;
+		if (!unit) return;
 
 		const newSubUnitId = Math.max(...unit.subUnits.map((s) => s.id)) + 1;
 		unit.subUnits = [
@@ -165,18 +104,10 @@
 		showAddSubUnitModal = false;
 	}
 
-	async function removeSubUnit(courtId: number, unitId: number, subUnitId: number) {
+	function removeSubUnit(courtId: number, unitId: number, subUnitId: number) {
 		const court = courts.find((c) => c.courtID === courtId);
 		const unit = court?.units?.find((u) => u.unitID === unitId);
 		if (!court || !unit) return;
-
-		errorMessage = '';
-		try {
-			await archiveCourtBookings(court.courtID);
-		} catch {
-			errorMessage = 'Failed to archive bookings for this court. Please try again.';
-			return;
-		}
 
 		if (unit.subUnits.length > 1) {
 			unit.subUnits = unit.subUnits.filter((s) => s.id !== subUnitId);
@@ -189,10 +120,6 @@
 
 <div class="card bg-base-100 md:shadow-xl">
 	<div class="card-body p-0!">
-		{#if errorMessage}
-			<div class="alert alert-error mx-4 mt-4 sm:mx-6">{errorMessage}</div>
-		{/if}
-
 		{#each courts as court}
 			<div class="card-body bg-base-200 p-4 sm:m-4 sm:p-6">
 				<div class="flex w-full justify-between">
@@ -394,18 +321,10 @@
 			</div>
 
 			<div class="modal-action">
-				<button
-					class="btn btn-sm sm:btn-md"
-					disabled={isSavingCourt}
-					on:click={() => (showAddCourtModal = false)}>Cancel</button
+				<button class="btn btn-sm sm:btn-md" on:click={() => (showAddCourtModal = false)}
+					>Cancel</button
 				>
-				<button
-					class="btn btn-sm btn-primary sm:btn-md"
-					disabled={isSavingCourt}
-					on:click={addNewCourt}
-				>
-					{isSavingCourt ? 'Adding...' : 'Add Court'}
-				</button>
+				<button class="btn btn-sm btn-primary sm:btn-md" on:click={addNewCourt}>Add Court</button>
 			</div>
 		</div>
 	</div>
@@ -453,18 +372,10 @@
 			</div>
 
 			<div class="modal-action">
-				<button
-					class="btn btn-sm sm:btn-md"
-					disabled={isArchiving}
-					on:click={() => (showAddUnitModal = false)}>Cancel</button
+				<button class="btn btn-sm sm:btn-md" on:click={() => (showAddUnitModal = false)}
+					>Cancel</button
 				>
-				<button
-					class="btn btn-sm btn-primary sm:btn-md"
-					disabled={isArchiving}
-					on:click={addNewUnit}
-				>
-					{isArchiving ? 'Saving...' : 'Add Unit'}
-				</button>
+				<button class="btn btn-sm btn-primary sm:btn-md" on:click={addNewUnit}>Add Unit</button>
 			</div>
 		</div>
 	</div>
@@ -497,18 +408,12 @@
 				/>
 			</div>
 			<div class="modal-action">
-				<button
-					class="btn btn-sm sm:btn-md"
-					disabled={isArchiving}
-					on:click={() => (showAddSubUnitModal = false)}>Cancel</button
+				<button class="btn btn-sm sm:btn-md" on:click={() => (showAddSubUnitModal = false)}
+					>Cancel</button
 				>
-				<button
-					class="btn btn-sm btn-primary sm:btn-md"
-					disabled={isArchiving}
-					on:click={addNewSubUnit}
+				<button class="btn btn-sm btn-primary sm:btn-md" on:click={addNewSubUnit}
+					>Add Sub-unit</button
 				>
-					{isArchiving ? 'Saving...' : 'Add Sub-unit'}
-				</button>
 			</div>
 		</div>
 	</div>
@@ -518,23 +423,12 @@
 	<div class="modal-open modal">
 		<div class="modal-box mx-4 max-w-sm sm:max-w-lg">
 			<h3 class="mb-4 text-lg font-bold text-error">Delete Court</h3>
-			<p class="mb-4">
-				Are you sure you want to delete this court? Its bookings will be archived first. This
-				action cannot be undone.
-			</p>
+			<p class="mb-4">Are you sure you want to delete this court? This action cannot be undone.</p>
 			<div class="modal-action">
-				<button
-					class="btn btn-sm sm:btn-md"
-					disabled={isDeletingCourt}
-					on:click={() => (showDeleteCourtModal = false)}>Cancel</button
+				<button class="btn btn-sm sm:btn-md" on:click={() => (showDeleteCourtModal = false)}
+					>Cancel</button
 				>
-				<button
-					class="btn btn-sm btn-error sm:btn-md"
-					disabled={isDeletingCourt}
-					on:click={deleteCourt}
-				>
-					{isDeletingCourt ? 'Deleting...' : 'Delete'}
-				</button>
+				<button class="btn btn-sm btn-error sm:btn-md" on:click={deleteCourt}>Delete</button>
 			</div>
 		</div>
 	</div>
