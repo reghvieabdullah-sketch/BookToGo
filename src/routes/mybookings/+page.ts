@@ -3,7 +3,9 @@ import type { BookingDetails } from "../../types/bookingTypes";
 
 export const load: PageLoad = async ({ parent, fetch }) => {
     const parentData = await parent();
-
+    // console.log("GIGGA NIGGA");
+    console.log(parentData.venueData.venueContactDetails);
+    
     try {
         const response = await fetch(`/api/v1/my-bookings/${parentData.venueID}`);
 
@@ -16,12 +18,15 @@ export const load: PageLoad = async ({ parent, fetch }) => {
 
         const bookings: BookingDetails[] = await response.json();
         return {
-            bookings
+            bookings, 
+            contactDetails: parentData.venueData.venueContactDetails,
         };
     } catch (error) {
         console.error('Error loading bookings:', error);
         return {
-            bookings: [] as BookingDetails[]
+            bookings: [] as BookingDetails[],
+            contactDetails: parentData.venueData.venueContactDetails,
+
         };
     }
 };
