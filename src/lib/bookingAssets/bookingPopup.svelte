@@ -18,22 +18,39 @@
 		courtStatusEnum,
 		QUERY_PARAM_BOOKING_DATE,
 	} from '$lib/constants/postgressFunctionConstants';
-	import { onMount } from 'svelte';
 
+	// Instance export (accessible via bind:this) - not a runes-mode prop, left as-is
 	export const onclose = () => {};
 
-	// Booking states
-	export let isLoggedIn = false; 
-	export let venueData: VenueData;
-	export let settingsData: VenueSettings;
-	export let courtsData: courtsType;
-	export let closureData: CourtWithClosures[];
-	let showConfirmation = false;
-	let pendingBooking: BookingDetails | null;
-	let isConfirming = false;
-	let bookingResult: 'success' | 'error' | null = null;
-	let bookingMessage = '';
-	$: ($bookingDayData.date, (showConfirmation = false), (bookingResult = null));
+	// Props
+	let {
+		isLoggedIn = false,
+		venueData,
+		settingsData,
+		courtsData,
+		closureData,
+		isVenueOwner = false
+	}: {
+		isLoggedIn?: boolean;
+		venueData: VenueData;
+		settingsData: VenueSettings;
+		courtsData: courtsType;
+		closureData: CourtWithClosures[];
+		isVenueOwner: boolean;
+	} = $props();
+
+	let showConfirmation = $state(false);
+	let pendingBooking: BookingDetails | null = $state(null);
+	let isConfirming = $state(false);
+	let bookingResult: 'success' | 'error' | null = $state(null);
+	let bookingMessage = $state('');
+
+	// Reset confirmation/result state whenever the booking date changes
+	$effect(() => {
+		$bookingDayData.date;
+		showConfirmation = false;
+		bookingResult = null;
+	});
 
 	async function attemptBooking(booking: BookingDetails): Promise<any> {
 		try {
@@ -41,7 +58,7 @@
 			// Maybe its unnecessary to keep it like this, since below we only need the details, so maybe make the server only bookingdetails only, except when the owner goes to the dashboard.
 			$bookingDayData.entries = [...$bookingDayData.entries, booking]; // even if its a failure, we add it to the list for now. since the user would keep seeing the same booking otherwise.
 			// Assume passed the insertion checks if we get a 200 response
-			const r =  await response.json();
+			const r = await response.json();
 			console.log(r);
 			return r;
 		} catch (error) {
@@ -61,6 +78,7 @@
 	function clearBooking() {
 		localStorage.removeItem('bookingState');
 	}
+
 	async function confirmBooking(): Promise<void> {
 		if (!pendingBooking) return;
 		if (!isLoggedIn)
@@ -70,16 +88,21 @@
 		isConfirming = true;
 		const bookingPossible = await attemptBooking(pendingBooking);
 		console.log(bookingPossible);
-		
+
 		if (typeof bookingPossible === 'string') {
 			bookingResult = 'success';
-			bookingMessage = 'Your booking has been confirmed successfully! Redirecting...';
+			if (isVenueOwner) {
+				bookingMessage = 'Booking has been successfully added to the system.';
+			} else {
+				bookingMessage = 'Your booking has been confirmed successfully! Redirecting...';
+			}
 			showConfirmation = false;
 			pendingBooking = null;
-
-			setTimeout(() => {
-				goto('/mybookings');
-			}, 2000);
+			if (!isVenueOwner) {
+				setTimeout(() => {
+					goto('/mybookings');
+				}, 2000);
+			}
 		} else {
 			bookingResult = 'error';
 			bookingMessage =
@@ -99,50 +122,51 @@
 		showConfirmation = false;
 		pendingBooking = null;
 	}
+
 	// loaded booking, maybe be empty
 	const loadedBooking = loadBooking();
 	if (loadedBooking) clearBooking(); // clear after loading, we dont want to save old stale data.
 
-	// Reactive variables for user selections
-	let selectedCourtId: number | null = loadedBooking?.selectedCourtId || null;
-	let selectedUnitId: number | null = loadedBooking?.selectedUnitId || null;
-	let selectedSubUnitIds: number[] = loadedBooking?.selectedSubUnitIds || [];
-	let selectedDuration = loadedBooking?.selectedDuration || '01:00';
-	let selectedTime = loadedBooking?.selectedTime || '09:00';
-	let totalPrice = 0;
+	// Reactive state for user selections
+	let selectedCourtId: number | null = $state(loadedBooking?.selectedCourtId || null);
+	let selectedUnitId: number | null = $state(loadedBooking?.selectedUnitId || null);
+	let selectedSubUnitIds: number[] = $state(loadedBooking?.selectedSubUnitIds || []);
+	let selectedDuration = $state(loadedBooking?.selectedDuration || '01:00');
+	let selectedTime = $state(loadedBooking?.selectedTime || '09:00');
+	let totalPrice = $state(0);
+	let timeOptions: string | any[] = $state([]);
 
-	let timeOptions: string | any[] = [];
-	// Reactive computations
-	$: selectedCourt = courtsData.find((court) => court.courtID === selectedCourtId);
-	$: selectedUnit = selectedCourt?.units?.find((unit) => unit.unitID === selectedUnitId);
-	$: availableSubUnits = selectedUnit?.subUnits || [];
-	$: selectedSubUnits = availableSubUnits.filter((subUnit) =>
-		selectedSubUnitIds.includes(subUnit.id)
+	// Derived values
+	let selectedCourt = $derived(courtsData.find((court) => court.courtID === selectedCourtId));
+	let selectedUnit = $derived(selectedCourt?.units?.find((unit) => unit.unitID === selectedUnitId));
+	let availableSubUnits = $derived(selectedUnit?.subUnits || []);
+	let selectedSubUnits = $derived(
+		availableSubUnits.filter((subUnit) => selectedSubUnitIds.includes(subUnit.id))
 	);
 
 	// Get all available units across all courts for the dropdown
-	$: allUnits = courtsData.flatMap(
-		(court) =>
-			(court.approvalStatus === courtStatusEnum.APPROVED &&
-				court.units?.map((unit) => ({
-					...unit,
-					courtId: court.courtID,
-					courtName: court.name,
-					displayName: `${court.name} - ${unit.title}`
-				}))) ||
-			[]
+	let allUnits = $derived(
+		courtsData.flatMap(
+			(court) =>
+				(court.approvalStatus === courtStatusEnum.APPROVED &&
+					court.units?.map((unit) => ({
+						...unit,
+						courtId: court.courtID,
+						courtName: court.name,
+						displayName: `${court.name} - ${unit.title}`
+					}))) ||
+				[]
+		)
 	);
 
-		
-function generateTimeOptions() {
-	
-		if (!settingsData?.daySettings || !$bookingDayData?.date) return timeOptions = [];
-		
+	function generateTimeOptions() {
+		if (!settingsData?.daySettings || !$bookingDayData?.date) return (timeOptions = []);
+
 		const dayName = $bookingDayData.date.toLocaleDateString('en-LK', { weekday: 'long' }).toLowerCase();
 		const daySettings = settingsData.daySettings[dayName];
 		if (!daySettings?.is_day_bookable || !daySettings.openTime || !daySettings.closeTime)
-			return timeOptions = [];
-		
+			return (timeOptions = []);
+
 		const options: string[] = [];
 		const openingTime = parseTimeStringToUTCMinutes(daySettings.openTime);
 		const closingTime = parseTimeStringToUTCMinutes(daySettings.closeTime);
@@ -154,20 +178,39 @@ function generateTimeOptions() {
 				dayName,
 				settingsData.daySettings,
 				$bookingDayData.entries,
-				{courtID: selectedCourtId!, startTime:combineUTCDateAndTime($bookingDayData.date, minutesToHHMM(time)), endTime: combineUTCDateAndTime($bookingDayData.date, minutesToHHMM(time + durationMinutes)), units: { unitID: selectedUnitId!, subUnits: selectedSubUnits }}, closureData).conflicts
-			conflict ? time += settingsData.bookingCoolDown! : options.push(minutesToHHMM(time));
+				{ courtID: selectedCourtId!, startTime: combineUTCDateAndTime($bookingDayData.date, minutesToHHMM(time)), endTime: combineUTCDateAndTime($bookingDayData.date, minutesToHHMM(time + durationMinutes)), units: { unitID: selectedUnitId!, subUnits: selectedSubUnits } },
+				closureData
+			).conflicts;
+			conflict ? (time += settingsData.bookingCoolDown!) : options.push(minutesToHHMM(time));
 			time += interval;
 		}
-		
-		timeOptions = options;
-}
-	$: ($bookingDayData, $bookingPopupVisible, selectedCourt, selectedDuration, selectedSubUnits,  generateTimeOptions(), calculateTotalPrice(), console.log("WHAT THE FUCK IS GOING ON LOOK HERE", $bookingDayData.entries));
 
-	onMount(() => {
-		
+		timeOptions = options;
+	}
+
+	function calculateTotalPrice() {
+		const durationHours = Math.round(HHMMToMinutes(selectedDuration) / 60);
+		totalPrice = selectedSubUnits.reduce((sum, subUnit) => sum + subUnit.price!, 0) * durationHours;
+	}
+
+	// Recompute time options / price whenever these dependencies change
+	// (also runs once on mount, so a separate onMount call is no longer needed)
+	$effect(() => {
+		$bookingDayData;
+		$bookingPopupVisible;
+		selectedCourt;
+		selectedDuration;
+		selectedSubUnits;
 		generateTimeOptions();
+		calculateTotalPrice();
+		console.log('WHAT THE FUCK IS GOING ON LOOK HERE', $bookingDayData.entries);
 	});
-	$: if (timeOptions.length > 0 && !timeOptions.includes(selectedTime)) { selectedTime = timeOptions[0] }
+
+	$effect(() => {
+		if (timeOptions.length > 0 && !timeOptions.includes(selectedTime)) {
+			selectedTime = timeOptions[0];
+		}
+	});
 
 	function handleUnitSelection(event: Event) {
 		const target = event.target as HTMLSelectElement;
@@ -182,12 +225,7 @@ function generateTimeOptions() {
 		const currentlySelected = selectedSubUnitIds.length;
 		const isSelected = selectedSubUnitIds.includes(subUnitId);
 		if (currentlySelected === 1 && isSelected) return;
-		isSelected ? selectedSubUnitIds = selectedSubUnitIds.filter((id) => id !== subUnitId) : selectedSubUnitIds = [...selectedSubUnitIds, subUnitId];
-	}
-
-	function calculateTotalPrice() {
-		const durationHours = Math.round(HHMMToMinutes(selectedDuration) / 60);
-		totalPrice = selectedSubUnits.reduce((sum, subUnit) => sum + subUnit.price!, 0) * durationHours;
+		isSelected ? (selectedSubUnitIds = selectedSubUnitIds.filter((id) => id !== subUnitId)) : (selectedSubUnitIds = [...selectedSubUnitIds, subUnitId]);
 	}
 
 	async function handleBooking() {
@@ -201,26 +239,27 @@ function generateTimeOptions() {
 				minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration))
 			),
 			status: 'pending',
-			units: 
+			units:
 			{ title: selectedUnit?.title!, unitID: selectedUnit?.unitID!, subUnits: selectedSubUnits }
 		};
-		saveBooking({selectedCourtId, selectedUnitId, selectedSubUnitIds, selectedDuration, selectedTime});
+		saveBooking({ selectedCourtId, selectedUnitId, selectedSubUnitIds, selectedDuration, selectedTime });
 		showConfirmation = true;
 		console.log(booking);
-		
+
 		pendingBooking = booking;
 	}
 
-	$: if (!selectedUnitId && allUnits.length > 0) {
-		const firstUnit = allUnits[0];
-		selectedCourtId = firstUnit.courtId;
-		selectedUnitId = firstUnit.unitID;
-		if (firstUnit.subUnits && firstUnit.subUnits.length > 0) {
-			selectedSubUnitIds = firstUnit.subUnits.map((su) => su.id);
+	$effect(() => {
+		if (!selectedUnitId && allUnits.length > 0) {
+			const firstUnit = allUnits[0];
+			selectedCourtId = firstUnit.courtId;
+			selectedUnitId = firstUnit.unitID;
+			if (firstUnit.subUnits && firstUnit.subUnits.length > 0) {
+				selectedSubUnitIds = firstUnit.subUnits.map((su) => su.id);
+			}
 		}
-	}
+	});
 </script>
-
 <!-- Main Booking Form -->
 {#if !showConfirmation}
 	<div class="max-w-sm border border-base-300 bg-base-100 p-3">

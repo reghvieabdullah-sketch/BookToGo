@@ -39,6 +39,7 @@
 					closureData={data.closureData}
 					venueData={data.venueData}
 					isLoggedIn={data.userLoggedIn}
+					isVenueOwner={data.isVenueOwner}
 				/>
 			</div>
 		</div>

@@ -14,8 +14,8 @@
 	let newContactType = 'phone';
 	let newContactDescription = '';
 	const components: Record<string, Component> = {
-		mail: MaiIcon,
-		phone: PhoneIcon
+	phone: PhoneIcon,
+	email: MaiIcon
 	};
 	function openAddContactModal() {
 		showAddContactModal = true;
@@ -38,13 +38,13 @@
 			const selectedType = contactTypes.find((type) => type.value === newContactType);
 			if (selectedType) {
 				contactDetails = [
-					...contactDetails,
-					{
-						icon: selectedType.icon,
-						title: selectedType.label,
-						description: newContactDescription.trim()
-					}
-				];
+			...contactDetails,
+			{
+				icon: selectedType.value,
+				title: selectedType.label,
+				description: newContactDescription.trim()
+			}
+			];
 				showAddContactModal = false;
 			}
 		}
