@@ -30,6 +30,7 @@
 		bookings = flatten(bookingData);
 	});
 
+	
 	let selectedBooking = $state<BookingEntry | null>(null);
 	let isMobile = $state(false);
 	let showMobileDetails = $state(false);
@@ -49,6 +50,7 @@
 
 	function selectBooking(booking: BookingEntry) {
 		selectedBooking = booking;
+		
 		if (isMobile) {
 			showMobileDetails = true;
 		}
@@ -64,6 +66,15 @@
 			' ' + new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 		);
 	}
+
+	function formatBookingDate(isoString: string | number | Date) {
+		return new Date(isoString).toLocaleDateString([], {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric'
+		});
+	}
+	
 
 	function getStatusBadgeClass(status?: string) {
 		switch (status && status.toLowerCase()) {
@@ -136,6 +147,7 @@
 						onClick={() => selectBooking(booking)}
 						{getStatusBadgeClass}
 						{formatDate}
+						{formatBookingDate}
 					/>
 				{/each}
 			{:else}
@@ -156,6 +168,8 @@
 					{formatDate}
 					{handleCancel}
 					{handleDelete}
+					{formatBookingDate}
+
 				/>
 			</div>
 		</div>
@@ -173,6 +187,8 @@
 			{formatDate}
 			{handleCancel}
 			{handleDelete}
+			{formatBookingDate}
+
 		/>
 	</div>
 {/if}

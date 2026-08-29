@@ -8,6 +8,7 @@
 	export let formatDate;
 	export let handleCancel;
 	export let handleDelete;
+	export let formatBookingDate;
 </script>
 
 <div class="card max-h-[90vh] w-full max-w-md overflow-y-auto bg-base-100">
@@ -27,6 +28,7 @@
 			</div>
 			<div class="divider my-2"></div>
 			<div class="space-y-1 text-sm">
+				<div><strong>Date:</strong> {formatBookingDate(booking.details.startTime)}</div>
 				<div><strong>Start:</strong> {formatDate(booking.details.startTime)}</div>
 				<div><strong>End:</strong> {formatDate(booking.details.endTime)}</div>
 			</div>

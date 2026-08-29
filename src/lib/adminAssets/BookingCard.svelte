@@ -6,6 +6,7 @@
 	export let onClick = () => {};
 	export let getStatusBadgeClass;
 	export let formatDate;
+	export let formatBookingDate;
 </script>
 
 <div
@@ -23,7 +24,8 @@
 			<span class="badge badge-sm {getStatusBadgeClass(booking.details.status)}">{booking.details.status}</span>
 		</div>
 		<div class="text-xs opacity-70">
-			<div>Unit: {booking.details.unitName}</div>
+			<div>Unit: {booking.details.units.title}</div>
+			<div>Date: {formatBookingDate(booking.details.startTime)}</div>
 			<div>Start: {formatDate(booking.details.startTime)}</div>
 			<div>End: {formatDate(booking.details.endTime)}</div>
 		</div>

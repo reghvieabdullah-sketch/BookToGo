@@ -74,19 +74,24 @@ function withinOpenHours(daySettings: daySettingsType, dayKey: string, attempted
 
 function conflictWithBookings(bookings: BookingDetails[], attemptedBooking: BookingDetails): boolean {
   // When a booking is archived, (when the owner updates the court details, say another unit is added or whatnot), they'd have different unitID's and/or may conflict with the current bookings. so for such bookings we ignore subunit overlap
+  console.log('checking for ', attemptedBooking);
+  console.log('against ', bookings);
+  
   for (const booking of bookings) {
     try{
     const existingStart = utcToMinutes(booking.startTime);
     const existingEnd = utcToMinutes(booking.endTime);
     const overlap = doIntervalsOverlap(utcToMinutes(attemptedBooking.startTime), utcToMinutes(attemptedBooking.endTime), existingStart, existingEnd);
-    const sameCourt = attemptedBooking.courtID === booking.courtID;
+    const sameCourt = attemptedBooking.courtID === booking.courtID; // the latter check is in place, since courtID's are different even for the same booking, so we have to outright not allow it
+    const conflictingWithArchivedBooking = booking.courtStatus !== courtStatusEnum.APPROVED;
     const subunitIDs = booking.units.subUnits?.map((su) => su.id) ?? [];
     const subunitOverlap = attemptedBooking.units.subUnits?.some((sunit) =>subunitIDs.includes(sunit.id)) ||  booking.courtStatus !== courtStatusEnum.APPROVED;
     if (sameCourt && overlap && booking.units.unitID !== attemptedBooking.units.unitID) return true; // if the unitID's are different, then the booking is archived and we ignore subunit overlap
     if (sameCourt && overlap && subunitOverlap) return true;
+    if (overlap && conflictingWithArchivedBooking) return true;
     } catch(e){
-      // console.log(booking);
-      return false;
+      console.log(e);
+      return true;
     }
   }
   
