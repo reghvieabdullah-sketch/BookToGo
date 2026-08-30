@@ -72,9 +72,9 @@
 	</div> -->
 	<div class="navbar-end gap-2">
 		{#if isVenueOwner}
-			<a href="/dashboard" class="btn btn-outline btn-primary">TOMATO</a>
+			<a href="/dashboard" class="btn btn-outline btn-primary">Dashboard</a>
 		{:else}
-			<a href="/booking" class="btn btn-primary">POTATO</a>
+			<a href="/booking" class="btn btn-primary">Book Now</a>
 		{/if}
 
 		{#if session}
