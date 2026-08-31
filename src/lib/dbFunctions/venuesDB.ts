@@ -1,10 +1,20 @@
 import type { Closure, courtsType, CourtWithClosures, VenueData, VenueSettings } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { FN_IS_VENUE_OWNER, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX } from "$lib/constants/postgressFunctionConstants";
+import { FN_CREATE_SAMPLE_VENUE, FN_CREATE_VENUE_INVITE_URL, FN_IS_SUPER_OWNER, FN_IS_VENUE_OWNER, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_INVITATION_CONSUMPTION, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX } from "$lib/constants/postgressFunctionConstants";
 import { runRPC, ensureArgs, type DBResult } from "./commonServerTypesAndFuncs";
+import crypto from 'node:crypto';
 
 // IMPORTANT: All update functions are protected at the database level with ownership checks. Thus adding ownership checks here is redundant. well kindof but not for booking related logic, which is as to why its in a separate file
 
+
+export async function isUserSuperOwner(supabase: SupabaseClient): Promise<boolean> {
+    try {
+        const { data, error } = await runRPC(supabase, FN_IS_SUPER_OWNER, {});  
+        return !error && data === true;
+    } catch (err) {
+        return false;
+    }
+}
 
 /** Boolean returned indicating is the passed in userID is the ownersID. There is already a function at db level to check verification. But this is added for sake of completeness */
 export async function isUserVenueOwner(supabase: SupabaseClient, venueURL: string) {
@@ -15,6 +25,35 @@ export async function isUserVenueOwner(supabase: SupabaseClient, venueURL: strin
         return false;
     }
 }
+
+
+/** Creates a new venue if the user is a super owner. And returns the invite token */
+export async function createNewVenue(supabase: SupabaseClient, venueURL: string, isSuperOwner: boolean): Promise<DBResult<any>> {
+    if (!isSuperOwner) return { data: null, error: 'User is not a super owner and cannot create a new venue.' };
+    
+    const createStatus = await runRPC(supabase, FN_CREATE_SAMPLE_VENUE, { p_venue_url_name: venueURL });
+    if (createStatus.error || !createStatus.data) return { data: null, error: createStatus.error ?? 'Failed to create new venue' };
+
+    const token = crypto.randomBytes(32).toString('base64url');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours from now
+    console.log('createStatus data', createStatus.data)
+    console.log('createStatus error', createStatus.error)
+    const newVenueID = createStatus.data;
+    const urlStatus = await runRPC(supabase, FN_CREATE_VENUE_INVITE_URL, { p_venue_id: newVenueID, p_token_hash: tokenHash, p_expires_at: expiresAt });
+    if (urlStatus.error || !urlStatus.data) return { data: null, error: urlStatus.error ?? 'Failed to create invite URL' };
+    const invitationURL = `${venueURL}.booktogo.lk/invite/${token}` 
+    console.log('invitationURL ', invitationURL);
+    return { data: { inviteURL: invitationURL }, error: null };
+}
+
+export async function consumeVenueInvitation(supabase: SupabaseClient, token: string): Promise<DBResult<any>> {
+    if (!token) return { data: null, error: "Token doesn't exist" };
+    const consumptionStatus = await runRPC(supabase, FN_VENUE_INVITATION_CONSUMPTION, { p_token_hash: token });
+    return consumptionStatus;
+}
+
+
 
 /**Returns list of image paths under the venue specific bucket. */
 export async function getVenueImages(supabase: SupabaseClient, venueID: string, readLimit?: 1000): Promise<string[]> {

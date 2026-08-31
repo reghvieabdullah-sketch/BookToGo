@@ -3,11 +3,11 @@ import { type Handle, redirect } from '@sveltejs/kit'
 import { sequence } from "@sveltejs/kit/hooks";
 
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
-import { isUserVenueOwner } from "$lib/dbFunctions/venuesDB";
+import { isUserSuperOwner, isUserVenueOwner } from "$lib/dbFunctions/venuesDB";
 
 const supabase: Handle = async ({ event, resolve }) => {
     const host = event.request.headers.get('host') ?? '';
-    const subdomain = 'stmarybball'; // PLEASE REMEMBER TO NEVER HAVE THIS HARDCODED
+    const subdomain = 'stjohnsbb'; // PLEASE REMEMBER TO NEVER HAVE THIS HARDCODED
     event.locals.venueURL = subdomain;
     event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         cookies: {
@@ -37,6 +37,7 @@ const authGuard: Handle = async ({ event, resolve }) => {
     const { session, user } = await event.locals.safeGetSession();
     event.locals.session = session;
     event.locals.user = user;
+    event.locals.isUserSuperOwner = await isUserSuperOwner(event.locals.supabase);
     event.locals.isUserOwner = user ? await isUserVenueOwner(event.locals.supabase, event.locals.venueURL) : false;    
     
     // Also make it possible to pass in venueID using locals

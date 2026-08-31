@@ -61,4 +61,4 @@ const testBooking: BookingDetails = {
 };
 
 
-testHasBookingConflict("1", "92b8a584-287a-4bb8-9c6d-aa2e95507e77", testBooking, supabase, "stmarybball");
+testHasBookingConflict("1", "92b8a584-287a-4bb8-9c6d-aa2e95507e77", testBooking, supabase, "stjohnsbb");
