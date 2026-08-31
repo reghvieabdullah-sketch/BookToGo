@@ -35,7 +35,14 @@ export const FN_VENUE_BOOKING_LIMIT = 'past_limit_for_booking_for_user';
 export const FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK = 'insert_booking_without_check' // used when the db doesnt check for compatibility and just directly inserts it. but this additionally needs the user id
 export const FN_VENUE_BOOKING_DELETE = 'delete_booking_by_id'
 export const FN_IS_VENUE_OWNER = 'is_venue_owner'
+export const FN_IS_SUPER_OWNER = 'is_super_owner'
+export const FN_CREATE_SAMPLE_VENUE = 'create_sample_venue' // used to create a sample venue for testing purposes. only super owners can do this. it creates a venue, and returns the venue url and the invite token for the owner to get access the venue
+export const FN_CREATE_VENUE_INVITE_URL = 'create_venue_invitation' // used to create a venue invite url for a super owner to invite a new owner to the venue. it returns the invite token that can be used to access the venue
+export const FN_VENUE_INVITATION_CONSUMPTION =  'consume_venue_invitation'
+
 // Query params 
+
+
 
 export const QUERY_PARAM_VENUE_URL = 'p_venue_url';
 export const QUERY_PARAM_VENUE_ID = 'p_venue_id';

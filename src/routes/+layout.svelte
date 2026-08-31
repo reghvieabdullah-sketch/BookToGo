@@ -73,10 +73,9 @@
 	<div class="navbar-end gap-2">
 		{#if isVenueOwner}
 			<a href="/dashboard" class="btn btn-outline btn-primary">Dashboard</a>
-		{:else}
-			<a href="/booking" class="btn btn-primary">Book Now</a>
 		{/if}
-
+		<a href="/booking" class="btn btn-primary">Book Now</a>
+		
 		{#if session}
 			<div class="dropdown dropdown-end">
 				<button tabindex="0" class="btn btn-ghost btn-circle avatar" aria-label="User menu">

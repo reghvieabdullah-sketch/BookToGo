@@ -12,6 +12,7 @@ declare global {
 			session: Session | null
 			user: User | null
 			isUserOwner: boolean
+			isUserSuperOwner: boolean
 			venueURL: string
 		}
 		interface PageData {

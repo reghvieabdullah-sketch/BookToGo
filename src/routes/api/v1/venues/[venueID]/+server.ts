@@ -1,6 +1,6 @@
 import { QUERY_PARAM_VENUE_GET_BUNDLE } from "$lib/constants/postgressFunctionConstants";
 import { deleteCachedData, getCachedData, setCachedData } from "$lib/dbFunctions/cacheHandler";
-import { getVenueBundled } from "$lib/dbFunctions/venuesDB";
+import { createNewVenue, getVenueBundled } from "$lib/dbFunctions/venuesDB";
 import { getVenueGeneralSettings, updateVenueGeneralSettings } from "$lib/dbFunctions/venuesDB";
 import { json, type RequestHandler } from "@sveltejs/kit";
 
@@ -29,4 +29,17 @@ export const PUT: RequestHandler = async ({ locals, request, params }) => {
     const result = await updateVenueGeneralSettings(locals.supabase, venueData);
     await deleteCachedData(cacheKeys);
     return json(result);
+};
+
+
+
+export const POST: RequestHandler = async ({ locals, params, url }) => {
+    const venueURL = params.venueID;
+    if (!venueURL) return json({error: 'venueURL not present'}, { status: 400 });
+    if (!locals.isUserSuperOwner) return json({error: 'Not authorized to perform the selected action!'}, { status: 400 });
+    const res = await createNewVenue(locals.supabase, venueURL, locals.isUserSuperOwner);
+    console.log('result from create venue', res.data);
+    console.log('result from create venue', res.error);
+    
+    return json(res);
 };
