@@ -78,7 +78,7 @@ export async function uploadVenueImages(supabase: SupabaseClient, venueID: strin
     const urls: string[] = [];
     for (let index = 0; index < files.length; index++) {
         const ext = files[index].name.split('.').pop();
-        if (!ext || !(ext in VENUE_IMAGE_BUCKET_FORMATS)) throw Error('Unsupported image format.');
+        if (!ext || !(VENUE_IMAGE_BUCKET_FORMATS.includes(ext))) throw Error(`Unsupported image format: ${ext}`);
         const fileName = `${VENUE_IMAGE_BUCKET_PREFIX}-${index + 1}_${Date.now()}.${ext}`;
         const { error } = await supabase.storage
             .from(VENUE_IMAGE_BUCKET_PATH)
@@ -100,7 +100,7 @@ export async function uploadVenueLogoImage(supabase: SupabaseClient, venueID: st
     
     const ext = file!.name.split('.').pop()?.toLowerCase();
     console.log("Image format:", ext);
-    if (!ext || !(ext in VENUE_IMAGE_BUCKET_FORMATS)) {
+    if (!ext || !(VENUE_IMAGE_BUCKET_FORMATS.includes(ext))) {
         return { data: null, error: `Unsupported image format: ${ext}` };
     }
 
