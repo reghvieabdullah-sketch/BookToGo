@@ -20,6 +20,7 @@
 	let isUpdatingConfig = false;
 	let finishedUpdating = false;
 	let imageBlobs: Blob[];
+	let venueIconFile: File | null = null;
 	let generalDropdownOpen = false;
 
 	export let data;
@@ -91,6 +92,17 @@
 					})
 				);
 			}
+
+			if (venueIconFile) {
+				const logoData = new FormData();
+				logoData.append('logo', venueIconFile);
+				responses.push(
+					await fetch(`/api/v1/venues/${venueID}/media`, {
+						method: 'PUT',
+						body: await logoData
+					})
+				);
+			}
 			if (responses.every((val) => val.ok)) {
 				finishedUpdating = true;
 				// invalidate the parent layout to refetch the updated data
@@ -150,7 +162,8 @@
 			props: {
 				venueName: venueDataCopy.venueBrand,
 				venueSlogan: venueDataCopy.venueSlogan,
-				venueIconPreview: venueDataCopy.venueLogo
+				venueIconPreview: venueDataCopy.venueLogo,
+				venueIcon: venueIconFile	
 			}
 		},
 		{

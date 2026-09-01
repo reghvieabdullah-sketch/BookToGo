@@ -18,5 +18,5 @@ export const load = async ({ params, url, locals: { supabase, session, venueURL 
     throw error(404, "Invitation is invalid, expired or already used");
   }
 
-  throw redirect(303, `${venueURL}.booktogo.lk/dashboard`);
+  throw redirect(303, `https://${venueURL}.booktogo.lk/dashboard`);
 }

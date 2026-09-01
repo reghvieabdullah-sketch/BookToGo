@@ -3,19 +3,21 @@
 	export let venueSlogan = '';
 	export let venueIconPreview = '';
 	export let venueAddress = '';
-	let venueIcon: File | null = null;
+	export let venueIcon: File | null = null;
+	// let venueIcon: File | null = null;
 	function handleIconChange(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 
-		if (file) {
-			venueIcon = file;
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				venueIconPreview = e.target?.result as string;
-			};
-			reader.readAsDataURL(file);
-		}
+		if (!file) return;
+
+		venueIcon = file;
+
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			venueIconPreview = e.target?.result as string;
+		};
+		reader.readAsDataURL(file);
 	}
 </script>
 

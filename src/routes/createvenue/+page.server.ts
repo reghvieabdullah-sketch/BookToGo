@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	if (!isSuperOwner) {
 		// Logged in, but not a super owner — hide the page entirely.
-		throw error(404, 'Not found');
+		throw error(302, '/');
 	}
 
 	return {
