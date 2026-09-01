@@ -94,7 +94,6 @@
 			}
 
 			if (venueIcon) {
-				console.log("We are sending a new logo to the logo API ");
 				const logoData = new FormData();
 				logoData.append('logo', venueIcon);
 				responses.push(

@@ -8,12 +8,10 @@
 	function handleIconChange(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
-		console.log("Waiting for new logo");
 		
 		if (!file) return;
 
 		venueIcon = file;
-		console.log("Selected a new logo");
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			venueIconPreview = e.target?.result as string;

@@ -6,7 +6,6 @@ import { INVALIDATE_PARENT_LAYOUT_CODE, QUERY_PARAM_VENUE_GET_BUNDLE } from '$li
 
 
 function getVenueURL(hostname: string): string | null {
-    console.log('hostname recieved: ', hostname);
 
 	const parts = hostname.split('.');
 
@@ -21,7 +20,6 @@ function getVenueURL(hostname: string): string | null {
 
 export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
   const venueURL = getVenueURL(url.hostname) ?? 'stmarybball';
-  console.log("The venue URL", venueURL);
   
   // const venueURL = 'stjohnsbb';
   depends('supabase:auth');

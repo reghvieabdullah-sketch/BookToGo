@@ -38,8 +38,6 @@ export const POST: RequestHandler = async ({ locals, params, url }) => {
     if (!venueURL) return json({error: 'venueURL not present'}, { status: 400 });
     if (!locals.isUserSuperOwner) return json({error: 'Not authorized to perform the selected action!'}, { status: 400 });
     const res = await createNewVenue(locals.supabase, venueURL, locals.isUserSuperOwner);
-    console.log('result from create venue', res.data);
-    console.log('result from create venue', res.error);
     
     return json(res);
 };

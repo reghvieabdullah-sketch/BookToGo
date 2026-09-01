@@ -30,7 +30,6 @@ export const actions: Actions = {
 			sameSite: 'lax',
 			maxAge: 60 * 10 // 10 minutes, plenty for the OAuth round trip
 		});
-		console.log(`THE URL OUT IS: ${url.origin}/auth/callback?next=${encodeURIComponent(next)}`);
 		
 		const { data, error } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
@@ -47,7 +46,6 @@ export const actions: Actions = {
 			console.error('OAuth error:', error);
 			throw redirect(303, '/auth/error');
 		}
-		console.log("THE DATA.URL VALUE IS ", data.url);
 		
 		if (data.url) {
 			throw redirect(303, data.url);
