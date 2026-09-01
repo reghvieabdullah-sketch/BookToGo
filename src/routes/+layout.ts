@@ -5,11 +5,14 @@ import { courtDataStore, userLoggedInStore, venueDataStore, venueSettingsStore }
 import { INVALIDATE_PARENT_LAYOUT_CODE, QUERY_PARAM_VENUE_GET_BUNDLE } from '$lib/constants/postgressFunctionConstants'
 
 
-
 function getVenueURL(hostname: string): string | null {
 	const parts = hostname.split('.');
 
 	if (parts.length < 3) return null;
+
+	if (parts[0] === 'www') {
+		return parts.length >= 4 ? parts[1] : null;
+	}
 
 	return parts[0];
 }
