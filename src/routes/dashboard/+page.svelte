@@ -252,7 +252,7 @@
 								bind:venueID={venueDataCopy.venueID}
 								bind:venueName={venueDataCopy.venueBrand}
 								bind:venueSlogan={venueDataCopy.venueSlogan}
-								bind:venueIconPreview={venueDataCopy.venueLogo}
+								venueIconPreview={venueDataCopy.venueLogo}
 								bind:homePageImages={venueDataCopy.venueCourtCarouselImages}
 								bind:whyChooseUsCards={venueDataCopy.venueDescription}
 								bind:contactDetails={venueDataCopy.venueContactDetails}
