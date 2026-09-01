@@ -138,7 +138,7 @@ export async function updateVenueImages(supabase: SupabaseClient, venueID: strin
 
     const oldImagePaths = await getVenueImages(supabase, venueID!);
     const newImagePaths = await uploadVenueImages(supabase, venueID!, files)
-    const settingsResponse = await runRPC(supabase, FN_VENUE_GENERAL_SETTINGS_GET, { p_venue_id: venueID, p_image_urls: newImagePaths })
+    const settingsResponse = await runRPC(supabase, FN_VENUE_GENERAL_SETTINGS_GET, { p_venue_id: venueID })
     if (!settingsResponse.error) await deleteVenueImages(supabase, oldImagePaths); // delete the old images
     return settingsResponse;
 }
