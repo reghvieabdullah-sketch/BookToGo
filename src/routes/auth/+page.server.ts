@@ -10,7 +10,7 @@ function toE164(raw: string) {
 }
 
 export const actions: Actions = {
-	loginWithGoogle: async ({ locals: { supabase }, url, request, cookies }) => {
+	loginWithGoogle: async ({ locals: { supabase, venueURL }, url, request, cookies }) => {
 		const next = url.searchParams.get('next') ?? '/';
 
 		const formData = await request.formData();
@@ -30,11 +30,12 @@ export const actions: Actions = {
 			sameSite: 'lax',
 			maxAge: 60 * 10 // 10 minutes, plenty for the OAuth round trip
 		});
-
+		console.log(`THE URL OUT IS: ${url.hostname}/auth/callback?next=${encodeURIComponent(next)}`);
+		
 		const { data, error } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
-				redirectTo: `${url.host}/auth/callback?next=${encodeURIComponent(next)}`,
+				redirectTo: `${url.hostname}/auth/callback?next=${encodeURIComponent(next)}`,
 				queryParams: {
 					access_type: 'offline',
 					prompt: 'consent'
