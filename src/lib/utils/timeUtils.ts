@@ -62,15 +62,29 @@ export function utcToMinutes(utcString: string): number {
  * Converts a time string like "09:00:00+05:30" or "18:00:00Z" to total UTC minutes.
  */
 export function parseTimeStringToUTCMinutes(timeString: string): number {
-  // Construct a valid ISO datetime (date part doesn't matter)
-  const iso = `1970-01-01T${timeString}`;
-  const date = new Date(iso);
+	const match = timeString.match(
+		/^(\d{2}):(\d{2})(?::(\d{2}))?([+-])(\d{2})(?::?(\d{2}))?$/
+	);
 
-  if (isNaN(date.getTime())) {
-    throw new Error(`Invalid time string: ${timeString}`);
-  }
+	if (!match) {
+		throw new Error(`Invalid time string: ${timeString}`);
+	}
 
-  return date.getUTCHours() * 60 + date.getUTCMinutes();
+	const [, hour, minute, , sign, offsetHour, offsetMinute = '0'] = match;
+
+	let minutes = Number(hour) * 60 + Number(minute);
+
+	const offsetMinutes =
+		Number(offsetHour) * 60 + Number(offsetMinute);
+
+	if (sign === '+') {
+		minutes -= offsetMinutes;
+	} else {
+		minutes += offsetMinutes;
+	}
+
+	// Keep within 0–1439
+	return ((minutes % 1440) + 1440) % 1440;
 }
 
 
