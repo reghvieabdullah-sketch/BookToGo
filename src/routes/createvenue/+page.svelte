@@ -29,7 +29,6 @@
 			}
 
 			const obj = (await res.json()).data;
-            console.log(obj)
             createResult = obj.inviteURL;
 			venueName = '';
 		} catch (err) {

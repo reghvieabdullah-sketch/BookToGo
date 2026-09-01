@@ -1,6 +1,6 @@
 import type { Closure, courtsType, CourtWithClosures, VenueData, VenueSettings } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { FN_CREATE_SAMPLE_VENUE, FN_CREATE_VENUE_INVITE_URL, FN_IS_SUPER_OWNER, FN_IS_VENUE_OWNER, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_INVITATION_CONSUMPTION, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX, VENUE_LOGO_BUCKET_PATH } from "$lib/constants/postgressFunctionConstants";
+import { FN_CREATE_SAMPLE_VENUE, FN_CREATE_VENUE_INVITE_URL, FN_IS_SUPER_OWNER, FN_IS_VENUE_OWNER, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_IMAGE_UPDATE, FN_VENUE_INVITATION_CONSUMPTION, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX, VENUE_LOGO_BUCKET_PATH } from "$lib/constants/postgressFunctionConstants";
 import { runRPC, ensureArgs, type DBResult } from "./commonServerTypesAndFuncs";
 import crypto from 'node:crypto';
 
@@ -37,13 +37,10 @@ export async function createNewVenue(supabase: SupabaseClient, venueURL: string,
     const token = crypto.randomBytes(32).toString('base64url');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours from now
-    console.log('createStatus data', createStatus.data)
-    console.log('createStatus error', createStatus.error)
     const newVenueID = createStatus.data;
     const urlStatus = await runRPC(supabase, FN_CREATE_VENUE_INVITE_URL, { p_venue_id: newVenueID, p_token_hash: tokenHash, p_expires_at: expiresAt });
     if (urlStatus.error || !urlStatus.data) return { data: null, error: urlStatus.error ?? 'Failed to create invite URL' };
     const invitationURL = `${venueURL}.booktogo.lk/invite/${token}` 
-    console.log('invitationURL ', invitationURL);
     return { data: { inviteURL: invitationURL }, error: null };
 }
 
@@ -96,16 +93,13 @@ export async function uploadVenueImages(supabase: SupabaseClient, venueID: strin
 export async function uploadVenueLogoImage(supabase: SupabaseClient, venueID: string | null | undefined, file: File | null | undefined ): Promise<DBResult<string>> {
     const missing = ensureArgs({ p_venue_id: venueID, p_file: file });
     if (missing) return { data: null, error: missing };
-    console.log("Logging logo to console");
     
     const ext = file!.name.split('.').pop()?.toLowerCase();
-    console.log("Image format:", ext);
     if (!ext || !(VENUE_IMAGE_BUCKET_FORMATS.includes(ext))) {
         return { data: null, error: `Unsupported image format: ${ext}` };
     }
 
     const filePath = `${venueID}/logo.${ext}`;
-    console.log("Uploading logo to path:", filePath);
     const { error: uploadError } = await supabase.storage
         .from(VENUE_LOGO_BUCKET_PATH)
         .upload(filePath, file!, {
@@ -118,8 +112,6 @@ export async function uploadVenueLogoImage(supabase: SupabaseClient, venueID: st
         return { data: null, error: `Failed to upload venue logo: ${uploadError.message}`};
     }
     const publicUrl = supabase.storage.from(VENUE_LOGO_BUCKET_PATH).getPublicUrl(filePath).data.publicUrl;
-    console.log("Logo uploaded successfully to path:", publicUrl);
-    
     return { data: publicUrl, error: null };
 }
 
@@ -138,7 +130,10 @@ export async function updateVenueImages(supabase: SupabaseClient, venueID: strin
 
     const oldImagePaths = await getVenueImages(supabase, venueID!);
     const newImagePaths = await uploadVenueImages(supabase, venueID!, files)
-    const settingsResponse = await runRPC(supabase, FN_VENUE_GENERAL_SETTINGS_GET, { p_venue_id: venueID })
+    console.log("New image paths after upload: ", newImagePaths);
+    console.log("Old image paths before upload: ", oldImagePaths);
+    
+    const settingsResponse = await runRPC(supabase, FN_VENUE_IMAGE_UPDATE, { p_venue_id: venueID, p_image_urls: newImagePaths });
     if (!settingsResponse.error) await deleteVenueImages(supabase, oldImagePaths); // delete the old images
     return settingsResponse;
 }
