@@ -3,6 +3,8 @@ export const VENUE_IMAGE_BUCKET_PATH = 'home-page-images'
 export const VENUE_IMAGE_BUCKET_PREFIX = 'homepage'
 export const VENUE_IMAGE_BUCKET_FORMATS = ['webp', 'jpg', 'jpeg']
 
+export const VENUE_LOGO_BUCKET_PATH = 'venue-logo-images'
+
 
 // Functions
 export const FN_USER_SETTINGS_SET = 'create_venue_user'

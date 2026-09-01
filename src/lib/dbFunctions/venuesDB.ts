@@ -1,6 +1,6 @@
 import type { Closure, courtsType, CourtWithClosures, VenueData, VenueSettings } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { FN_CREATE_SAMPLE_VENUE, FN_CREATE_VENUE_INVITE_URL, FN_IS_SUPER_OWNER, FN_IS_VENUE_OWNER, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_INVITATION_CONSUMPTION, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX } from "$lib/constants/postgressFunctionConstants";
+import { FN_CREATE_SAMPLE_VENUE, FN_CREATE_VENUE_INVITE_URL, FN_IS_SUPER_OWNER, FN_IS_VENUE_OWNER, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_INVITATION_CONSUMPTION, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX, VENUE_LOGO_BUCKET_PATH } from "$lib/constants/postgressFunctionConstants";
 import { runRPC, ensureArgs, type DBResult } from "./commonServerTypesAndFuncs";
 import crypto from 'node:crypto';
 
@@ -89,10 +89,35 @@ export async function uploadVenueImages(supabase: SupabaseClient, venueID: strin
             .getPublicUrl(`${venueID}/${fileName}`).data.publicUrl;
         urls.push(publicUrl);
     }
-    console.log(`we got urls as ${urls}`);
-    
     return urls;
 }
+
+
+export async function uploadVenueLogoImage(supabase: SupabaseClient, venueID: string | null | undefined, file: File | null | undefined ): Promise<DBResult<string>> {
+    const missing = ensureArgs({ p_venue_id: venueID, p_file: file });
+    if (missing) return { data: null, error: missing };
+
+    const ext = file!.name.split('.').pop()?.toLowerCase();
+
+    if (!ext || !(ext in VENUE_IMAGE_BUCKET_FORMATS)) {
+        return { data: null, error: 'Unsupported image format.' };
+    }
+
+    const filePath = `${venueID}/logo.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+        .from(VENUE_LOGO_BUCKET_PATH)
+        .upload(filePath, file!, {
+            upsert: true,
+            contentType: file!.type
+    });
+
+    if (uploadError) return { data: null, error: `Failed to upload venue logo: ${uploadError.message}`};
+    const publicUrl = supabase.storage.from(VENUE_LOGO_BUCKET_PATH).getPublicUrl(filePath).data.publicUrl;
+    
+    return { data: publicUrl, error: null };
+}
+
 
 export async function updateVenueImages(supabase: SupabaseClient, venueID: string | null | undefined, files: File[]): Promise<DBResult<any>> {
     /* 

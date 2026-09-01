@@ -5,10 +5,20 @@ import { sequence } from "@sveltejs/kit/hooks";
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
 import { isUserSuperOwner, isUserVenueOwner } from "$lib/dbFunctions/venuesDB";
 
+
+// TODO - move this out to a proper file
+function getVenueURL(hostname: string): string | null {
+	const parts = hostname.split('.');
+
+	if (parts.length < 3) return null;
+
+	return parts[0];
+}
+
 const supabase: Handle = async ({ event, resolve }) => {
     const host = event.request.headers.get('host') ?? '';
-    const subdomain = 'stjohnsbb'; // PLEASE REMEMBER TO NEVER HAVE THIS HARDCODED
-    event.locals.venueURL = subdomain;
+    // const subdomain = 'stjohnsbb'; // PLEASE REMEMBER TO NEVER HAVE THIS HARDCODED
+    event.locals.venueURL = getVenueURL(host) ?? '';
     event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         cookies: {
             getAll: () => event.cookies.getAll(),
