@@ -95,11 +95,12 @@
 
 			if (venueIcon) {
 				const logoData = new FormData();
-				logoData.append('logo', venueIcon);
+				logoData.append('files', venueIcon);
+
 				responses.push(
 					await fetch(`/api/v1/venues/${venueID}/media`, {
 						method: 'PUT',
-						body: await logoData
+						body: logoData
 					})
 				);
 			}
