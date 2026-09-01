@@ -6,7 +6,7 @@ export const load = async ({ params, url, locals: { supabase, session, venueURL 
   const { token } = params;
   if (!session) {
     const next = encodeURIComponent(url.pathname);
-    throw redirect(303, `/auth/next?=${next}`)
+    throw redirect(303, `/auth?next=${next}`)
   }
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
   const { data, error: invError } = await consumeVenueInvitation(supabase, tokenHash);
