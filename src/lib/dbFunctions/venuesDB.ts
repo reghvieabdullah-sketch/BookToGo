@@ -80,7 +80,7 @@ export async function uploadVenueImages(supabase: SupabaseClient, venueID: strin
         const { error } = await supabase.storage
             .from(VENUE_IMAGE_BUCKET_PATH)
             .upload(`${venueID}/${fileName}`, files[index], { upsert: true });
-        if (error) throw Error("Image mismatch | upload error");
+        if (error) throw Error("Error uploading file: " + error.message);
         const publicUrl = supabase.storage
             .from(VENUE_IMAGE_BUCKET_PATH)
             .getPublicUrl(`${venueID}/${fileName}`).data.publicUrl;
