@@ -19,6 +19,7 @@ function getVenueURL(hostname: string): string | null {
 
 export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
   const venueURL = getVenueURL(url.hostname);
+  console.log(venueURL);
   
   // const venueURL = 'stjohnsbb';
   depends('supabase:auth');
