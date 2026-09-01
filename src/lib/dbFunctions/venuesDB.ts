@@ -101,7 +101,7 @@ export async function uploadVenueLogoImage(supabase: SupabaseClient, venueID: st
     const ext = file!.name.split('.').pop()?.toLowerCase();
     console.log("Image format:", ext);
     if (!ext || !(ext in VENUE_IMAGE_BUCKET_FORMATS)) {
-        return { data: null, error: 'Unsupported image format.' };
+        return { data: null, error: `Unsupported image format: ${ext}` };
     }
 
     const filePath = `${venueID}/logo.${ext}`;
