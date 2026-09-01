@@ -7,7 +7,7 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 export const GET: RequestHandler = async ({ locals, params, url }) => {
     const { venueID } = params;
     const requestedBundle = QUERY_PARAM_VENUE_GET_BUNDLE in url.searchParams;
-    const cacheKey = `venue:${locals.venueURL}:${requestedBundle ? 'bundled' : 'general'}`;
+    const cacheKey = `venue:${venueID}:${requestedBundle ? 'bundled' : 'general'}`;
     
     const cached = await getCachedData(cacheKey);
     if (cached) return json(cached);
