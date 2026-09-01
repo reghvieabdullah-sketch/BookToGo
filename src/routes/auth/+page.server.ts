@@ -30,12 +30,12 @@ export const actions: Actions = {
 			sameSite: 'lax',
 			maxAge: 60 * 10 // 10 minutes, plenty for the OAuth round trip
 		});
-		console.log(`THE URL OUT IS: ${url.hostname}/auth/callback?next=${encodeURIComponent(next)}`);
+		console.log(`THE URL OUT IS: ${url.origin}/auth/callback?next=${encodeURIComponent(next)}`);
 		
 		const { data, error } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
-				redirectTo: `${url.hostname}/auth/callback?next=${encodeURIComponent(next)}`,
+				redirectTo: `${url.origin}/auth/callback?next=${encodeURIComponent(next)}`,
 				queryParams: {
 					access_type: 'offline',
 					prompt: 'consent'
