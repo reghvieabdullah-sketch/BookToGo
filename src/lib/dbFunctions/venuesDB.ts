@@ -96,24 +96,29 @@ export async function uploadVenueImages(supabase: SupabaseClient, venueID: strin
 export async function uploadVenueLogoImage(supabase: SupabaseClient, venueID: string | null | undefined, file: File | null | undefined ): Promise<DBResult<string>> {
     const missing = ensureArgs({ p_venue_id: venueID, p_file: file });
     if (missing) return { data: null, error: missing };
-
+    console.log("Logging logo to console");
+    
     const ext = file!.name.split('.').pop()?.toLowerCase();
-
+    console.log("Image format:", ext);
     if (!ext || !(ext in VENUE_IMAGE_BUCKET_FORMATS)) {
         return { data: null, error: 'Unsupported image format.' };
     }
 
     const filePath = `${venueID}/logo.${ext}`;
-
+    console.log("Uploading logo to path:", filePath);
     const { error: uploadError } = await supabase.storage
         .from(VENUE_LOGO_BUCKET_PATH)
         .upload(filePath, file!, {
             upsert: true,
             contentType: file!.type
     });
-
-    if (uploadError) return { data: null, error: `Failed to upload venue logo: ${uploadError.message}`};
+    
+    if (uploadError) {
+        console.error("Error uploading logo:", uploadError);
+        return { data: null, error: `Failed to upload venue logo: ${uploadError.message}`};
+    }
     const publicUrl = supabase.storage.from(VENUE_LOGO_BUCKET_PATH).getPublicUrl(filePath).data.publicUrl;
+    console.log("Logo uploaded successfully to path:", publicUrl);
     
     return { data: publicUrl, error: null };
 }
