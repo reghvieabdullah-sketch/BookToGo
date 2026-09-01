@@ -8,6 +8,8 @@ import { isUserSuperOwner, isUserVenueOwner } from "$lib/dbFunctions/venuesDB";
 
 // TODO - move this out to a proper file
 function getVenueURL(hostname: string): string | null {
+    console.log('hostname recieved: ', hostname);
+    
 	const parts = hostname.split('.');
 
 	if (parts.length < 3) return null;

@@ -6,6 +6,8 @@ import { INVALIDATE_PARENT_LAYOUT_CODE, QUERY_PARAM_VENUE_GET_BUNDLE } from '$li
 
 
 function getVenueURL(hostname: string): string | null {
+    console.log('hostname recieved: ', hostname);
+
 	const parts = hostname.split('.');
 
 	if (parts.length < 3) return null;
