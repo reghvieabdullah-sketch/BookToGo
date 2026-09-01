@@ -94,13 +94,13 @@
 			}
 
 			if (venueIcon) {
+				console.log("We are sending a new logo to the logo API ");
 				const logoData = new FormData();
-				logoData.append('files', venueIcon);
-
+				logoData.append('logo', venueIcon);
 				responses.push(
 					await fetch(`/api/v1/venues/${venueID}/media`, {
 						method: 'PUT',
-						body: logoData
+						body: await logoData
 					})
 				);
 			}
