@@ -47,7 +47,8 @@ export const actions: Actions = {
 			console.error('OAuth error:', error);
 			throw redirect(303, '/auth/error');
 		}
-
+		console.log("THE DATA.URL VALUE IS ", data.url);
+		
 		if (data.url) {
 			throw redirect(303, data.url);
 		}
