@@ -20,7 +20,7 @@
 	let isUpdatingConfig = false;
 	let finishedUpdating = false;
 	let imageBlobs: Blob[];
-	let venueIconFile: File | null = null;
+	let venueIcon: File | null = null;
 	let generalDropdownOpen = false;
 
 	export let data;
@@ -93,9 +93,9 @@
 				);
 			}
 
-			if (venueIconFile) {
+			if (venueIcon) {
 				const logoData = new FormData();
-				logoData.append('logo', venueIconFile);
+				logoData.append('logo', venueIcon);
 				responses.push(
 					await fetch(`/api/v1/venues/${venueID}/media`, {
 						method: 'PUT',
@@ -163,7 +163,7 @@
 				venueName: venueDataCopy.venueBrand,
 				venueSlogan: venueDataCopy.venueSlogan,
 				venueIconPreview: venueDataCopy.venueLogo,
-				venueIcon: venueIconFile	
+				venueIcon: venueIcon
 			}
 		},
 		{
@@ -261,6 +261,7 @@
 								bind:venueSettings={venueSettingsCopy}
 								bind:closureData={data.closureData}
 								bind:bookingData={data.bookingData}
+								bind:venueIcon={venueIcon}
 							/>
 						{/if}
 					</div>
