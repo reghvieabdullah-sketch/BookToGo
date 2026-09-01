@@ -25,7 +25,6 @@ const supabase: Handle = async ({ event, resolve }) => {
     const host = event.request.headers.get('host') ?? '';
     // const subdomain = 'stjohnsbb'; // PLEASE REMEMBER TO NEVER HAVE THIS HARDCODED
     event.locals.venueURL = getVenueURL(host) ?? 'stmarybball';
-    console.log("The venue URL", event.locals.venueURL);
     
     event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         cookies: {
