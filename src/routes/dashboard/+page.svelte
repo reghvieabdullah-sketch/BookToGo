@@ -32,6 +32,10 @@
 
 	async function getFormData(): Promise<FormData> {
 		const formData = new FormData();
+		if (venueIcon) {
+			formData.append('logo', venueIcon);
+		}
+
 		imageBlobs.forEach((blob, index) => {
 			const fileName = `homepage-${index + 1}.${blob.type.split('/')[1] || 'jpg'}`;
 			const file = new File([blob], fileName, { type: blob.type });
@@ -84,22 +88,11 @@
 					})
 				);
 			}
-			if (imageBlobs) {
+			if (imageBlobs || venueIcon) {
 				responses.push(
 					await fetch(`/api/v1/venues/${venueID}/media`, {
 						method: 'PUT',
 						body: await getFormData()
-					})
-				);
-			}
-
-			if (venueIcon) {
-				const logoData = new FormData();
-				logoData.append('logo', venueIcon);
-				responses.push(
-					await fetch(`/api/v1/venues/${venueID}/media`, {
-						method: 'PUT',
-						body: await logoData
 					})
 				);
 			}

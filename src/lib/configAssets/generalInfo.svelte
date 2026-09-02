@@ -4,14 +4,24 @@
 	export let venueIconPreview = '';
 	export let venueAddress = '';
 	export let venueIcon: File | null = null;
-	// let venueIcon: File | null = null;
+
 	function handleIconChange(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
-		
+
 		if (!file) return;
 
+		const maxSize = 2 * 1024 * 1024; // 2 MB
+
+		// Ignore files larger than 2 MB
+		if (file.size > maxSize) {
+			target.value = '';
+			alert('File size exceeds 2 MB. Please choose a smaller file.');
+			return;
+		}
+
 		venueIcon = file;
+
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			venueIconPreview = e.target?.result as string;
@@ -39,7 +49,7 @@
 
 		<div class="form-control w-full mb-3 sm:mb-4">
 			<label class="label pb-1 sm:pb-2">
-				<span class="label-text font-semibold text-sm sm:text-base">Venue Name</span>
+				<span class="label-text font-semibold text-sm sm:text-base">Venue Address</span>
 			</label>
 			<input
 				type="text"
@@ -67,12 +77,14 @@
 			<label class="label pb-1 sm:pb-2">
 				<span class="label-text font-semibold text-sm sm:text-base">Venue Icon</span>
 			</label>
+
 			<input
 				type="file"
-				accept="image/*"
+				accept="image/png"
 				on:change={handleIconChange}
 				class="file-input-bordered file-input w-full text-sm sm:text-base h-10 sm:h-12"
 			/>
+
 			{#if venueIconPreview}
 				<div class="mt-2 sm:mt-4">
 					<img
