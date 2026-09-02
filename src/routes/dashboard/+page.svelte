@@ -264,92 +264,93 @@
 		</div>
 
 		<!-- Sidebar / Drawer -->
-		<div class="drawer-side">
-			<label for="drawer-toggle" class="drawer-overlay lg:hidden"></label>
-			<aside class="min-h-full w-80 border-r border-base-300 bg-base-100">
-				<!-- Sidebar Header -->
-				<div class="border-b border-base-300 p-6">
-					<h2 class="text-xl font-bold text-base-content">Navigation</h2>
-					<p class="mt-1 text-sm text-base-content/60">Venue management dashboard</p>
-				</div>
+<!-- Sidebar / Drawer -->
+	<div class="drawer-side">
+		<label for="drawer-toggle" class="drawer-overlay lg:hidden"></label>
+		<aside class="flex min-h-full w-80 flex-col border-r border-base-300 bg-base-100">
+			<!-- Sidebar Header -->
+			<div class="border-b border-base-300 p-6">
+				<h2 class="text-xl font-bold text-base-content">Navigation</h2>
+				<p class="mt-1 text-sm text-base-content/60">Venue management dashboard</p>
+			</div>
 
-				<!-- Navigation Menu -->
-				<div class="space-y-2 p-4">
-					<!-- Main Sections -->
-					{#each mainSections as section}
-						<button
-							class="btn w-full justify-start text-left font-medium btn-ghost"
-							class:btn-active={activeSection === section.id}
-							on:click={() => setActiveSection(section.id)}
-						>
-							{section.name}
-						</button>
-					{/each}
+			<!-- Navigation Menu -->
+			<div class="flex-1 space-y-2 overflow-y-auto p-4">
+				<!-- Main Sections -->
+				{#each mainSections as section}
+					<button
+						class="btn w-full justify-start text-left font-medium btn-ghost"
+						class:btn-active={activeSection === section.id}
+						on:click={() => setActiveSection(section.id)}
+					>
+						{section.name}
+					</button>
+				{/each}
 
-					<!-- General Configuration Dropdown -->
-					<div class="collapse-arrow collapse bg-base-200">
-						<input type="checkbox" bind:checked={generalDropdownOpen} />
-						<div class="collapse-title text-sm font-medium text-base-content/80">
-							General Configuration
-						</div>
-						<div class="collapse-content space-y-2">
-							{#each generalSections as section}
-								<button
-									class="btn w-full justify-start text-left btn-sm {activeSection === section.id
-										? 'btn-active!'
-										: 'btn-ghost'}"
-									on:click={() => setActiveSection(section.id)}
-								>
-									{section.name}
-								</button>
-							{/each}
-						</div>
+				<!-- General Configuration Dropdown -->
+				<div class="collapse-arrow collapse bg-base-200">
+					<input type="checkbox" bind:checked={generalDropdownOpen} />
+					<div class="collapse-title text-sm font-medium text-base-content/80">
+						General Configuration
 					</div>
-
-					<!-- Save Button -->
-					<div class="pt-4">
-						<button
-							class="btn w-full font-medium btn-primary"
-							on:click={updateVenueConfig}
-							disabled={isUpdatingConfig}
-						>
-							{#if isUpdatingConfig}
-								<span class="loading loading-sm loading-spinner"></span>
-								Saving...
-							{:else}
-								Save Changes
-							{/if}
-						</button>
+					<div class="collapse-content space-y-2">
+						{#each generalSections as section}
+							<button
+								class="btn w-full justify-start text-left btn-sm {activeSection === section.id
+									? 'btn-active!'
+									: 'btn-ghost'}"
+								on:click={() => setActiveSection(section.id)}
+							>
+								{section.name}
+							</button>
+						{/each}
 					</div>
 				</div>
 
-				<!-- Sidebar Footer with Current Section Info -->
-				<div class="absolute right-0 bottom-0 left-0 border-t border-base-300 p-4">
-					<div class="rounded-lg bg-info/10 p-4">
-						<h4 class="mb-2 font-medium text-info">Current Section</h4>
-						<p class="text-xs text-base-content/70">
-							{#if activeSection === 'bookings'}
-								View and manage all venue bookings and reservations.
-							{:else if activeSection === 'courts'}
-								Configure court availability, pricing, and booking settings.
-							{:else if activeSection === 'general'}
-								Update basic venue information and branding settings.
-							{:else if activeSection === 'images'}
-								Upload and manage venue images and media assets.
-							{:else if activeSection === 'features'}
-								Customize feature highlights displayed on your website.
-							{:else if activeSection === 'contact'}
-								Maintain up-to-date contact information for customers.
-							{:else if activeSection === 'settings'}
-								Customize the settings regarding booking & policies.
-							{:else}
-								Select a section to view management options.
-							{/if}
-						</p>
-					</div>
+				<!-- Save Button -->
+				<div class="pt-4">
+					<button
+						class="btn w-full font-medium btn-primary"
+						on:click={updateVenueConfig}
+						disabled={isUpdatingConfig}
+					>
+						{#if isUpdatingConfig}
+							<span class="loading loading-sm loading-spinner"></span>
+							Saving...
+						{:else}
+							Save Changes
+						{/if}
+					</button>
 				</div>
-			</aside>
-		</div>
+			</div>
+
+			<!-- Sidebar Footer with Current Section Info -->
+			<div class="border-t border-base-300 p-4">
+				<div class="rounded-lg bg-info/10 p-4">
+					<h4 class="mb-2 font-medium text-info">Current Section</h4>
+					<p class="text-xs text-base-content/70">
+						{#if activeSection === 'bookings'}
+							View and manage all venue bookings and reservations.
+						{:else if activeSection === 'courts'}
+							Configure court availability, pricing, and booking settings.
+						{:else if activeSection === 'general'}
+							Update basic venue information and branding settings.
+						{:else if activeSection === 'images'}
+							Upload and manage venue images and media assets.
+						{:else if activeSection === 'features'}
+							Customize feature highlights displayed on your website.
+						{:else if activeSection === 'contact'}
+							Maintain up-to-date contact information for customers.
+						{:else if activeSection === 'settings'}
+							Customize the settings regarding booking & policies.
+						{:else}
+							Select a section to view management options.
+						{/if}
+					</p>
+				</div>
+			</div>
+		</aside>
+	</div>
 	</div>
 </div>
 
