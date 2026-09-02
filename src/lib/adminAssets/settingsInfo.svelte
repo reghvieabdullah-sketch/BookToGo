@@ -124,10 +124,7 @@
 											class="input-bordered input input-sm w-full text-center text-sm"
 											on:change={(e) =>
 												updateOpenTime(dayOfWeek.toLowerCase(), e.currentTarget.value)}
-											value={toLocalTime(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.openTime?.slice(
-												0,
-												5
-											))}
+											value={toLocalTime(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.openTime)}
 										/>
 									</div>
 									<div>
@@ -139,10 +136,7 @@
 											class="input-bordered input input-sm w-full text-center text-sm"
 											on:change={(e) =>
 												updateCloseTime(dayOfWeek.toLowerCase(), e.currentTarget.value)}
-											value={toLocalTime(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.closeTime?.slice(
-												0,
-												5
-											))}
+											value={toLocalTime(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.closeTime)}
 										/>
 									</div>
 								</div>
