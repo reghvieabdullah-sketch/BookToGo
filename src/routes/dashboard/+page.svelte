@@ -35,12 +35,13 @@
 		if (venueIcon) {
 			formData.append('logo', venueIcon);
 		}
-
+		if (imageBlobs){
 		imageBlobs.forEach((blob, index) => {
 			const fileName = `homepage-${index + 1}.${blob.type.split('/')[1] || 'jpg'}`;
 			const file = new File([blob], fileName, { type: blob.type });
 			formData.append('files', file);
 		});
+		}
 		return formData;
 	}
 	async function updateVenueConfig() {
