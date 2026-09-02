@@ -64,7 +64,7 @@
 			{/if}
 			<div class="divider my-2"></div>
 			<div class="flex flex-row gap-2">
-				<button class="btn flex-1 btn-sm btn-error" on:click={handleCancel}> Cancel </button>
+				<button class="btn flex-1 btn-sm btn-error" on:click={handleCancel}> Back </button>
 				<button class="btn flex-1 btn-sm btn-primary" on:click={handleDelete}> Delete </button>
 			</div>
 		</div>

@@ -9,8 +9,7 @@
 	// Sri Lankan mobile numbers:
 	// Accepts: 07XXXXXXXX (10 digits) or +947XXXXXXXX / 947XXXXXXXX
 	// Valid mobile prefixes: 070,071,072,074,075,076,077,078
-	const LK_PHONE_REGEX = /^(?:\+?94|0)7[0124-8]\d{7}$/;
-
+	const LK_PHONE_REGEX = /^(?:\+?94|0)?7[0124-8]\d{7}$/;
 	function normalizedPhone(raw: string) {
 		const digits = raw.replace(/[\s-]/g, '');
 		return digits;

@@ -52,16 +52,29 @@
 </script>
 
 <!-- <svelte:head> -->
-	<!-- <link rel="icon" href={favicon} /> -->
+<!-- <link rel="icon" href={favicon} /> -->
 <!-- </svelte:head> -->
 
-<header class="sticky top-0 z-50 navbar bg-base-100 shadow">
-	<div class="navbar-start">
-		{#if venueData?.venueLogo && venueData.venueLogo !== ''}
-			<img src={venueData.venueLogo} alt="logoImage" class="mt-2 mr-2 h-10 w-10 bg-base-100" />
-		{/if}
-		<span class="text-sm font-bold text-primary md:text-lg">{venueData?.venueBrand || ''}</span>
+<header class="sticky top-0 z-50 navbar bg-base-100 shadow px-2 sm:px-4">
+	<div class="navbar-start min-w-0">
+		<a
+			href="/"
+			class="flex min-w-0 items-center gap-2 rounded-lg px-1 py-1 transition-opacity hover:opacity-80"
+			aria-label="Go to homepage"
+		>
+			{#if venueData?.venueLogo && venueData.venueLogo !== ''}
+				<img
+					src={venueData.venueLogo}
+					alt="{venueData?.venueBrand || 'Venue'} logo"
+					class="h-8 w-8 shrink-0 rounded bg-base-100 sm:h-10 sm:w-10"
+				/>
+			{/if}
+			<span class="truncate text-sm font-bold text-primary sm:text-lg">
+				{venueData?.venueBrand || ''}
+			</span>
+		</a>
 	</div>
+
 	<!-- <div class="navbar-center hidden lg:flex">
 		<ul class="menu menu-horizontal px-1">
 			<li><a href="#facilities">Facilities</a></li>
@@ -70,30 +83,38 @@
 			<li><a href="#contact">Contact</a></li>
 		</ul>
 	</div> -->
-	<div class="navbar-end gap-2">
+
+	<div class="navbar-end gap-1 sm:gap-2">
 		{#if isVenueOwner}
-			<a href="/dashboard" class="btn btn-outline btn-primary">Dashboard</a>
+			<a href="/dashboard" class="btn btn-outline btn-primary btn-sm hidden sm:inline-flex sm:btn-md">
+				Dashboard
+			</a>
 		{/if}
-		<a href="/booking" class="btn btn-primary">Book Now</a>
-		
+
+		<a href="/booking" class="btn btn-primary btn-sm sm:btn-md">
+			<span class="hidden xs:inline">Book Now</span>
+			<span class="xs:hidden">Book</span>
+		</a>
+
 		{#if session}
 			<div class="dropdown dropdown-end">
-				<button tabindex="0" class="btn btn-ghost btn-circle avatar" aria-label="User menu">
+				<button tabindex="0" class="btn btn-ghost btn-circle avatar btn-sm sm:btn-md" aria-label="User menu">
 					{#if avatarUrl}
-						<div class="w-10 rounded-full">
+						<div class="w-8 rounded-full sm:w-10">
 							<img src={avatarUrl} alt="User avatar" referrerpolicy="no-referrer" />
 						</div>
 					{:else}
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
-							width="28"
-							height="28"
+							width="24"
+							height="24"
 							viewBox="0 0 24 24"
 							fill="none"
 							stroke="currentColor"
 							stroke-width="2"
 							stroke-linecap="round"
 							stroke-linejoin="round"
+							class="sm:h-7 sm:w-7"
 						>
 							<circle cx="12" cy="12" r="10" />
 							<circle cx="12" cy="8" r="4" />
@@ -105,12 +126,20 @@
 					tabindex="0"
 					class="menu dropdown-content z-[1] mt-3 w-48 rounded-box bg-base-100 p-2 shadow"
 				>
+					{#if isVenueOwner}
+						<li class="sm:hidden">
+							<a href="/dashboard" onclick={closeDropdown}>Dashboard</a>
+						</li>
+					{/if}
 					<li><a href="/mybookings" onclick={closeDropdown}>My Bookings</a></li>
 					<li><button onclick={openLogoutConfirm}>Logout</button></li>
 				</ul>
 			</div>
 		{:else}
-			<a href="/auth" class="btn btn-outline btn-primary">Login</a>
+			<a href="/auth" class="btn btn-outline btn-primary btn-sm sm:btn-md">
+				<span class="hidden xs:inline">Login</span>
+				<span class="xs:hidden">Log in</span>
+			</a>
 		{/if}
 	</div>
 </header>
