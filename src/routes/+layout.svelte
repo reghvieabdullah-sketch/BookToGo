@@ -51,9 +51,9 @@
 	}
 </script>
 
-<!-- <svelte:head> -->
-<!-- <link rel="icon" href={favicon} /> -->
-<!-- </svelte:head> -->
+<svelte:head>
+<link rel="icon" href={venueData.venueLogo} />
+</svelte:head>
 
 <header class="sticky top-0 z-50 navbar bg-base-100 shadow px-2 sm:px-4">
 	<div class="navbar-start min-w-0">

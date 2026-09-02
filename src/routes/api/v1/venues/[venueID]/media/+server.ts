@@ -1,3 +1,4 @@
+import { deleteCachedData } from "$lib/dbFunctions/cacheHandler";
 import { updateVenueImages, uploadVenueLogoImage } from "$lib/dbFunctions/venuesDB";
 import { json, type RequestHandler } from "@sveltejs/kit";
 
@@ -25,8 +26,9 @@ export const PUT: RequestHandler = async ({ locals, request, params }) => {
         return json({ error: logoResult.error }, { status: 400 });
     }
 
+    const cacheKeys = [`venue:${locals.venueURL}:general`, `venue:${locals.venueURL}:bundled`, `venue:${locals.venueURL}:media`];
+    await deleteCachedData(cacheKeys);
     
-
     return json({
         images: imageResult?.data ?? null,
         logo: logoResult?.data ?? null,
