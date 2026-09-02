@@ -66,6 +66,21 @@
 			venueSettings.daySettings[day].is_day_bookable = checked;
 		}
 	}
+	const toLocalTime = (timeString?: string | null): string => {
+		if (!timeString) return "";
+
+		// Use today's date since the input only contains a time.
+		const date = new Date(`1970-01-01T${timeString}`);
+
+		if (Number.isNaN(date.getTime())) return "";
+
+		return date.toLocaleTimeString([], {
+			hour: "2-digit",
+			minute: "2-digit",
+			hour12: false,
+		});
+	};
+
 </script>
 
 <div class="card bg-base-100 shadow-xl">
@@ -109,7 +124,7 @@
 											class="input-bordered input input-sm w-full text-center text-sm"
 											on:change={(e) =>
 												updateOpenTime(dayOfWeek.toLowerCase(), e.currentTarget.value)}
-											value={timeStringToLocal(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.openTime?.slice(
+											value={toLocalTime(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.openTime?.slice(
 												0,
 												5
 											))}
@@ -124,10 +139,10 @@
 											class="input-bordered input input-sm w-full text-center text-sm"
 											on:change={(e) =>
 												updateCloseTime(dayOfWeek.toLowerCase(), e.currentTarget.value)}
-											value={timeStringToLocal(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.closeTime?.slice(
+											value={toLocalTime(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.closeTime?.slice(
 												0,
 												5
-											)!)}
+											))}
 										/>
 									</div>
 								</div>
@@ -160,10 +175,10 @@
 										disabled={!isDayBookable[i]}
 										on:change={(e) =>
 											updateOpenTime(dayOfWeek.toLowerCase(), e.currentTarget.value)}
-										value={timeStringToLocal(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.openTime?.slice(
+										value={venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.openTime?.slice(
 											0,
 											5
-										)!)}
+										)}
 									/>
 								</div>
 								<div class="flex-1">
@@ -176,10 +191,10 @@
 										disabled={!isDayBookable[i]}
 										on:change={(e) =>
 											updateCloseTime(dayOfWeek.toLowerCase(), e.currentTarget.value)}
-										value={timeStringToLocal(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.closeTime?.slice(
+										value={venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.closeTime?.slice(
 											0,
 											5
-										)!)}
+										)}
 									/>
 								</div>
 							</div>
