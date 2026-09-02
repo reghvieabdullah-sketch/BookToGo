@@ -79,6 +79,8 @@
 				);
 			}
 			if (!equal(data.settingsData, venueSettingsCopy)) {
+				console.log("check this ", venueSettingsCopy);
+				
 				responses.push(
 					await fetch(`/api/v1/venues/${venueID}/settings`, {
 						method: 'PUT',
