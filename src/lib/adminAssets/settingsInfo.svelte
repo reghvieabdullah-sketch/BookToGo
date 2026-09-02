@@ -2,6 +2,7 @@
 	// TODO - create a home page.
 	// TODO - add the payment creds detail info into the dashboard page
 	import { dayNamesFull } from '$lib/constants/dayMonthconstants';
+	import { timeStringToLocal } from '$lib/utils/timeUtils';
 	import type { VenueSettings } from '../../types/bookingTypes';
 	import LabelHelper from './LabelHelper.svelte';
 	let { venueSettings = $bindable() }: { venueSettings: VenueSettings } = $props();
@@ -108,10 +109,10 @@
 											class="input-bordered input input-sm w-full text-center text-sm"
 											on:change={(e) =>
 												updateOpenTime(dayOfWeek.toLowerCase(), e.currentTarget.value)}
-											value={venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.openTime?.slice(
+											value={timeStringToLocal(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.openTime?.slice(
 												0,
 												5
-											)}
+											))}
 										/>
 									</div>
 									<div>
@@ -123,10 +124,10 @@
 											class="input-bordered input input-sm w-full text-center text-sm"
 											on:change={(e) =>
 												updateCloseTime(dayOfWeek.toLowerCase(), e.currentTarget.value)}
-											value={venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.closeTime?.slice(
+											value={timeStringToLocal(venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.closeTime?.slice(
 												0,
 												5
-											)}
+											)!)}
 										/>
 									</div>
 								</div>
