@@ -13,6 +13,10 @@ export async function getCachedData(cacheKey: string): Promise<any | null> {
 
 export async function setCachedData(cacheKey: string, data: any, ttlSeconds?: number): Promise<void> {
   if (!redis) return;
+  const isEmpty = data === null || data === undefined || data === '' || (typeof data === 'object' && Object.keys(data).length === 0);
+  if (isEmpty) return;
+
+
   ttlSeconds ? await redis.set(cacheKey, JSON.stringify(data), 'EX', ttlSeconds) : await redis.set(cacheKey, JSON.stringify(data));
 }
 
