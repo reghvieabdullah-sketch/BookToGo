@@ -160,10 +160,7 @@
 										disabled={!isDayBookable[i]}
 										on:change={(e) =>
 											updateOpenTime(dayOfWeek.toLowerCase(), e.currentTarget.value)}
-										value={venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.openTime?.slice(
-											0,
-											5
-										)}
+										value={venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.openTime}
 									/>
 								</div>
 								<div class="flex-1">
@@ -176,10 +173,7 @@
 										disabled={!isDayBookable[i]}
 										on:change={(e) =>
 											updateCloseTime(dayOfWeek.toLowerCase(), e.currentTarget.value)}
-										value={venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.closeTime?.slice(
-											0,
-											5
-										)}
+										value={venueSettings.daySettings?.[dayOfWeek.toLowerCase()]?.closeTime}
 									/>
 								</div>
 							</div>
