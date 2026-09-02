@@ -69,8 +69,14 @@
 	const toLocalTime = (timeString?: string | null): string => {
 		if (!timeString) return "";
 
-		// Use today's date since the input only contains a time.
-		const date = new Date(`1970-01-01T${timeString}`);
+		// Convert +00 / -05 / +0530 → +00:00 / -05:00 / +05:30
+		const normalized = timeString.replace(
+			/([+-])(\d{2})(?::?(\d{2}))?$/,
+			(_, sign, hours, minutes = "00") =>
+				`${sign}${hours}:${minutes}`
+		);
+
+		const date = new Date(`1970-01-01T${normalized}`);
 
 		if (Number.isNaN(date.getTime())) return "";
 

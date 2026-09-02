@@ -61,4 +61,28 @@ const testBooking: BookingDetails = {
 };
 
 
-testHasBookingConflict("1", "92b8a584-287a-4bb8-9c6d-aa2e95507e77", testBooking, supabase, "stjohnsbb");
+// testHasBookingConflict("1", "92b8a584-287a-4bb8-9c6d-aa2e95507e77", testBooking, supabase, "stjohnsbb");
+
+const toLocalTime = (timeString?: string | null): string => {
+	if (!timeString) return "";
+
+	// Convert +00 / -05 / +0530 → +00:00 / -05:00 / +05:30
+	const normalized = timeString.replace(
+		/([+-])(\d{2})(?::?(\d{2}))?$/,
+		(_, sign, hours, minutes = "00") =>
+			`${sign}${hours}:${minutes}`
+	);
+
+	const date = new Date(`1970-01-01T${normalized}`);
+
+	if (Number.isNaN(date.getTime())) return "";
+
+	return date.toLocaleTimeString([], {
+		hour: "2-digit",
+		minute: "2-digit",
+		hour12: false,
+	});
+};
+
+
+console.log(toLocalTime("08:00:00+00:30"));
