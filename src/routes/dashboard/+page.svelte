@@ -68,6 +68,8 @@
 				// archive bookings that are no longer valid due to court status changes
 			}
 			if (!equal(data.venueData, venueDataCopy)) {
+				console.log("check this ", venueDataCopyy);
+
 				responses.push(
 					await fetch(`/api/v1/venues/${venueID}`, {
 						method: 'PUT',
@@ -79,7 +81,6 @@
 				);
 			}
 			if (!equal(data.settingsData, venueSettingsCopy)) {
-				console.log("check this ", venueSettingsCopy);
 				
 				responses.push(
 					await fetch(`/api/v1/venues/${venueID}/settings`, {
