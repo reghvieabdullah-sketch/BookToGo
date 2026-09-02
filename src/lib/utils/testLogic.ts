@@ -80,9 +80,9 @@ const toLocalTime = (timeString?: string | null): string => {
 	return date.toLocaleTimeString([], {
 		hour: "2-digit",
 		minute: "2-digit",
-		hour12: false,
+		hour12: true,
 	});
 };
 
 
-console.log(toLocalTime("08:00:00+00:30"));
+console.log(toLocalTime("08:00:00+00"));
