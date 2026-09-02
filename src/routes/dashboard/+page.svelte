@@ -68,7 +68,7 @@
 				// archive bookings that are no longer valid due to court status changes
 			}
 			if (!equal(data.venueData, venueDataCopy)) {
-				console.log("check this ", venueDataCopyy);
+				console.log("check this ", venueDataCopy);
 
 				responses.push(
 					await fetch(`/api/v1/venues/${venueID}`, {
