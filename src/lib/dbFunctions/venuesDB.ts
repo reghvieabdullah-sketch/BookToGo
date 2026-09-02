@@ -63,6 +63,7 @@ export async function getVenueImages(supabase: SupabaseClient, venueID: string, 
 
 /**Deletes list of image paths under the venue specific bucket. */
 export async function deleteVenueImages(supabase: SupabaseClient, imagePaths: string[]): Promise<number> {
+    if (!imagePaths || imagePaths.length === 0) return 0;
     const { error: delError } = await supabase.storage
         .from(VENUE_IMAGE_BUCKET_PATH)
         .remove(imagePaths);
