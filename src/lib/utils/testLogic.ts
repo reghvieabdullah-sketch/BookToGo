@@ -26,7 +26,7 @@ async function testHasBookingConflict(venueID: string, userID: string, bookingJS
         ),
       ]);
     
-    //   console.log(bookingRes.data);
+      console.log(limitRes);
       
 
     const conflictHandler = hasBookingConflict(timeStampToDayKey(bookingJSON.startTime), venueRes.data.settingsData.daySettings, Object.values(bookingRes.data.bookingData ?? {}).flat() as BookingDetails[], bookingJSON, bookingRes.data.closureData)
@@ -59,7 +59,7 @@ const testBooking: BookingDetails = {
 };
 
 
-testHasBookingConflict("1", "", testBooking, supabase, "example");
+testHasBookingConflict("1", "0d5aa090-620d-42a3-86d5-34cf6bc7af20", testBooking, supabase, "example");
 
 
 

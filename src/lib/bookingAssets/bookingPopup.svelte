@@ -1,6 +1,15 @@
 <script lang="ts">
 	import BookIcon from '$lib/icons/BookIcon.svelte';
-	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate, parseTimeStringToUTCMinutes, localTimeToUTC, combineUTCDateAndTime, timeStringToLocal } from '$lib/utils/timeUtils';
+	import {
+		HHMMToMinutes,
+		minutesToHHMM,
+		to12HourFormat,
+		formatDate,
+		parseTimeStringToUTCMinutes,
+		localTimeToUTC,
+		combineUTCDateAndTime,
+		timeStringToLocal
+	} from '$lib/utils/timeUtils';
 	import GrabHandleIcon from '$lib/icons/GrabHandleIcon.svelte';
 	import { bookingDayData, bookingPopupVisible, isLoading } from './bookingStore';
 	import { hasBookingConflict } from '$lib/bookingLogic';
@@ -16,13 +25,11 @@
 	import { goto } from '$app/navigation';
 	import {
 		courtStatusEnum,
-		QUERY_PARAM_BOOKING_DATE,
+		QUERY_PARAM_BOOKING_DATE
 	} from '$lib/constants/postgressFunctionConstants';
 
-	// Instance export (accessible via bind:this) - not a runes-mode prop, left as-is
 	export const onclose = () => {};
 
-	// Props
 	let {
 		isLoggedIn = false,
 		venueData,
@@ -45,7 +52,6 @@
 	let bookingResult: 'success' | 'error' | null = $state(null);
 	let bookingMessage = $state('');
 
-	// Reset confirmation/result state whenever the booking date changes
 	$effect(() => {
 		$bookingDayData.date;
 		showConfirmation = false;
@@ -54,10 +60,14 @@
 
 	async function attemptBooking(booking: BookingDetails): Promise<any> {
 		try {
-			const response = await fetch(`/api/v1/bookings/${venueData.venueID}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(booking) });
-			// Maybe its unnecessary to keep it like this, since below we only need the details, so maybe make the server only bookingdetails only, except when the owner goes to the dashboard.
-			$bookingDayData.entries = [...$bookingDayData.entries, booking]; // even if its a failure, we add it to the list for now. since the user would keep seeing the same booking otherwise.
-			// Assume passed the insertion checks if we get a 200 response
+			const response = await fetch(`/api/v1/bookings/${venueData.venueID}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(booking)
+			});
+
+			$bookingDayData.entries = [...$bookingDayData.entries, booking];
+
 			const r = await response.json();
 			console.log(r);
 			return r;
@@ -81,23 +91,28 @@
 
 	async function confirmBooking(): Promise<void> {
 		if (!pendingBooking) return;
+
 		if (!isLoggedIn)
 			return goto(
 				`/auth?next=/booking?${QUERY_PARAM_BOOKING_DATE}=${$bookingDayData.date.toISOString().split('T')[0]}`
 			);
+
 		isConfirming = true;
 		const bookingPossible = await attemptBooking(pendingBooking);
 		console.log(bookingPossible);
 
 		if (typeof bookingPossible === 'string') {
 			bookingResult = 'success';
+
 			if (isVenueOwner) {
 				bookingMessage = 'Booking has been successfully added to the system.';
 			} else {
 				bookingMessage = 'Your booking has been confirmed successfully! Redirecting...';
 			}
+
 			showConfirmation = false;
 			pendingBooking = null;
+
 			if (!isVenueOwner) {
 				setTimeout(() => {
 					goto('/mybookings');
@@ -108,6 +123,7 @@
 			bookingMessage =
 				'Failed to confirm booking. ' +
 				(bookingPossible && bookingPossible.error ? bookingPossible.error : '');
+
 			showConfirmation = false;
 			pendingBooking = null;
 
@@ -115,6 +131,7 @@
 				bookingResult = null;
 			}, 5000);
 		}
+
 		isConfirming = false;
 	}
 
@@ -123,11 +140,10 @@
 		pendingBooking = null;
 	}
 
-	// loaded booking, maybe be empty
 	const loadedBooking = loadBooking();
-	if (loadedBooking) clearBooking(); // clear after loading, we dont want to save old stale data.
 
-	// Reactive state for user selections
+	if (loadedBooking) clearBooking();
+
 	let selectedCourtId: number | null = $state(loadedBooking?.selectedCourtId || null);
 	let selectedUnitId: number | null = $state(loadedBooking?.selectedUnitId || null);
 	let selectedSubUnitIds: number[] = $state(loadedBooking?.selectedSubUnitIds || []);
@@ -136,15 +152,18 @@
 	let totalPrice = $state(0);
 	let timeOptions: string | any[] = $state([]);
 
-	// Derived values
 	let selectedCourt = $derived(courtsData.find((court) => court.courtID === selectedCourtId));
-	let selectedUnit = $derived(selectedCourt?.units?.find((unit) => unit.unitID === selectedUnitId));
+
+	let selectedUnit = $derived(
+		selectedCourt?.units?.find((unit) => unit.unitID === selectedUnitId)
+	);
+
 	let availableSubUnits = $derived(selectedUnit?.subUnits || []);
+
 	let selectedSubUnits = $derived(
 		availableSubUnits.filter((subUnit) => selectedSubUnitIds.includes(subUnit.id))
 	);
 
-	// Get all available units across all courts for the dropdown
 	let allUnits = $derived(
 		courtsData.flatMap(
 			(court) =>
@@ -160,28 +179,56 @@
 	);
 
 	function generateTimeOptions() {
-		if (!settingsData?.daySettings || !$bookingDayData?.date) return (timeOptions = []);
-
-		const dayName = $bookingDayData.date.toLocaleDateString('en-LK', { weekday: 'long' }).toLowerCase();
-		const daySettings = settingsData.daySettings[dayName];
-		if (!daySettings?.is_day_bookable || !daySettings.openTime || !daySettings.closeTime)
+		if (!settingsData?.daySettings || !$bookingDayData?.date) {
 			return (timeOptions = []);
+		}
+
+		const dayName = $bookingDayData.date
+			.toLocaleDateString('en-LK', { weekday: 'long' })
+			.toLowerCase();
+
+		const daySettings = settingsData.daySettings[dayName];
+
+		if (!daySettings?.is_day_bookable || !daySettings.openTime || !daySettings.closeTime) {
+			return (timeOptions = []);
+		}
 
 		const options: string[] = [];
+
 		const openingTime = parseTimeStringToUTCMinutes(daySettings.openTime);
 		const closingTime = parseTimeStringToUTCMinutes(daySettings.closeTime);
 		const interval = settingsData.slotGenerationInterval || 60;
 		const durationMinutes = HHMMToMinutes(selectedDuration);
+
 		let time = openingTime;
+
 		while (time <= closingTime - durationMinutes) {
 			const conflict = hasBookingConflict(
 				dayName,
 				settingsData.daySettings,
 				$bookingDayData.entries,
-				{ courtID: selectedCourtId!, startTime: combineUTCDateAndTime($bookingDayData.date, minutesToHHMM(time)), endTime: combineUTCDateAndTime($bookingDayData.date, minutesToHHMM(time + durationMinutes)), units: { unitID: selectedUnitId!, subUnits: selectedSubUnits } },
+				{
+					courtID: selectedCourtId!,
+					startTime: combineUTCDateAndTime(
+						$bookingDayData.date,
+						minutesToHHMM(time)
+					),
+					endTime: combineUTCDateAndTime(
+						$bookingDayData.date,
+						minutesToHHMM(time + durationMinutes)
+					),
+					units: {
+						unitID: selectedUnitId!,
+						subUnits: selectedSubUnits
+					}
+				},
 				closureData
 			).conflicts;
-			conflict ? (time += settingsData.bookingCoolDown!) : options.push(minutesToHHMM(time));
+
+			conflict
+				? (time += settingsData.bookingCoolDown!)
+				: options.push(minutesToHHMM(time));
+
 			time += interval;
 		}
 
@@ -190,17 +237,20 @@
 
 	function calculateTotalPrice() {
 		const durationHours = Math.round(HHMMToMinutes(selectedDuration) / 60);
-		totalPrice = selectedSubUnits.reduce((sum, subUnit) => sum + subUnit.price!, 0) * durationHours;
+
+		totalPrice = selectedSubUnits.reduce(
+			(sum, subUnit) => sum + subUnit.price!,
+			0
+		) * durationHours;
 	}
 
-	// Recompute time options / price whenever these dependencies change
-	// (also runs once on mount, so a separate onMount call is no longer needed)
 	$effect(() => {
 		$bookingDayData;
 		$bookingPopupVisible;
 		selectedCourt;
 		selectedDuration;
 		selectedSubUnits;
+
 		generateTimeOptions();
 		calculateTotalPrice();
 	});
@@ -214,76 +264,123 @@
 	function handleUnitSelection(event: Event) {
 		const target = event.target as HTMLSelectElement;
 		const selectedUnitData = JSON.parse(target.value);
+
 		selectedCourtId = selectedUnitData.courtId;
 		selectedUnitId = selectedUnitData.unitID;
 		selectedSubUnitIds = [];
-		if (selectedUnitData.subUnits && selectedUnitData.subUnits.length > 0) selectedSubUnitIds = selectedUnitData.subUnits.map((su: SubUnit) => su.id);
+
+		if (selectedUnitData.subUnits && selectedUnitData.subUnits.length > 0) {
+			selectedSubUnitIds = selectedUnitData.subUnits.map((su: SubUnit) => su.id);
+		}
 	}
 
 	function handleSubUnitToggle(subUnitId: number) {
 		const currentlySelected = selectedSubUnitIds.length;
 		const isSelected = selectedSubUnitIds.includes(subUnitId);
+
 		if (currentlySelected === 1 && isSelected) return;
-		isSelected ? (selectedSubUnitIds = selectedSubUnitIds.filter((id) => id !== subUnitId)) : (selectedSubUnitIds = [...selectedSubUnitIds, subUnitId]);
+
+		isSelected
+			? (selectedSubUnitIds = selectedSubUnitIds.filter((id) => id !== subUnitId))
+			: (selectedSubUnitIds = [...selectedSubUnitIds, subUnitId]);
 	}
 
 	async function handleBooking() {
+		if (timeOptions.length === 0) return;
+
 		const booking: BookingDetails = {
 			courtStatus: selectedCourt?.approvalStatus!,
 			courtID: selectedCourtId!,
-			startTime: combineUTCDateAndTime($bookingDayData.date, selectedTime),
+			startTime: combineUTCDateAndTime(
+				$bookingDayData.date,
+				selectedTime
+			),
 			endTime: combineUTCDateAndTime(
 				$bookingDayData.date,
-				minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration))
+				minutesToHHMM(
+					HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration)
+				)
 			),
 			status: 'pending',
-			units:
-			{ title: selectedUnit?.title!, unitID: selectedUnit?.unitID!, subUnits: selectedSubUnits }
+			units: {
+				title: selectedUnit?.title!,
+				unitID: selectedUnit?.unitID!,
+				subUnits: selectedSubUnits
+			}
 		};
-		saveBooking({ selectedCourtId, selectedUnitId, selectedSubUnitIds, selectedDuration, selectedTime });
+
+		saveBooking({
+			selectedCourtId,
+			selectedUnitId,
+			selectedSubUnitIds,
+			selectedDuration,
+			selectedTime
+		});
+
 		showConfirmation = true;
 		pendingBooking = booking;
+
 		console.log(pendingBooking);
-		
 	}
 
 	$effect(() => {
 		if (!selectedUnitId && allUnits.length > 0) {
 			const firstUnit = allUnits[0];
+
 			selectedCourtId = firstUnit.courtId;
 			selectedUnitId = firstUnit.unitID;
+
 			if (firstUnit.subUnits && firstUnit.subUnits.length > 0) {
 				selectedSubUnitIds = firstUnit.subUnits.map((su) => su.id);
 			}
 		}
 	});
 </script>
+
 <!-- Main Booking Form -->
 {#if !showConfirmation}
 	<div class="max-w-sm border border-base-300 bg-base-100 p-3">
 		<div class="mb-2 border border-base-300 bg-base-100 p-3">
-			<div class="flex justify-center pb-1"><GrabHandleIcon /></div>
+			<div class="flex justify-center pb-1">
+				<GrabHandleIcon />
+			</div>
+
 			<div class="mb-3 bg-primary/20 text-center">
 				<div class="py-1 text-lg font-bold">
 					{formatDate($bookingDayData.date.toLocaleDateString('en-LK').split('T')[0])}
 				</div>
-				<div class="px-3 py-1 text-base">
-					{timeStringToLocal(selectedTime)} - {timeStringToLocal(
-						minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration))
-					)}
-				</div>
+
+				{#if timeOptions.length > 0}
+					<div class="px-3 py-1 text-base">
+						{timeStringToLocal(selectedTime)} -
+						{timeStringToLocal(
+							minutesToHHMM(
+								HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration)
+							)
+						)}
+					</div>
+				{:else}
+					<div class="px-3 py-2 text-sm font-semibold text-error">
+						Fully booked
+					</div>
+				{/if}
 			</div>
+
 			<div class="form-control">
 				<label class="label" for="court-select">
 					<span class="label-text text-sm">Court Type</span>
 				</label>
+
 				<select
 					id="court-select"
 					on:change={handleUnitSelection}
 					class="select-bordered select select-sm"
 				>
 					{#each allUnits as unit}
-						<option value={JSON.stringify(unit)} selected={unit.unitID === selectedUnitId}>
+						<option
+							value={JSON.stringify(unit)}
+							selected={unit.unitID === selectedUnitId}
+						>
 							{unit.displayName}
 						</option>
 					{/each}
@@ -294,6 +391,7 @@
 						<label class="label">
 							<span class="label-text text-xs">Select one or more options</span>
 						</label>
+
 						<form>
 							{#each availableSubUnits as subUnit}
 								<button
@@ -313,49 +411,89 @@
 			</div>
 		</div>
 
-		<!-- Duration and Time Selection -->
-		<div class="mb-2 flex justify-around border border-base-300 bg-base-100 px-3 py-2">
-			<div class="form-control">
-				<label class="label" for="time-select">
-					<span class="label-text text-xs">Start Time</span>
-				</label>
-				<select id="time-select" bind:value={selectedTime} class="select-bordered select select-sm">
-					{#each timeOptions as timeOption}
-						<option value={timeOption}>{timeStringToLocal(timeOption)}</option>
-					{/each}
-				</select>
-			</div>
-
-			<div class="form-control">
-				<label class="label" for="duration-select">
-					<span class="label-text text-xs">Duration</span>
-				</label>
-				<select
-					id="duration-select"
-					bind:value={selectedDuration}
-					class="select-bordered select select-sm"
+		<!-- Fully Booked Notice -->
+		{#if timeOptions.length === 0}
+			<div class="mb-2 alert alert-error">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					class="h-6 w-6 shrink-0 stroke-current"
 				>
-					{#each Array(Math.round((settingsData?.maxBookingDurationMinutes || 180) / 60)) as _, i}
-						<option value={String(i + 1).padStart(2, '0') + ':00'}>
-							{i + 1}
-							{i + 1 === 1 ? 'hr' : 'hrs'}
-						</option>
-					{/each}
-				</select>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 9v3.75m0 3.75h.008M12 21a9 9 0 100-18 9 9 0 000 18z"
+					/>
+				</svg>
+
+				<div>
+					<div class="font-semibold">Fully Booked</div>
+					<div class="text-xs">
+						There are no available time slots for this day.
+					</div>
+				</div>
 			</div>
-		</div>
+		{:else}
+			<!-- Duration and Time Selection -->
+			<div class="mb-2 flex justify-around border border-base-300 bg-base-100 px-3 py-2">
+				<div class="form-control">
+					<label class="label" for="time-select">
+						<span class="label-text text-xs">Start Time</span>
+					</label>
+
+					<select
+						id="time-select"
+						bind:value={selectedTime}
+						class="select-bordered select select-sm"
+					>
+						{#each timeOptions as timeOption}
+							<option value={timeOption}>
+								{timeStringToLocal(timeOption)}
+							</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="form-control">
+					<label class="label" for="duration-select">
+						<span class="label-text text-xs">Duration</span>
+					</label>
+
+					<select
+						id="duration-select"
+						bind:value={selectedDuration}
+						class="select-bordered select select-sm"
+					>
+						{#each Array(
+							Math.round(
+								(settingsData?.maxBookingDurationMinutes || 180) / 60
+							)
+						) as _, i}
+							<option value={String(i + 1).padStart(2, '0') + ':00'}>
+								{i + 1}
+								{i + 1 === 1 ? 'hr' : 'hrs'}
+							</option>
+						{/each}
+					</select>
+				</div>
+			</div>
+		{/if}
 
 		<!-- Price Summary Card -->
 		<div class="mb-2 border border-primary/20 bg-primary/10 p-3">
 			<div class="flex items-center justify-between">
 				<div>
 					<h3 class="text-base font-semibold">Total Price</h3>
+
 					<p class="text-xs">
-						{selectedSubUnits.length} unit{selectedSubUnits.length !== 1 ? 's' : ''} × {Math.round(
-							HHMMToMinutes(selectedDuration) / 60
-						)} hr{Math.round(HHMMToMinutes(selectedDuration) / 60) !== 1 ? 's' : ''}
+						{selectedSubUnits.length} unit{selectedSubUnits.length !== 1 ? 's' : ''} ×
+						{Math.round(HHMMToMinutes(selectedDuration) / 60)} hr
+						{Math.round(HHMMToMinutes(selectedDuration) / 60) !== 1 ? 's' : ''}
 					</p>
 				</div>
+
 				<div class="text-xl font-bold text-primary">
 					{settingsData.currency} {totalPrice}
 				</div>
@@ -364,7 +502,11 @@
 
 		<!-- Book Button -->
 		<div class="flex justify-center">
-			<button on:click={handleBooking} class="btn btn-md btn-primary" disabled = {!timeOptions || timeOptions.length === 0}>
+			<button
+				on:click={handleBooking}
+				class="btn btn-md btn-primary"
+				disabled={timeOptions.length === 0}
+			>
 				<BookIcon />
 				Book
 			</button>
@@ -375,17 +517,19 @@
 <!-- Confirmation Screen -->
 {#if showConfirmation && pendingBooking}
 	<div class="max-w-sm border border-base-300 bg-base-100 p-4">
-		<!-- Header -->
 		<div class="mb-3 text-center">
-			<div class="flex justify-center pb-2"><GrabHandleIcon /></div>
+			<div class="flex justify-center pb-2">
+				<GrabHandleIcon />
+			</div>
+
 			<h2 class="mb-1 text-xl font-bold">Confirm Your Booking</h2>
 			<p class="text-sm">Please review your booking details below</p>
 		</div>
 
-		<!-- Booking Details Card -->
 		<div class="mb-3 border border-base-300 bg-base-200/50 p-4">
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-sm font-medium">Date</span>
+
 				<span class="text-sm font-semibold">
 					{formatDate($bookingDayData.date.toLocaleDateString('en-CA').split('T')[0])}
 				</span>
@@ -393,21 +537,25 @@
 
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-sm font-medium">Time</span>
+
 				<span class="text-sm font-semibold">
-					{to12HourFormat(timeStringToLocal(selectedTime))} - {to12HourFormat(timeStringToLocal(
-						minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration)))
+					{to12HourFormat(timeStringToLocal(selectedTime))} -
+					{to12HourFormat(
+						timeStringToLocal(
+							minutesToHHMM(
+								HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration)
+							)
+						)
 					)}
 				</span>
 			</div>
 
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-sm font-medium">Duration</span>
+
 				<span class="text-sm font-semibold">
-					{Math.round(HHMMToMinutes(selectedDuration) / 60)} hour{Math.round(
-						HHMMToMinutes(selectedDuration) / 60
-					) !== 1
-						? 's'
-						: ''}
+					{Math.round(HHMMToMinutes(selectedDuration) / 60)} hour
+					{Math.round(HHMMToMinutes(selectedDuration) / 60) !== 1 ? 's' : ''}
 				</span>
 			</div>
 
@@ -415,6 +563,7 @@
 
 			<div class="mb-2 flex items-start justify-between">
 				<span class="text-sm font-medium">Court</span>
+
 				<span class="text-sm font-semibold">
 					{selectedCourt?.name}
 				</span>
@@ -422,6 +571,7 @@
 
 			<div class="mb-2 flex items-start justify-between">
 				<span class="text-sm font-medium">Unit</span>
+
 				<span class="text-sm font-semibold">
 					{selectedUnit?.title}
 				</span>
@@ -430,6 +580,7 @@
 			{#if selectedSubUnits.length > 0}
 				<div class="flex items-start justify-between">
 					<span class="text-sm font-medium">Options</span>
+
 					<div class="text-right text-sm font-semibold">
 						{#each selectedSubUnits as subUnit}
 							<div>{subUnit.description}</div>
@@ -444,12 +595,14 @@
 			<div class="flex items-center justify-between">
 				<div>
 					<h3 class="text-base font-semibold">Total Amount</h3>
+
 					<p class="text-xs">
-						{selectedSubUnits.length} unit{selectedSubUnits.length !== 1 ? 's' : ''} × {Math.round(
-							HHMMToMinutes(selectedDuration) / 60
-						)} hr{Math.round(HHMMToMinutes(selectedDuration) / 60) !== 1 ? 's' : ''}
+						{selectedSubUnits.length} unit{selectedSubUnits.length !== 1 ? 's' : ''} ×
+						{Math.round(HHMMToMinutes(selectedDuration) / 60)} hr
+						{Math.round(HHMMToMinutes(selectedDuration) / 60) !== 1 ? 's' : ''}
 					</p>
 				</div>
+
 				<div class="text-xl font-bold text-success">
 					LKR {totalPrice}
 				</div>
@@ -471,6 +624,7 @@
 					d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
 				></path>
 			</svg>
+
 			<div class="text-xs">
 				<div class="font-medium">Booking Status: Pending</div>
 				<div>Your booking will be confirmed once processed.</div>
@@ -486,6 +640,7 @@
 			>
 				Cancel
 			</button>
+
 			<button
 				on:click={confirmBooking}
 				class="btn flex-1 btn-md btn-primary"
@@ -517,6 +672,7 @@
 						d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
 					/>
 				</svg>
+
 				<div>
 					<h3 class="font-bold">Success!</h3>
 					<div class="text-xs">{bookingMessage}</div>
@@ -537,6 +693,7 @@
 						d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
 					/>
 				</svg>
+
 				<div>
 					<h3 class="font-bold">Error!</h3>
 					<div class="text-xs">{bookingMessage}</div>
