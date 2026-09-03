@@ -42,6 +42,7 @@ export const FN_IS_SUPER_OWNER = 'is_super_owner'
 export const FN_CREATE_SAMPLE_VENUE = 'create_sample_venue' // used to create a sample venue for testing purposes. only super owners can do this. it creates a venue, and returns the venue url and the invite token for the owner to get access the venue
 export const FN_CREATE_VENUE_INVITE_URL = 'create_venue_invitation' // used to create a venue invite url for a super owner to invite a new owner to the venue. it returns the invite token that can be used to access the venue
 export const FN_VENUE_INVITATION_CONSUMPTION =  'consume_venue_invitation'
+export const FN_OWNER_CONTACT_US =  'insert_potential_customer'
 
 // Query params 
 

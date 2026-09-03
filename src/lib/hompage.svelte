@@ -37,6 +37,67 @@
 			text: 'Customers choose their court and time while your schedule updates automatically.'
 		}
 	];
+
+	// --- Contact form state ---
+	// TODO: point this at your real endpoint (e.g. an API route, form backend, or serverless function)
+	const CONTACT_API_URL = '/api/v1/contact';
+
+	let contactName = '';
+	let contactEmail = '';
+	let contactPhone = '';
+
+	type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
+	let submitState: SubmitState = 'idle';
+	let errorMessage = '';
+
+	function isValidEmail(value: string) {
+		return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+	}
+
+	async function handleContactSubmit(event: SubmitEvent) {
+		event.preventDefault();
+		errorMessage = '';
+
+		if (!contactName.trim()) {
+			errorMessage = 'Please enter your name.';
+			return;
+		}
+		if (!contactEmail.trim() || !isValidEmail(contactEmail)) {
+			errorMessage = 'Please enter a valid email address.';
+			return;
+		}
+		if (!contactPhone.trim()) {
+			errorMessage = 'Please enter your phone number.';
+			return;
+		}
+
+		submitState = 'submitting';
+
+		try {
+			const response = await fetch(CONTACT_API_URL, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: contactName.trim(),
+					email: contactEmail.trim(),
+					phone: contactPhone.trim()
+				})
+			});
+
+			if (!response.ok) {
+				throw new Error(`Request failed with status ${response.status}`);
+			}
+
+			submitState = 'success';
+			contactName = '';
+			contactEmail = '';
+			contactPhone = '';
+		} catch (err) {
+			console.error('Contact form submission failed:', err);
+			submitState = 'error';
+			errorMessage = `${err} is the rr`;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -93,7 +154,7 @@
 							</svg>
 						</a>
 
-						<a href="#how-it-works" class="btn btn-ghost btn-lg">
+						<a href="https://example.booktogo.lk" class="btn btn-ghost btn-lg">
 							Try an example
 						</a>
 					</div>
@@ -560,50 +621,112 @@
 		</div>
 	</section>
 
-	<!-- FINAL CTA -->
+	<!-- FINAL CTA / CONTACT FORM -->
 	<section id="get-started" class="pb-24">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div
 				class="hero overflow-hidden rounded-[2rem] bg-neutral py-20 text-neutral-content shadow-2xl sm:py-28"
 			>
-				<div class="hero-content px-6 text-center">
-					<div class="max-w-3xl">
-						<p class="font-bold uppercase tracking-widest text-primary-content/60">
-							Ready to simplify your bookings?
-						</p>
+				<div class="hero-content px-6">
+					<div class="grid w-full max-w-4xl gap-12 lg:grid-cols-2 lg:items-center">
+						<!-- Copy -->
+						<div class="text-center lg:text-left">
+							<p class="font-bold uppercase tracking-widest text-primary-content/60">
+								Ready to simplify your bookings?
+							</p>
 
-						<h2 class="mt-4 text-4xl font-black tracking-tight sm:text-6xl">
-							Let your customers do the booking.
-						</h2>
+							<h2 class="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
+								Let your customers do the booking.
+							</h2>
 
-						<p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-content/60">
-							Spend less time answering calls and messages.
-							Give your customers a better way to book your venue.
-						</p>
+							<p class="mt-6 max-w-xl text-lg leading-8 text-neutral-content/60">
+								Leave your details and we'll get in touch to set up
+								BookToGo for your venue.
+							</p>
+						</div>
 
-						<div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-							<a href="/signup" class="btn btn-primary btn-lg">
-								Get started with BookToGo
+						<!-- Contact form -->
+						<div class="card bg-base-100 text-base-content shadow-xl">
+							<div class="card-body">
+								{#if submitState === 'success'}
+									<div class="alert border border-success/20 bg-success/5">
+										<span class="text-xl">✅</span>
+										<span>
+											Thanks! We've got your details and will be in touch soon.
+										</span>
+									</div>
+								{:else}
+									<form class="space-y-4" on:submit={handleContactSubmit} novalidate>
+										<div class="form-control">
+											<label class="label" for="contact-name">
+												<span class="label-text font-semibold">Name</span>
+											</label>
+											<input
+												id="contact-name"
+												type="text"
+												name="name"
+												autocomplete="name"
+												placeholder="Your name"
+												class="input input-bordered w-full"
+												bind:value={contactName}
+												disabled={submitState === 'submitting'}
+											/>
+										</div>
 
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									class="size-5"
-								>
-									<path d="M5 12h14" />
-									<path d="m13 6 6 6-6 6" />
-								</svg>
-							</a>
+										<div class="form-control">
+											<label class="label" for="contact-email">
+												<span class="label-text font-semibold">Email</span>
+											</label>
+											<input
+												id="contact-email"
+												type="email"
+												name="email"
+												autocomplete="email"
+												placeholder="you@example.com"
+												class="input input-bordered w-full"
+												bind:value={contactEmail}
+												disabled={submitState === 'submitting'}
+											/>
+										</div>
 
-							<a
-								href="#how-it-works"
-								class="btn btn-ghost btn-lg text-neutral-content"
-							>
-								See how it works
-							</a>
+										<div class="form-control">
+											<label class="label" for="contact-phone">
+												<span class="label-text font-semibold">Phone number</span>
+											</label>
+											<input
+												id="contact-phone"
+												type="tel"
+												name="phone"
+												autocomplete="tel"
+												placeholder="07X XXX XXXX"
+												class="input input-bordered w-full"
+												bind:value={contactPhone}
+												disabled={submitState === 'submitting'}
+											/>
+										</div>
+
+										{#if errorMessage}
+											<div class="alert border border-error/20 bg-error/5 text-sm">
+												<span>⚠️</span>
+												<span>{errorMessage}</span>
+											</div>
+										{/if}
+
+										<button
+											type="submit"
+											class="btn btn-primary btn-lg w-full"
+											disabled={submitState === 'submitting'}
+										>
+											{#if submitState === 'submitting'}
+												<span class="loading loading-spinner"></span>
+												Sending...
+											{:else}
+												Contact Us
+											{/if}
+										</button>
+									</form>
+								{/if}
+							</div>
 						</div>
 					</div>
 				</div>
