@@ -116,6 +116,7 @@ export function occursAtRecurrence(closureDateString: string, closureEndDateStri
   const closureEndDate = new Date(closureEndDateString);
   // if (closureDate < attemptedDate) return false; // If the closure starts before the attempted booking, it can't be a conflict
   const type = typeof recurrenceType === "string" ? recurrenceType : recurrenceType.valueOf();
+  
   switch (type) {
     case recurrenceEnum.DAILY:
       return true;
@@ -130,7 +131,7 @@ export function occursAtRecurrence(closureDateString: string, closureEndDateStri
       );
     case recurrenceEnum.ONCE:
       // Here WAS my damn problem. fixed that shit lol by just passing in the end time. now works for weeks. remove this line for merge.
-      return closureDate < attemptedDate && attemptedDate < closureEndDate;
+      return true;
     default:
       return false;
 

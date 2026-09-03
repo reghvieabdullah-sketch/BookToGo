@@ -48,16 +48,43 @@ export function hasBookingConflict(dayKey: string, daySettings: daySettingsType,
 // --------------------------  //
 //      Conflict checkers      //
 // --------------------------  //
-function conflictWithClosure( closure: Closure, attemptedBooking: BookingDetails): boolean {
-  const closureStartMinutes = utcToMinutes(closure.startTimestamp);
-  const closureEndMinutes = closureStartMinutes + (closure.durationMinutes || 0);
-  const closureEndTimeStamp = addMinutesToUTCTimestamp(closure.startTimestamp, closure.durationMinutes);
-  const timeOverlap = closureStartMinutes < utcToMinutes(attemptedBooking.startTime) || utcToMinutes(attemptedBooking.endTime) < closureEndMinutes;
-  // Discovered issue, its with the timeOverlap logic
-  
-  const recurrenceMatch = occursAtRecurrence(closure.startTimestamp, closureEndTimeStamp, attemptedBooking.startTime.split('T')[0], closure.recurringType as recurrenceEnum);
-  
-  return !timeOverlap && recurrenceMatch
+function conflictWithClosure(
+    closure: Closure,
+    attemptedBooking: BookingDetails
+): boolean {
+    const closureStartMinutes = utcToMinutes(closure.startTimestamp);
+    const closureEndTimeStamp = addMinutesToUTCTimestamp(
+        closure.startTimestamp,
+        closure.durationMinutes
+    );
+    const closureEndMinutes =
+        closureStartMinutes + (closure.durationMinutes || 0);
+
+    const bookingStartMinutes = utcToMinutes(attemptedBooking.startTime);
+    const bookingEndMinutes = utcToMinutes(attemptedBooking.endTime);
+
+    const timeOverlap =
+        bookingStartMinutes < closureEndMinutes &&
+        bookingEndMinutes > closureStartMinutes;
+
+    const recurrenceMatch = occursAtRecurrence(
+        closure.startTimestamp,
+        closureEndTimeStamp,
+        attemptedBooking.startTime.split('T')[0],
+        closure.recurringType as recurrenceEnum
+    );
+
+    console.log({bookingStartMinutes, bookingEndMinutes});
+    console.log({closureStartMinutes, closureEndMinutes});
+    
+    console.log(
+        'recurrence:',
+        recurrenceMatch,
+        'timeOverlap:',
+        timeOverlap
+    );
+
+    return timeOverlap && recurrenceMatch;
 }
 
 function conflictWithinClosures(allClosures: CourtWithClosures[], attemptedBooking: BookingDetails): boolean {

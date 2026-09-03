@@ -228,10 +228,9 @@
 	}
 
 	async function handleBooking() {
-		const booking = {
+		const booking: BookingDetails = {
 			courtStatus: selectedCourt?.approvalStatus!,
 			courtID: selectedCourtId!,
-			attemptedUnitID: selectedUnitId!,
 			startTime: combineUTCDateAndTime($bookingDayData.date, selectedTime),
 			endTime: combineUTCDateAndTime(
 				$bookingDayData.date,
@@ -243,9 +242,9 @@
 		};
 		saveBooking({ selectedCourtId, selectedUnitId, selectedSubUnitIds, selectedDuration, selectedTime });
 		showConfirmation = true;
-		console.log(booking);
-
 		pendingBooking = booking;
+		console.log(pendingBooking);
+		
 	}
 
 	$effect(() => {
