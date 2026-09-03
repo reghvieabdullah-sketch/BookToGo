@@ -53,7 +53,7 @@
 
 
 <svelte:head>
-<link rel="icon" href={venueData ? venueData.venueLogo : ''} />
+<link rel="icon" href={venueData ? venueData.venueLogo : '/src/lib/logo.png'} />
 </svelte:head>
 {#if !venueData}
 <div class="navbar mx-auto max-w-full px-4 py-5 sm:px-6 lg:px-8">
