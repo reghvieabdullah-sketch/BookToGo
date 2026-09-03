@@ -131,7 +131,11 @@ export function occursAtRecurrence(closureDateString: string, closureEndDateStri
       );
     case recurrenceEnum.ONCE:
       // Here WAS my damn problem. fixed that shit lol by just passing in the end time. now works for weeks. remove this line for merge.
-      return true;
+      return (
+        closureDate.getUTCDate() === attemptedDate.getUTCDate() &&
+        closureDate.getUTCMonth() === attemptedDate.getUTCMonth() &&
+        closureDate.getUTCFullYear() === attemptedDate.getUTCFullYear()
+      );
     default:
       return false;
 
