@@ -17,13 +17,13 @@ function getVenueURL(hostname: string): string | null {
 		return parts.length >= 4 ? parts[1] : null;
 	}
 
-	return parts[0] ?? 'stmarybball';
+	return parts[0];
 }
 
 const supabase: Handle = async ({ event, resolve }) => {
     const host = event.request.headers.get('host') ?? '';
     // const subdomain = 'stjohnsbb'; // PLEASE REMEMBER TO NEVER HAVE THIS HARDCODED
-    event.locals.venueURL = getVenueURL(host) ?? 'stmarybball';
+    event.locals.venueURL = getVenueURL(host);
     
     event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         cookies: {
