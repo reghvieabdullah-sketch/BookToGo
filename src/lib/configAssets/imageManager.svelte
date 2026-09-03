@@ -58,24 +58,31 @@
 
 	const acceptString = buildAcceptString(allowedImageFormats);
 
+	const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+
 	function fileAllowed(file: File) {
 		const lowerType = (file.type || '').toLowerCase();
 		const name = file.name.toLowerCase();
+
+		// Reject files >= 2 MB
+		if (file.size >= MAX_FILE_SIZE) return false;
 
 		// check mime type first
 		for (const fmt of allowedImageFormats) {
 			const key = fmt.toLowerCase().replace(/^\./, '');
 			const tokens = extToAccept[key] ?? ['.' + key];
-			if (tokens.some((t) => t.startsWith('image/') && lowerType === t)) return true;
+
+			if (tokens.some((t) => t.startsWith('image/') && lowerType === t)) {
+				return true;
+			}
 		}
 
 		// fallback to extension check
 		return allowedImageFormats.some((fmt) => {
-			const ext = fmt.toLowerCase().replace(/^\./, '');
-			return name.endsWith('.' + ext) || (ext === 'jpg' && (name.endsWith('.jpeg')));
-		});
-	}
-
+		const ext = fmt.toLowerCase().replace(/^\./, '');
+		return name.endsWith('.' + ext) || (ext === 'jpg' && name.endsWith('.jpeg'));
+	});
+}
 	async function addHomePageImage() {
 		const input = document.createElement('input');
 		input.type = 'file';
