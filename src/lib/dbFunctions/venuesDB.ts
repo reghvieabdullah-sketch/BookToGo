@@ -8,9 +8,11 @@ import crypto from 'node:crypto';
 
 
 export async function contactRegardingPotentialCustomers(supabase: SupabaseClient, contactName: string, contactEmail: string, contactPhone: string): Promise<DBResult<any>>{
- const missing = ensureArgs({contactName, contactEmail, contactPhone});
- if (missing) return {data: null, error: missing };
- return await runRPC(supabase, FN_OWNER_CONTACT_US, {p_contact_name: contactName, p_contact_email: contactEmail, p_contact_phone: contactPhone});
+    console.log(contactName, contactEmail, contactPhone);
+    
+    const missing = ensureArgs({contactName, contactEmail, contactPhone});
+    if (missing) return {data: null, error: missing };
+    return await runRPC(supabase, FN_OWNER_CONTACT_US, {p_contact_name: contactName, p_contact_email: contactEmail, p_contact_phone: contactPhone});
 }
 
 

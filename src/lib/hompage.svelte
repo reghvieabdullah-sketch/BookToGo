@@ -95,7 +95,7 @@
 		} catch (err) {
 			console.error('Contact form submission failed:', err);
 			submitState = 'error';
-			errorMessage = 'Something went wrong sending your details. Please try again.';
+			errorMessage = `${err} is the rr`;
 		}
 	}
 </script>
