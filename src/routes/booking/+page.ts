@@ -14,8 +14,8 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
   const parentData = await parent();
   let venueID = url.searchParams.get(QUERY_PARAM_VENUE_ID);
   if (!venueID || venueID === '') {
-    if (!parentData.venueID) throw new Error("No venueID found in URL or parent layout");
-    venueID = parentData.venueID;
+    if (!parentData.venueData.venueID) throw new Error("No venueID found in URL or parent layout");
+    venueID = parentData.venueData.venueID;
   }
   const dateParam = url.searchParams.get(QUERY_PARAM_BOOKING_DATE);
   const targetDate = dateParam ? new Date(dateParam) : new Date();

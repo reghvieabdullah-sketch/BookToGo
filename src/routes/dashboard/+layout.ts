@@ -5,7 +5,7 @@ export const load: LayoutLoad = async ({ fetch, parent, depends, url }) => {
   const parentData = await parent();
   const session = parentData.session; // <- required
 
-  let venueID = url.searchParams.get(QUERY_PARAM_VENUE_ID) || parentData.venueID;
+  let venueID = url.searchParams.get(QUERY_PARAM_VENUE_ID) || parentData.venueData.venueID;
   if (!venueID) throw new Error("No venueID found in URL or parent layout");
   depends('layout:dashboard')
   const dateParam = url.searchParams.get(QUERY_PARAM_BOOKING_DATE);

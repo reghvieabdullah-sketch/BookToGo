@@ -7,7 +7,7 @@ export const load: PageLoad = async ({ parent, fetch }) => {
     console.log(parentData.venueData.venueContactDetails);
     
     try {
-        const response = await fetch(`/api/v1/my-bookings/${parentData.venueID}`);
+        const response = await fetch(`/api/v1/my-bookings/${parentData.venueData.venueID}`);
 
         if (!response.ok) {
             console.error('Failed to fetch bookings:', response.status);
