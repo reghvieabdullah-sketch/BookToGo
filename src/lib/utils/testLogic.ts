@@ -8,8 +8,8 @@ import { timeStampToDayKey, timeStampToDateString, HHMMToMinutes } from "./timeU
 import { userBookingPastLimit, getBookingClosureBundle } from "$lib/dbFunctions/bookingsDB";
 
 const supabase = createClient(
-    "https://nggnpugivucqjmawwfzm.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ25wdWdpdnVjcWptYXd3ZnptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODIxMDEsImV4cCI6MjA5NTM1ODEwMX0.H0hUEZPq96yzLSNpjmo-gMkjCirbJ8Z30IqhGLpHut4"
+    "https://girygvjwrdgdinbljcfu.supabase.co",
+    "sb_publishable_UluMQJz8t2GPf5XKN3tWEQ_8cf1yFXY"
 );
 
 async function testHasBookingConflict(venueID: string, userID: string, bookingJSON: BookingDetails, supabase: SupabaseClient, venueURL: string) {
@@ -26,9 +26,11 @@ async function testHasBookingConflict(venueID: string, userID: string, bookingJS
         ),
       ]);
     
+    //   console.log(bookingRes.data);
+      
 
     const conflictHandler = hasBookingConflict(timeStampToDayKey(bookingJSON.startTime), venueRes.data.settingsData.daySettings, Object.values(bookingRes.data.bookingData ?? {}).flat() as BookingDetails[], bookingJSON, bookingRes.data.closureData)
-    console.log(conflictHandler.flags);
+    // console.log(conflictHandler.flags);
     if (conflictHandler.conflicts) console.log("Booking conflicts detected!");
       
 }
@@ -38,30 +40,37 @@ async function testHasBookingConflict(venueID: string, userID: string, bookingJS
 
 const testBooking: BookingDetails = {
     "courtStatus": "approved",
-    "courtID": 32,
-    "startTime": "2026-08-31T03:30:00.000Z",
-    "endTime": "2026-08-31T04:30:00.000Z",
+    "courtID": 1,
+    "startTime": "2026-09-03T05:00:00.000Z", // closure starts at 5 and ends at 6
+    "endTime": "2026-09-03T06:00:00.000Z", // so if the bookingEndTime between closureStart and closureEnd. Or if the closureStartTime < bookingStartTime < closureEndTime. Or if the bookingStart < closureStartTime and bookingEnd > 6. Then it should be a conflict. 
     "status": "pending",
     "units": {
-        "title": "Half Court",
-        "unitID": 58,
+        "title": "Full Court",
+        "unitID": 1,
         "subUnits": [
             {
-                "id": 89,
-                "price": 2500,
-                "description": "Half Court A"
-            },
-            {
-                "id": 90,
-                "price": 2500,
-                "description": "Half Court B"
+                "id": 1,
+                "price": 2000,
+                "description": "1 hour"
             }
         ]
     }
+
 };
 
 
-// testHasBookingConflict("1", "92b8a584-287a-4bb8-9c6d-aa2e95507e77", testBooking, supabase, "stjohnsbb");
+testHasBookingConflict("1", "", testBooking, supabase, "example");
+
+
+
+
+
+
+
+
+
+
+
 
 const toLocalTime = (timeString?: string | null): string => {
 	if (!timeString) return "";
@@ -85,4 +94,4 @@ const toLocalTime = (timeString?: string | null): string => {
 };
 
 
-console.log(toLocalTime("08:00:00+00"));
+// console.log(toLocalTime("08:00:00+00"));
