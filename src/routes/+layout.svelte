@@ -51,11 +51,48 @@
 	}
 </script>
 
-<svelte:head>
-<link rel="icon" href={venueData.venueLogo} />
-</svelte:head>
 
-<header class="sticky top-0 z-50 navbar bg-base-100 shadow px-2 sm:px-4">
+<svelte:head>
+<link rel="icon" href={venueData ? venueData.venueLogo : ''} />
+</svelte:head>
+{#if !venueData}
+<div class="navbar mx-auto max-w-full px-4 py-5 sm:px-6 lg:px-8">
+	<div class="navbar-start">
+		<a href="/" class="flex items-center gap-2">
+			<div
+				class="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-content shadow-lg"
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					class="size-5"
+				>
+					<path d="M6 3h12" />
+					<path d="M6 3v4a6 6 0 0 0 12 0V3" />
+					<path d="M12 13v8" />
+					<path d="M8 21h8" />
+				</svg>
+			</div>
+
+			<span class="text-xl font-black tracking-tight">BookToGo</span>
+		</a>
+	</div>
+
+	<div class="navbar-end gap-2">
+		<a href="#how-it-works" class="btn btn-ghost hidden sm:inline-flex">
+			How it works
+		</a>
+
+		<a href="#get-started" class="btn btn-primary">
+			Get started
+		</a>
+	</div>
+</div>
+{:else}
+<div class="sticky top-0 z-50 navbar bg-base-100 shadow px-2 sm:px-4">
 	<div class="navbar-start min-w-0">
 		<a
 			href="/"
@@ -142,7 +179,8 @@
 			</a>
 		{/if}
 	</div>
-</header>
+</div>
+{/if}
 
 <dialog bind:this={logoutDialog} class="modal">
 	<div class="modal-box">
