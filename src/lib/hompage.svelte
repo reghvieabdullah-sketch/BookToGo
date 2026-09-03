@@ -78,9 +78,9 @@
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					name: contactName.trim(),
-					email: contactEmail.trim(),
-					phone: contactPhone.trim()
+					contactName: contactName.trim(),
+					contactEmail: contactEmail.trim(),
+					contactPhone: contactPhone.trim()
 				})
 			});
 
