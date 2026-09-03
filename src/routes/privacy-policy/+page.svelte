@@ -13,16 +13,16 @@
 </script>
 
 <svelte:head>
-	<title>Privacy Policy | ExamCrunch</title>
+	<title>Privacy Policy | BookToGo</title>
 	<meta
 		name="description"
-		content="Read ExamCrunch’s privacy policy to learn how we handle your data responsibly and securely."
+		content="Read BookToGo’s privacy policy to learn how we handle your data responsibly and securely."
 	/>
-	<link rel="canonical" href="https://www.examcrunch.app/privacy-policy" />
+	<link rel="canonical" href="https://booktogo.lk/privacy-policy" />
 
-	<meta property="og:title" content="ExamCrunch Privacy Policy" />
-	<meta property="og:description" content="Learn how ExamCrunch protects your data and privacy." />
-	<meta property="og:url" content="https://www.examcrunch.app/privacy-policy" />
+	<meta property="og:title" content="BookToGo Privacy Policy" />
+	<meta property="og:description" content="Learn how BookToGo protects your data and privacy." />
+	<meta property="og:url" content="https://booktogo.lk/privacy-policy" />
 </svelte:head>
 
 <div class="min-h-screen bg-base-100">
@@ -59,7 +59,7 @@
 					Introduction
 				</h2>
 				<p class="text-base-content/80 leading-relaxed">
-					Welcome to <span class="font-semibold text-primary">ExamCrunch.app</span> ("we," "our," or
+					Welcome to <span class="font-semibold text-primary">booktogo.lk</span> ("we," "our," or
 					"us"). We respect your privacy and want to be transparent about how we handle your information.
 					This Privacy Policy explains what data we collect, how we use it, and your choices.
 				</p>
@@ -531,7 +531,7 @@
 				<div class="card-body">
 					<h2 class="card-title text-xl text-primary mb-3">Children's Privacy</h2>
 					<p class="text-sm text-base-content/80">
-						ExamCrunch.app is built for students. If you are under 13, you should use this platform
+						booktogo.lk is built for students. If you are under 13, you should use this platform
 						only with parental/guardian supervision. We do not knowingly collect personal data from
 						children under 13 without consent.
 					</p>
