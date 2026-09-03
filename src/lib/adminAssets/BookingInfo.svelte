@@ -1,4 +1,3 @@
-```svelte
 <script lang="ts">
 	import type { BookingEntry } from "../../types/bookingTypes";
 
@@ -145,4 +144,3 @@
 		</div>
 	</div>
 </div>
-```
