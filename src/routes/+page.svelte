@@ -1,267 +1,627 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-
-	const onTestMode = false;
-	let carouselElement: HTMLDivElement;
-	let showStickyButton = $state(false);
-	let heroSection: HTMLElement;
-	let isNavigating = $state(false);
-
-	let { data } = $props();
-	let {  venueData } = $derived(data);
-
-	function isImagePath(icon: string) {
-		return icon.includes('/') || icon.includes('.');
-	}
-
-	// Function to open Google Maps with venue location
-	function openGoogleMaps() {
-		const address = venueData?.venueAddress || venueData?.venueBrand || 'venue location';
-		const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-		window.open(mapsUrl, '_blank');
-	}
-
-	// Handle sticky button visibility
-	function handleScroll() {
-		if (heroSection) {
-			const heroRect = heroSection.getBoundingClientRect();
-			// Show sticky button when hero section is mostly out of view
-			showStickyButton = heroRect.bottom < window.innerHeight * 0.3;
+	const problems = [
+		{
+			icon: '📞',
+			title: 'Endless booking calls',
+			text: 'Customers can see availability and book without calling you to ask what is free.'
+		},
+		{
+			icon: '💬',
+			title: 'WhatsApp chaos',
+			text: 'Stop digging through conversations to figure out who booked what and when.'
+		},
+		{
+			icon: '📅',
+			title: 'Manual schedules',
+			text: 'Manage courts, availability, pricing and bookings from one simple dashboard.'
+		},
+		{
+			icon: '👻',
+			title: 'Ghost bookings',
+			text: 'Online payments are coming soon, helping turn reservations into confirmed bookings.'
 		}
-	}
+	];
 
-	import { goto } from '$app/navigation';
-	import {
-		QUERY_PARAM_BOOKING_DATE,
-		QUERY_PARAM_VENUE_ID
-	} from '$lib/constants/postgressFunctionConstants';
-
-	onMount(() => {
-		window.addEventListener('scroll', handleScroll);
-		handleScroll(); // Initial check
-
-		return () => {
-			window.removeEventListener('scroll', handleScroll);
-		};
-	});
-
-	let start = '';
-	let end = '';
-	let error = '';
-
-	async function submit(e: Event) {
-		e.preventDefault();
-
-		if (isNavigating) return;
-		isNavigating = true;
-
-		try {
-			// Navigate to /booking with query params
-			await goto(
-				`/booking?${QUERY_PARAM_VENUE_ID}=${venueData?.venueID || ''}&${QUERY_PARAM_BOOKING_DATE}=${new Date().toISOString().split('T')[0]}`
-			);
-		} finally {
-			isNavigating = false;
+	const steps = [
+		{
+			number: '01',
+			title: 'Set up your venue',
+			text: 'Add your courts, opening hours, pricing and availability.'
+		},
+		{
+			number: '02',
+			title: 'Share your booking page',
+			text: 'Give customers one simple link where they can see what is available.'
+		},
+		{
+			number: '03',
+			title: 'Let them book',
+			text: 'Customers choose their court and time while your schedule updates automatically.'
 		}
-	}
-
-	async function goToBooking(e: Event) {
-		e.preventDefault();
-
-		if (isNavigating) return;
-		isNavigating = true;
-
-		try {
-			await goto('/booking');
-		} finally {
-			isNavigating = false;
-		}
-	}
-	// why so much error handling? cause the venue owner are just dumb and will most likely
-	// not provide all the venueData needed to render the page properly
+	];
 </script>
 
-<div class="bg-base-100">
-	<!-- Navbar -->
+<svelte:head>
+	<title>BookToGo — Let your customers book themselves</title>
+	<meta
+		name="description"
+		content="BookToGo helps sports venues spend less time answering booking calls and messages, and more time running their venue."
+	/>
+</svelte:head>
 
-	<!-- Hero -->
-	<section
-		bind:this={heroSection}
-		class="text-soft-content flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/8 via-transparent to-secondary/6 px-4 text-center"
-	>
-		<div class="flex w-full max-w-5xl flex-col items-center justify-center">
-			<!-- Left: copy -->
-			<div class="md:pl-8">
-				<h1 class="mb-4 text-3xl leading-tight font-extrabold md:text-5xl">
-					{venueData?.venueBrand || 'Book your Court!'}
-				</h1>
-				<p class="text-muted mb-6 px-6 text-sm md:text-lg">
-					Booking a court with {venueData?.venueBrand || 'us'} has never been easier. Experience seamless
-					booking, top-notch facilities, and unforgettable moments every time.
-				</p>
-
-				<ul class="hidden gap-2 md:inline">
-					<li class="badge bg-green-600 text-success-content">Real-time availability</li>
-					<li class="badge bg-yellow-400 text-error-content">Secure payments</li>
-					<li class="badge bg-orange-300 text-error-content">Instant confirmations</li>
-				</ul>
-			</div>
-
-			<!-- Right: form card -->
-			<form
-				on:submit={submit}
-				class="max-w-2xl rounded-2xl border border-white/6 bg-base-100/60 p-6 shadow-2xl backdrop-blur-md"
-			>
-				<div class="text-muted mb-3 text-left text-sm">Quick search — choose a court type</div>
-
-				<div class="flex flex-col gap-3 sm:flex-row">
-					<!-- Start -->
-					<select class="select select-primary" disabled={isNavigating}>
-						<option>Half Court</option>
-						<option>Full Court</option>
-					</select>
-					<!-- Next button -->
-					<button
-						type="submit"
-						class="btn flex shrink-0 items-center gap-3 px-5 btn-primary"
-						aria-label="Next — go to booking"
-						disabled={isNavigating}
+<div class="bg-base-100 text-base-content">
+	<!-- NAVBAR -->
+	<header class="navbar mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+		<div class="navbar-start">
+			<a href="/" class="flex items-center gap-2">
+				<div
+					class="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-content shadow-lg"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						class="size-5"
 					>
-						{#if isNavigating}
-							<span class="loading loading-sm loading-spinner"></span>
-						{:else}
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="h-5 w-5"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-								stroke-width="2"
-							>
-								<path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-							</svg>
-						{/if}
-					</button>
+						<path d="M6 3h12" />
+						<path d="M6 3v4a6 6 0 0 0 12 0V3" />
+						<path d="M12 13v8" />
+						<path d="M8 21h8" />
+					</svg>
 				</div>
 
-				{#if error}
-					<p class="mt-3 text-sm text-error">{error}</p>
-				{:else}
-					<p class="text-muted mt-3 text-xs">You'll be taken to booking with the selected type.</p>
-				{/if}
-			</form>
+				<span class="text-xl font-black tracking-tight">BookToGo</span>
+			</a>
+		</div>
+
+		<div class="navbar-end gap-2">
+			<a href="#how-it-works" class="btn btn-ghost hidden sm:inline-flex">
+				How it works
+			</a>
+
+			<a href="#get-started" class="btn btn-primary">
+				Get started
+			</a>
+		</div>
+	</header>
+
+	<!-- HERO -->
+	<section class="relative overflow-hidden">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="grid items-center gap-14 py-16 lg:grid-cols-[1fr_1.05fr] lg:py-24">
+				<!-- Hero copy -->
+				<div class="max-w-2xl">
+					<div class="badge badge-primary badge-outline mb-6 gap-2 px-4 py-3">
+						<span class="size-2 rounded-full bg-primary"></span>
+						Booking, without the busywork
+					</div>
+
+					<h1 class="text-5xl font-black leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+						Let your customers
+						<span class="text-primary">book themselves.</span>
+					</h1>
+
+					<p class="mt-7 max-w-xl text-lg leading-8 text-base-content/65 sm:text-xl">
+						Stop spending your day answering “Is 7 PM available?”
+						BookToGo gives your customers an easy way to book while
+						you get one simple place to manage it all.
+					</p>
+
+					<div class="mt-9 flex flex-col gap-3 sm:flex-row">
+						<a href="#get-started" class="btn btn-primary btn-lg shadow-lg shadow-primary/20">
+							Start accepting bookings
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								class="size-5"
+							>
+								<path d="M5 12h14" />
+								<path d="m13 6 6 6-6 6" />
+							</svg>
+						</a>
+
+						<a href="#how-it-works" class="btn btn-ghost btn-lg">
+							See how it works
+						</a>
+					</div>
+
+					<div class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-base-content/50">
+						<span class="flex items-center gap-2">
+							<span class="text-success">✓</span>
+							Easy to set up
+						</span>
+
+						<span class="flex items-center gap-2">
+							<span class="text-success">✓</span>
+							No complicated software
+						</span>
+
+						<span class="flex items-center gap-2">
+							<span class="text-success">✓</span>
+							Built for venues
+						</span>
+					</div>
+				</div>
+
+				<!-- Hero visual -->
+				<div class="relative">
+					<!-- Decorative background -->
+					<div
+						class="absolute -inset-8 -z-10 rounded-[4rem] bg-primary/5 blur-3xl"
+					></div>
+
+					<div class="mockup-browser border border-base-300 bg-base-200 shadow-2xl">
+						<div class="mockup-browser-toolbar">
+							<div class="input border-base-300 bg-base-100 text-xs">
+								sunrisebadminton.booktogo.app
+							</div>
+						</div>
+
+						<div class="bg-base-100 p-5 sm:p-7">
+							<!-- Booking page header -->
+							<div class="flex items-start justify-between gap-4">
+								<div>
+									<div class="flex items-center gap-3">
+										<div
+											class="flex size-11 items-center justify-center rounded-xl bg-secondary text-secondary-content"
+										>
+											🏸
+										</div>
+
+										<div>
+											<h3 class="font-bold">Sunrise Badminton</h3>
+											<p class="text-xs text-base-content/50">Colombo</p>
+										</div>
+									</div>
+								</div>
+
+								<div class="badge badge-success badge-sm gap-1">
+									<span class="size-1.5 rounded-full bg-current"></span>
+									Open
+								</div>
+							</div>
+
+							<div class="divider my-5"></div>
+
+							<div class="mb-4">
+								<p class="text-xs font-semibold uppercase tracking-wider text-base-content/45">
+									Choose a date
+								</p>
+
+								<div class="mt-3 flex gap-2 overflow-hidden">
+									<div class="btn btn-primary btn-sm h-auto min-w-16 flex-col py-2">
+										<span class="text-[10px] opacity-70">TODAY</span>
+										<span>02</span>
+									</div>
+
+									<div class="btn btn-sm h-auto min-w-16 flex-col py-2">
+										<span class="text-[10px] opacity-50">THU</span>
+										<span>03</span>
+									</div>
+
+									<div class="btn btn-sm h-auto min-w-16 flex-col py-2">
+										<span class="text-[10px] opacity-50">FRI</span>
+										<span>04</span>
+									</div>
+
+									<div class="btn btn-sm h-auto min-w-16 flex-col py-2">
+										<span class="text-[10px] opacity-50">SAT</span>
+										<span>05</span>
+									</div>
+								</div>
+							</div>
+
+							<p class="mb-3 text-xs font-semibold uppercase tracking-wider text-base-content/45">
+								Available times
+							</p>
+
+							<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+								<button class="btn btn-outline btn-sm">5:00 PM</button>
+								<button class="btn btn-outline btn-sm">6:00 PM</button>
+								<button class="btn btn-primary btn-sm">7:00 PM</button>
+								<button class="btn btn-outline btn-sm">8:00 PM</button>
+								<button class="btn btn-outline btn-sm">9:00 PM</button>
+								<button class="btn btn-disabled btn-sm">10:00 PM</button>
+							</div>
+
+							<div class="mt-5 rounded-xl bg-base-200 p-4">
+								<div class="flex items-center justify-between">
+									<div>
+										<p class="text-xs text-base-content/50">Court 2</p>
+										<p class="font-bold">7:00 PM — 8:00 PM</p>
+									</div>
+
+									<div class="badge badge-primary">Available</div>
+								</div>
+
+								<button class="btn btn-primary btn-sm mt-4 w-full">
+									Book this court
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- Floating owner notification -->
+					<div
+						class="absolute -bottom-7 -left-4 hidden w-64 rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xl sm:block lg:-left-10"
+					>
+						<div class="flex items-center gap-3">
+							<div class="avatar placeholder">
+								<div class="size-10 rounded-full bg-success text-success-content">
+									<span>✓</span>
+								</div>
+							</div>
+
+							<div>
+								<p class="text-xs text-base-content/50">New booking</p>
+								<p class="font-bold">Court 2 · 7:00 PM</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- Floating notification -->
+					<div
+						class="absolute -right-3 -top-6 hidden rounded-2xl border border-base-300 bg-base-100 p-3 shadow-xl sm:flex sm:items-center sm:gap-3"
+					>
+						<div class="flex size-9 items-center justify-center rounded-full bg-primary/10">
+							📅
+						</div>
+
+						<div>
+							<p class="text-xs font-semibold">18 bookings today</p>
+							<p class="text-[11px] text-base-content/45">Everything in one place</p>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</section>
 
-	<!-- Carousel -->
-	<section class="bg-base-100 py-12">
-		<h2 class="mb-8 text-center text-3xl font-bold">Our Premium Facilities</h2>
-		<div class="carousel w-full" bind:this={carouselElement}>
-			{#if venueData}
-				{#each venueData!.venueCourtCarouselImages as src, i}
-					<div id="slide{i}" class="relative carousel-item flex w-full justify-center">
-						<div
-							class="h-64 w-full overflow-hidden sm:h-80 md:h-96 md:w-[80vw] lg:h-[500px] xl:h-[600px]"
-						>
-							<img {src} class="h-full w-full object-cover" alt={src} loading="lazy" />
-						</div>
-						<div
-							class="absolute top-1/2 right-5 left-5 flex -translate-y-1/2 transform justify-between"
-						>
-							<a
-								href="#slide{i === 0 ? venueData!.venueCourtCarouselImages.length - 1 : i - 1}"
-								class="btn btn-circle btn-outline btn-soft">❮</a
-							>
-							<a
-								href="#slide{(i + 1) % venueData!.venueCourtCarouselImages.length}"
-								class="btn btn-circle btn-outline btn-soft">❯</a
-							>
+	<!-- PAIN POINTS -->
+	<section class="bg-base-200/60 py-24">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="max-w-2xl">
+				<p class="font-bold uppercase tracking-widest text-primary">Sound familiar?</p>
+
+				<h2 class="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+					Your venue shouldn't run on WhatsApp.
+				</h2>
+
+				<p class="mt-5 text-lg leading-8 text-base-content/60">
+					Running a venue is already enough work. Booking shouldn't mean
+					constantly checking messages, answering calls and updating schedules by hand.
+				</p>
+			</div>
+
+			<div class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+				{#each problems as problem}
+					<div class="card border border-base-300 bg-base-100 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+						<div class="card-body">
+							<div class="text-3xl">{problem.icon}</div>
+
+							<h3 class="mt-2 text-lg font-bold">{problem.title}</h3>
+
+							<p class="text-sm leading-6 text-base-content/55">
+								{problem.text}
+							</p>
 						</div>
 					</div>
-				{/each}
-			{/if}
-		</div>
-		{#if venueData}
-			<div class="flex justify-center py-2">
-				{#each venueData!.venueCourtCarouselImages as _, i}
-					<a href="#slide{i}" class="btn mx-1 btn-outline btn-xs">
-						{i + 1}
-					</a>
 				{/each}
 			</div>
-		{/if}
-	</section>
-
-	<!-- Features -->
-	<section id="facilities" class="py-12">
-		<h2 class="mb-8 text-center text-3xl font-bold text-primary">
-			Why {venueData?.venueBrand || 'choose us'}?
-		</h2>
-		<div class="flex flex-wrap justify-center gap-6">
-			{#if venueData}
-				{#each venueData.venueDescription as feature}
-					<div class="card w-full max-w-sm bg-base-100 shadow">
-						<div class="card-body text-center">
-							{#if isImagePath(feature.icon)}
-								<img src={feature.icon} alt={feature.title} class="mx-auto mb-4 h-12 w-12" />
-							{:else if feature.icon !== 'default'}
-								<div class="mb-4 text-3xl">{feature.icon}</div>
-							{/if}
-
-							<h3 class="card-title justify-center">{feature.title}</h3>
-							<p class="opacity-70">{feature.description}</p>
-						</div>
-					</div>
-				{/each}
-			{/if}
 		</div>
 	</section>
 
-	<!-- Location Section -->
-	{#if !onTestMode}
-		<section id="location" class="bg-base-200 py-12">
-			<div class="container mx-auto px-4">
-				<h2 class="mb-8 text-center text-3xl font-bold text-primary">Find Us Here</h2>
-				<div class="flex flex-col items-center gap-8 lg:flex-row lg:justify-center">
-					<!-- Map Container -->
-					<div class="w-full max-w-2xl">
-						<div class="card bg-base-100 shadow-lg">
-							<div class="card-body p-0">
-								<div class="h-64 w-full overflow-hidden rounded-t-2xl md:h-80">
-									{#if venueData?.venueAddress || venueData?.venueBrand}
-										<iframe
-											src="https://www.google.com/maps/embed/v1/place?key=AIzaSyARYtZ_9ukYxOdqCMes7stPSiuNDxcFmaU&q={encodeURIComponent(
-												venueData?.venueAddress || venueData?.venueBrand || ''
-											)}"
-											width="100%"
-											height="100%"
-											style="border:0;"
-											allowfullscreen=""
-											loading="lazy"
-											referrerpolicy="no-referrer-when-downgrade"
-											title="Venue Location"
-										></iframe>
-									{:else}
-										<!-- Placeholder when no address is available -->
-										<div class="flex h-full items-center justify-center bg-base-300">
-											<div class="text-center">
-												<div class="mb-2 text-4xl">📍</div>
-												<p class="text-base-content/60">Location map will appear here</p>
-											</div>
-										</div>
-									{/if}
+	<!-- TRANSFORMATION -->
+	<section class="py-24">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="text-center">
+				<p class="font-bold uppercase tracking-widest text-primary">The difference</p>
+
+				<h2 class="mx-auto mt-3 max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">
+					From booking chaos to <span class="text-primary">booked.</span>
+				</h2>
+			</div>
+
+			<div class="mt-14 grid items-center gap-6 lg:grid-cols-[1fr_auto_1fr]">
+				<!-- Before -->
+				<div class="card border border-base-300 bg-base-200">
+					<div class="card-body p-7">
+						<div class="flex items-center justify-between">
+							<h3 class="font-bold">Before BookToGo</h3>
+							<div class="badge badge-error badge-outline">Manual</div>
+						</div>
+
+						<div class="mt-5 space-y-3">
+							<div class="chat chat-start">
+								<div class="chat-bubble bg-base-100 text-base-content shadow-sm">
+									Hi, is court 2 available at 7?
 								</div>
-								<div class="p-6">
-									<div class="text-center">
-										<h3 class="mb-2 text-xl font-semibold">
-											{venueData?.venueBrand || 'Our Location'}
-										</h3>
-										{#if venueData?.venueAddress}
-											<p class="mb-4 text-base-content/70">{venueData.venueAddress}</p>
-										{/if}
-										<button on:click={openGoogleMaps} class="btn gap-2 btn-primary">
-											<span class="text-lg">🗺️</span>
-											Open in Google Maps
+							</div>
+
+							<div class="chat chat-start">
+								<div class="chat-bubble bg-base-100 text-base-content shadow-sm">
+									What about tomorrow at 6?
+								</div>
+							</div>
+
+							<div class="chat chat-start">
+								<div class="chat-bubble bg-base-100 text-base-content shadow-sm">
+									Can I book court 1 for Friday?
+								</div>
+							</div>
+
+							<div class="alert border border-error/20 bg-error/5 text-sm">
+								<span>🔔</span>
+								<span>Another booking message...</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="hidden text-3xl text-primary lg:block">→</div>
+				<div class="text-center text-3xl text-primary lg:hidden">↓</div>
+
+				<!-- After -->
+				<div class="card border-2 border-primary/20 bg-base-100 shadow-xl">
+					<div class="card-body p-7">
+						<div class="flex items-center justify-between">
+							<h3 class="font-bold">With BookToGo</h3>
+							<div class="badge badge-success badge-outline">Simple</div>
+						</div>
+
+						<div class="mt-5 space-y-3">
+							<div class="flex items-center gap-3 rounded-xl bg-base-200 p-4">
+								<div class="flex size-9 items-center justify-center rounded-lg bg-success text-success-content">
+									✓
+								</div>
+
+								<div class="flex-1">
+									<p class="text-xs text-base-content/50">New booking</p>
+									<p class="font-semibold">Court 2 · 7:00 PM</p>
+								</div>
+
+								<span class="badge badge-success badge-sm">Booked</span>
+							</div>
+
+							<div class="flex items-center gap-3 rounded-xl bg-base-200 p-4">
+								<div class="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-content">
+									✓
+								</div>
+
+								<div class="flex-1">
+									<p class="text-xs text-base-content/50">Customer</p>
+									<p class="font-semibold">Booked themselves</p>
+								</div>
+							</div>
+
+							<div class="alert border border-success/20 bg-success/5 text-sm">
+								<span>✨</span>
+								<span>Your schedule stays up to date automatically.</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- HOW IT WORKS -->
+	<section id="how-it-works" class="bg-neutral text-neutral-content py-24">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="grid gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+				<div>
+					<p class="font-bold uppercase tracking-widest text-primary-content/70">
+						How it works
+					</p>
+
+					<h2 class="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+						You set it up.<br />
+						They do the booking.
+					</h2>
+
+					<p class="mt-6 max-w-lg text-lg leading-8 text-neutral-content/60">
+						BookToGo takes care of the repetitive part of booking so
+						you can focus on the actual business.
+					</p>
+				</div>
+
+				<div class="space-y-4">
+					{#each steps as step}
+						<div
+							class="group flex gap-5 rounded-2xl border border-neutral-content/10 bg-neutral-content/5 p-6 transition hover:bg-neutral-content/10"
+						>
+							<div class="font-mono text-sm font-bold text-primary-content/50">
+								{step.number}
+							</div>
+
+							<div>
+								<h3 class="text-xl font-bold">{step.title}</h3>
+
+								<p class="mt-2 max-w-lg leading-7 text-neutral-content/55">
+									{step.text}
+								</p>
+							</div>
+						</div>
+					{/each}
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- OWNER DASHBOARD -->
+	<section class="py-24">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="grid items-center gap-14 lg:grid-cols-2">
+				<!-- Dashboard mockup -->
+				<div class="order-2 lg:order-1">
+					<div class="rounded-3xl border border-base-300 bg-base-200 p-3 shadow-2xl">
+						<div class="rounded-2xl bg-base-100 p-5">
+							<div class="flex items-center justify-between">
+								<div>
+									<p class="text-xs font-medium text-base-content/50">Tuesday, September 2</p>
+									<h3 class="mt-1 text-2xl font-black">Today's bookings</h3>
+								</div>
+
+								<div class="btn btn-primary btn-sm">+ Add booking</div>
+							</div>
+
+							<div class="mt-6 grid grid-cols-3 gap-3">
+								<div class="stat rounded-xl bg-base-200 p-3">
+									<div class="stat-title text-[10px]">Bookings</div>
+									<div class="stat-value text-2xl">18</div>
+								</div>
+
+								<div class="stat rounded-xl bg-base-200 p-3">
+									<div class="stat-title text-[10px]">Available</div>
+									<div class="stat-value text-2xl">7</div>
+								</div>
+
+								<div class="stat rounded-xl bg-base-200 p-3">
+									<div class="stat-title text-[10px]">Courts</div>
+									<div class="stat-value text-2xl">6</div>
+								</div>
+							</div>
+
+							<div class="mt-6 space-y-2">
+								{#each [
+									['5:00 PM', 'Court 1', 'Booked'],
+									['6:00 PM', 'Court 2', 'Booked'],
+									['7:00 PM', 'Court 1', 'Available'],
+									['7:00 PM', 'Court 3', 'Booked'],
+									['8:00 PM', 'Court 2', 'Available']
+								] as booking}
+									<div class="flex items-center gap-4 rounded-xl border border-base-300 p-3">
+										<div class="w-16 text-sm font-bold">{booking[0]}</div>
+
+										<div class="h-8 w-px bg-base-300"></div>
+
+										<div class="flex-1">
+											<p class="font-semibold">{booking[1]}</p>
+										</div>
+
+										<div
+											class:badge-success={booking[2] === 'Booked'}
+											class:badge-ghost={booking[2] === 'Available'}
+											class="badge badge-sm"
+										>
+											{booking[2]}
+										</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Copy -->
+				<div class="order-1 lg:order-2">
+					<p class="font-bold uppercase tracking-widest text-primary">Your venue. Your rules.</p>
+
+					<h2 class="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+						Everything you need.<br />
+						Nothing you don't.
+					</h2>
+
+					<p class="mt-6 text-lg leading-8 text-base-content/60">
+						Manage your venue without learning some enormous piece of
+						enterprise software.
+					</p>
+
+					<div class="mt-8 space-y-4">
+						{#each [
+							['Availability', 'Control exactly when your courts can be booked.'],
+							['Pricing', 'Set and update your prices whenever you need.'],
+							['Closures', 'Block out courts for maintenance, events or holidays.'],
+							['Bookings', 'See what is booked and what is still available at a glance.']
+						] as feature}
+							<div class="flex gap-4">
+								<div class="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-content">
+									✓
+								</div>
+
+								<div>
+									<h3 class="font-bold">{feature[0]}</h3>
+									<p class="mt-1 text-sm leading-6 text-base-content/55">{feature[1]}</p>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- CUSTOMER EXPERIENCE -->
+	<section class="bg-base-200/60 py-24">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="grid items-center gap-14 lg:grid-cols-2">
+				<div>
+					<p class="font-bold uppercase tracking-widest text-secondary">Better for customers</p>
+
+					<h2 class="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+						No calls.<br />
+						No waiting.<br />
+						Just book.
+					</h2>
+
+					<p class="mt-6 max-w-xl text-lg leading-8 text-base-content/60">
+						Your customers already know what they want.
+						Give them a fast way to find an available time and book it.
+					</p>
+
+					<div class="mt-8">
+						<div class="alert border border-secondary/20 bg-secondary/5">
+							<span class="text-xl">💡</span>
+							<span>
+								<strong>The result:</strong> customers get convenience
+								while you get fewer messages.
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="flex justify-center">
+					<div class="mockup-phone border-base-300 bg-neutral">
+						<div class="mockup-phone-camera"></div>
+
+						<div class="display bg-base-100">
+							<div class="artboard artboard-demo w-80 bg-base-100">
+								<div class="w-full p-5">
+									<div class="flex items-center gap-3">
+										<div class="flex size-10 items-center justify-center rounded-xl bg-secondary">
+											🏸
+										</div>
+
+										<div>
+											<p class="font-bold">Sunrise Badminton</p>
+											<p class="text-xs text-base-content/50">Book a court</p>
+										</div>
+									</div>
+
+									<div class="divider"></div>
+
+									<p class="text-xs font-bold uppercase tracking-wider text-base-content/45">
+										Today
+									</p>
+
+									<div class="mt-3 grid grid-cols-2 gap-2">
+										<div class="btn btn-outline btn-sm">5:00 PM</div>
+										<div class="btn btn-outline btn-sm">6:00 PM</div>
+										<div class="btn btn-primary btn-sm">7:00 PM</div>
+										<div class="btn btn-outline btn-sm">8:00 PM</div>
+									</div>
+
+									<div class="mt-5 rounded-xl bg-base-200 p-4">
+										<p class="text-xs text-base-content/50">Selected</p>
+										<p class="mt-1 font-bold">Court 2 · 7:00 PM</p>
+
+										<button class="btn btn-secondary btn-sm mt-4 w-full">
+											Continue
 										</button>
 									</div>
 								</div>
@@ -270,66 +630,114 @@
 					</div>
 				</div>
 			</div>
-		</section>
-	{/if}
+		</div>
+	</section>
 
-	<!-- Sticky Book Button -->
-	{#if showStickyButton}
-		<div
-			class="fixed right-0 bottom-0 left-0 z-40 bg-gradient-to-t from-base-100 via-base-100/95 to-transparent p-4 pb-6 transition-all duration-300 ease-in-out"
-			style="backdrop-filter: blur(8px);"
-		>
-			<div class="mx-auto max-w-sm">
-				<button
-					on:click={goToBooking}
-					disabled={isNavigating}
-					class="btn w-full transform gap-2 shadow-lg transition-all duration-200 btn-lg btn-primary hover:scale-105 hover:shadow-xl"
-				>
-					{#if isNavigating}
-						<span class="loading loading-md loading-spinner"></span>
-					{:else}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-5 w-5"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
-							/>
-						</svg>
-					{/if}
-					{isNavigating ? 'Loading...' : 'Book Court'}
-				</button>
+	<!-- PAYMENTS -->
+	<section class="py-24">
+		<div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+			<div class="relative overflow-hidden rounded-[2rem] border border-primary/20 bg-primary/5 p-8 sm:p-12">
+				<div class="absolute -right-20 -top-20 size-64 rounded-full bg-primary/10 blur-3xl"></div>
+
+				<div class="relative grid gap-10 md:grid-cols-[1fr_auto] md:items-center">
+					<div>
+						<div class="badge badge-primary mb-5">Coming soon</div>
+
+						<h2 class="text-3xl font-black tracking-tight sm:text-4xl">
+							Book. Pay. Confirmed.
+						</h2>
+
+						<p class="mt-4 max-w-2xl text-lg leading-8 text-base-content/60">
+							Online payments are coming to BookToGo, giving venues another
+							way to reduce ghost bookings and no-shows.
+						</p>
+					</div>
+
+					<div class="flex items-center justify-center">
+						<div class="flex items-center gap-2 text-sm font-bold">
+							<div class="badge badge-lg">Book</div>
+							<span class="text-primary">→</span>
+							<div class="badge badge-lg">Pay</div>
+							<span class="text-primary">→</span>
+							<div class="badge badge-primary badge-lg">Confirmed</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
-	{/if}
+	</section>
 
-	<!-- Footer -->
-	<footer class="footer bg-base-200 p-10 pb-40 text-base-content sm:footer-horizontal">
-		<aside>
-			{#if venueData?.venueLogo && venueData.venueLogo !== ''}
-				<img src={venueData.venueLogo} alt="logoImage" class="h-10 w-10" />
-			{/if}
-			<p>
-				{venueData?.venueBrand}
-				<br />
-				{venueData?.venueSlogan}
+	<!-- FINAL CTA -->
+	<section id="get-started" class="pb-24">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="hero overflow-hidden rounded-[2rem] bg-neutral py-20 text-neutral-content shadow-2xl sm:py-28">
+				<div class="hero-content px-6 text-center">
+					<div class="max-w-3xl">
+						<p class="font-bold uppercase tracking-widest text-primary-content/60">
+							Ready to simplify your bookings?
+						</p>
+
+						<h2 class="mt-4 text-4xl font-black tracking-tight sm:text-6xl">
+							Let your customers do the booking.
+						</h2>
+
+						<p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-content/60">
+							Spend less time answering calls and messages.
+							Give your customers a better way to book your venue.
+						</p>
+
+						<div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+							<a href="/signup" class="btn btn-primary btn-lg">
+								Get started with BookToGo
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									class="size-5"
+								>
+									<path d="M5 12h14" />
+									<path d="m13 6 6 6-6 6" />
+								</svg>
+							</a>
+
+							<a href="#how-it-works" class="btn btn-ghost btn-lg text-neutral-content">
+								See how it works
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- FOOTER -->
+	<footer class="border-t border-base-300">
+		<div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+			<div class="flex items-center gap-2">
+				<div class="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-content">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						class="size-4"
+					>
+						<path d="M6 3h12" />
+						<path d="M6 3v4a6 6 0 0 0 12 0V3" />
+						<path d="M12 13v8" />
+						<path d="M8 21h8" />
+					</svg>
+				</div>
+
+				<span class="font-bold">BookToGo</span>
+			</div>
+
+			<p class="text-sm text-base-content/45">
+				© {new Date().getFullYear()} BookToGo. Book less. Manage better.
 			</p>
-		</aside>
-		<nav>
-			<h6 class="footer-title">Company</h6>
-			<a class="link link-hover">About us</a>
-			<a class="link link-hover">Contact</a>
-		</nav>
-		<nav>
-			<h6 class="footer-title">Legal</h6>
-			<a class="link link-hover">Terms of use</a>
-			<a class="link link-hover">Privacy policy</a>
-		</nav>
+		</div>
 	</footer>
 </div>
