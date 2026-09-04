@@ -44,9 +44,10 @@
 		courtsData: courtsType;
 		closureData: CourtWithClosures[];
 		isVenueOwner: boolean;
+		isConfirming: boolean;
 	} = $props();
 
-	let showConfirmation = $state(false);
+	let showConfirmation = $state(isConfirming || false);
 	let pendingBooking: BookingDetails | null = $state(null);
 	let isConfirming = $state(false);
 	let bookingResult: 'success' | 'error' | null = $state(null);
