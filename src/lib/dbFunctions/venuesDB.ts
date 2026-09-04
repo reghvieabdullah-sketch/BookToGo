@@ -1,6 +1,6 @@
 import type { Closure, courtsType, CourtWithClosures, VenueData, VenueSettings } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { FN_CREATE_SAMPLE_VENUE, FN_CREATE_VENUE_INVITE_URL, FN_IS_SUPER_OWNER, FN_IS_VENUE_OWNER, FN_LOGO_URL_UPDATE, FN_OWNER_CONTACT_US, FN_VENUE_BOOKING_STATUS_UPDATE, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_IMAGE_UPDATE, FN_VENUE_INVITATION_CONSUMPTION, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX, VENUE_LOGO_BUCKET_PATH } from "$lib/constants/postgressFunctionConstants";
+import { FN_CREATE_SAMPLE_VENUE, FN_CREATE_VENUE_INVITE_URL, FN_IS_SUPER_OWNER, FN_IS_VENUE_OWNER, FN_IS_VENUE_OWNER_OR_SUPER_OWNER, FN_LOGO_URL_UPDATE, FN_OWNER_CONTACT_US, FN_VENUE_BOOKING_STATUS_UPDATE, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_IMAGE_UPDATE, FN_VENUE_INVITATION_CONSUMPTION, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX, VENUE_LOGO_BUCKET_PATH } from "$lib/constants/postgressFunctionConstants";
 import { runRPC, ensureArgs, type DBResult } from "./commonServerTypesAndFuncs";
 import crypto from 'node:crypto';
 
@@ -43,7 +43,13 @@ export async function isUserVenueOwner(supabase: SupabaseClient, venueURL: strin
     }
 }
 
-
+export async function isUserVenueOwnerOrSuperOwner(supabase: SupabaseClient, venueURL: string) {
+    const { data, error } = await runRPC(supabase, FN_IS_VENUE_OWNER_OR_SUPER_OWNER, { p_venue_url: venueURL });
+    return {
+        isSuperOwner: (error || !data) ? data.isSuperOwner : false,
+        isVenueOwner: (error || !data) ? data.isVenueOwner : false
+    }
+}
 /** Creates a new venue if the user is a super owner. And returns the invite token */
 export async function createNewVenue(supabase: SupabaseClient, venueURL: string, isSuperOwner: boolean): Promise<DBResult<any>> {
     if (!isSuperOwner) return { data: null, error: 'User is not a super owner and cannot create a new venue.' };
