@@ -143,19 +143,19 @@
 		pendingBooking = null;
 	}
 
-	const loadedBooking = loadBooking();
+	pendingBooking = loadBooking();
 
-	if (loadedBooking) {
+	if (pendingBooking) {
 		showConfirmation = true;
 
 		clearBooking();
 	}
 
-	let selectedCourtId: number | null = $state(loadedBooking?.selectedCourtId || null);
-	let selectedUnitId: number | null = $state(loadedBooking?.selectedUnitId || null);
-	let selectedSubUnitIds: number[] = $state(loadedBooking?.selectedSubUnitIds || []);
-	let selectedDuration = $state(loadedBooking?.selectedDuration || '01:00');
-	let selectedTime = $state(loadedBooking?.selectedTime || '09:00');
+	let selectedCourtId: number | null = $state(pendingBooking?.selectedCourtId || null);
+	let selectedUnitId: number | null = $state(pendingBooking?.selectedUnitId || null);
+	let selectedSubUnitIds: number[] = $state(pendingBooking?.selectedSubUnitIds || []);
+	let selectedDuration = $state(pendingBooking?.selectedDuration || '01:00');
+	let selectedTime = $state(pendingBooking?.selectedTime || '09:00');
 	let totalPrice = $state(0);
 	let timeOptions: string | any[] = $state([]);
 
@@ -522,7 +522,7 @@
 {/if}
 
 <!-- Confirmation Screen -->
-{#if showConfirmation && (pendingBooking || loadedBooking)}
+{#if showConfirmation && (pendingBooking || pendingBooking)}
 	<div class="max-w-sm border border-base-300 bg-base-100 p-4">
 		<div class="mb-3 text-center">
 			<div class="flex justify-center pb-2">
