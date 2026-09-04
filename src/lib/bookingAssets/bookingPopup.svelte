@@ -25,7 +25,10 @@
 	import { goto } from '$app/navigation';
 	import {
 		courtStatusEnum,
-		QUERY_PARAM_BOOKING_DATE
+		QUERY_PARAM_BOOKING_DATE,
+
+		QUERY_PARAM_BOOKING_SHOW_CONFIRMATION
+
 	} from '$lib/constants/postgressFunctionConstants';
 
 	export const onclose = () => {};
@@ -94,7 +97,7 @@
 
 		if (!isLoggedIn)
 			return goto(
-				`/auth?next=/booking?${QUERY_PARAM_BOOKING_DATE}=${$bookingDayData.date.toISOString().split('T')[0]}`
+				`/auth?next=/booking?${QUERY_PARAM_BOOKING_DATE}=${$bookingDayData.date.toISOString().split('T')[0]}&${QUERY_PARAM_BOOKING_SHOW_CONFIRMATION}=true`
 			);
 
 		isConfirming = true;

@@ -1,5 +1,6 @@
 import {
   QUERY_PARAM_BOOKING_DATE,
+  QUERY_PARAM_BOOKING_SHOW_CONFIRMATION,
   QUERY_PARAM_VENUE_BOOKING_DATE_END,
   QUERY_PARAM_VENUE_BOOKING_DATE_START,
   QUERY_PARAM_VENUE_ID
@@ -18,6 +19,7 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
     venueID = parentData.venueData.venueID;
   }
   const dateParam = url.searchParams.get(QUERY_PARAM_BOOKING_DATE);
+  const keepPopupOpen = url.searchParams.get(QUERY_PARAM_BOOKING_SHOW_CONFIRMATION) === 'true';
   const targetDate = dateParam ? new Date(dateParam) : new Date();
   const { startDate, endDate } = getStartEndDayOfTimeStamp(targetDate);
   
@@ -27,7 +29,7 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
   const { bookingData, closureData } = await response.json();
   if (isBrowser()) bookingDayData.set({ date: targetDate, entries: bookingData[targetDate.toISOString().split('T')[0]] });
     return {
-    keepPopupOpen: !!dateParam, 
+    keepPopupOpen, 
     bookingData: bookingData as BookingsForDateRange,
     closureData: closureData as CourtWithClosures[],
   };
