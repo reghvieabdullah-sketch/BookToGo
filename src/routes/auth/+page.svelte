@@ -132,7 +132,7 @@
 		</div>
 
 		<p class="mt-5 text-center text-xs leading-relaxed text-base-content/50">
-			You may miss important features if you skip signing in
+			Your phone number may be used by the venue to contact you. We do not share your phone number with third parties.
 		</p>
 	</div>
 </div>
