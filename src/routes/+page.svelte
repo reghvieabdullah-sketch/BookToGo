@@ -6,6 +6,11 @@
 	let showStickyButton = $state(false);
 	let heroSection: HTMLElement;
 	let isNavigating = $state(false);
+	let activeSlide = $state(0);
+
+	// Hero background crossfade
+	let heroBgIndex = $state(0);
+	let heroBgInterval: ReturnType<typeof setInterval> | undefined;
 
 	let { data } = $props();
 	let { venueData } = $derived(data);
@@ -14,18 +19,15 @@
 		return icon.includes('/') || icon.includes('.');
 	}
 
-	// Function to open Google Maps with venue location
 	function openGoogleMaps() {
 		const address = venueData?.venueAddress || venueData?.venueBrand || 'venue location';
 		const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 		window.open(mapsUrl, '_blank');
 	}
 
-	// Handle sticky button visibility
 	function handleScroll() {
 		if (heroSection) {
 			const heroRect = heroSection.getBoundingClientRect();
-			// Show sticky button when hero section is mostly out of view
 			showStickyButton = heroRect.bottom < window.innerHeight * 0.3;
 		}
 	}
@@ -39,10 +41,18 @@
 
 	onMount(() => {
 		window.addEventListener('scroll', handleScroll);
-		handleScroll(); // Initial check
+		handleScroll();
+
+		const images = venueData?.venueCourtCarouselImages;
+		if (images?.length > 1) {
+			heroBgInterval = setInterval(() => {
+				heroBgIndex = (heroBgIndex + 1) % images.length;
+			}, 5000);
+		}
 
 		return () => {
 			window.removeEventListener('scroll', handleScroll);
+			if (heroBgInterval) clearInterval(heroBgInterval);
 		};
 	});
 
@@ -52,12 +62,9 @@
 
 	async function submit(e: Event) {
 		e.preventDefault();
-
 		if (isNavigating) return;
 		isNavigating = true;
-
 		try {
-			// Navigate to /booking with query params
 			await goto(
 				`/booking?${QUERY_PARAM_VENUE_ID}=${venueData?.venueID || ''}&${QUERY_PARAM_BOOKING_DATE}=${new Date().toISOString().split('T')[0]}`
 			);
@@ -68,10 +75,8 @@
 
 	async function goToBooking(e: Event) {
 		e.preventDefault();
-
 		if (isNavigating) return;
 		isNavigating = true;
-
 		try {
 			await goto('/booking');
 		} finally {
@@ -81,55 +86,99 @@
 	// why so much error handling? cause the venue owner are just dumb and will most likely
 	// not provide all the venueData needed to render the page properly
 </script>
-{#if data.venueURL}	
-<div class="bg-base-100">
-	<!-- Navbar -->
+
+{#if data.venueURL}
+<div class="min-h-screen bg-base-100">
 
 	<!-- Hero -->
 	<section
 		bind:this={heroSection}
-		class="text-soft-content flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/8 via-transparent to-secondary/6 px-4 text-center"
+		class="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-24"
 	>
-		<div class="flex w-full max-w-5xl flex-col items-center justify-center">
-			<!-- Left: copy -->
-			<div class="md:pl-8">
-				<h1 class="mb-4 text-3xl leading-tight font-extrabold md:text-5xl">
+		<!-- Background: carousel photos if available, decorative gradient otherwise -->
+		<div class="pointer-events-none absolute inset-0 -z-10">
+			{#if venueData?.venueCourtCarouselImages?.length}
+				{#each venueData.venueCourtCarouselImages as src, i}
+					<img
+						{src}
+						alt=""
+						class="absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-in-out"
+						style="opacity: {i === heroBgIndex ? 1 : 0}"
+						loading={i === 0 ? 'eager' : 'lazy'}
+					/>
+				{/each}
+				<!-- Overlay using daisyUI's neutral token for legibility -->
+				<div class="absolute inset-0 bg-gradient-to-b from-neutral/75 via-neutral/55 to-neutral/85"></div>
+				<div class="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20"></div>
+			{:else}
+				<div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-base-100 to-secondary/10"></div>
+				<div class="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl"></div>
+				<div class="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-secondary/20 blur-3xl"></div>
+			{/if}
+		</div>
+
+		<div class="mx-auto flex w-full max-w-4xl flex-col items-center gap-10 text-center">
+			<!-- Copy -->
+			<div class="flex flex-col items-center gap-5">
+				{#if venueData?.venueLogo && venueData.venueLogo !== ''}
+					<img
+						src={venueData.venueLogo}
+						alt="{venueData?.venueBrand} logo"
+						class="h-16 w-16 rounded-2xl object-cover shadow-lg ring-4 ring-base-100"
+					/>
+				{/if}
+
+				<h1 class="text-4xl leading-tight font-extrabold tracking-tight text-neutral-content drop-shadow-lg md:text-6xl">
 					{venueData?.venueBrand || 'Book your Court!'}
 				</h1>
-				<p class="text-muted mb-6 px-6 text-sm md:text-lg">
+
+				<p class="max-w-2xl text-balance text-base leading-relaxed text-neutral-content/85 drop-shadow md:text-lg">
 					Booking a court with {venueData?.venueBrand || 'us'} has never been easier. Experience seamless
 					booking, top-notch facilities, and unforgettable moments every time.
 				</p>
 
-				<ul class="hidden gap-2 md:inline">
-					<li class="badge bg-green-600 text-success-content">Real-time availability</li>
-					<li class="badge bg-yellow-400 text-error-content">Secure payments</li>
-					<li class="badge bg-orange-300 text-error-content">Instant confirmations</li>
+				<ul class="hidden flex-wrap items-center justify-center gap-2 md:flex">
+					<li class="badge badge-lg gap-1 border-0 bg-base-100/90 font-medium text-success shadow-sm">
+						● Real-time availability
+					</li>
+					<li class="badge badge-lg gap-1 border-0 bg-base-100/90 font-medium text-warning shadow-sm">
+						● Secure payments
+					</li>
+					<li class="badge badge-lg gap-1 border-0 bg-base-100/90 font-medium text-info shadow-sm">
+						● Instant confirmations
+					</li>
 				</ul>
 			</div>
 
-			<!-- Right: form card -->
+			<!-- Booking card -->
 			<form
 				on:submit={submit}
-				class="max-w-2xl rounded-2xl border border-white/6 bg-base-100/60 p-6 shadow-2xl backdrop-blur-md"
+				class="w-full max-w-xl rounded-3xl border border-base-100/20 bg-base-100/90 p-6 text-left shadow-2xl ring-1 ring-primary/10 backdrop-blur-xl md:p-8"
 			>
-				<div class="text-muted mb-3 text-left text-sm">Quick search — choose a court type</div>
+				<div class="mb-4">
+					<p class="text-sm font-semibold text-base-content">Find your court</p>
+					<p class="text-xs text-base-content/60">Pick a court type to start your booking</p>
+				</div>
 
 				<div class="flex flex-col gap-3 sm:flex-row">
-					<!-- Start -->
-					<select class="select select-primary" disabled={isNavigating}>
+					<select
+						class="select select-bordered w-full rounded-xl focus:select-primary"
+						disabled={isNavigating}
+					>
 						<option>Full Court</option>
 					</select>
-					<!-- Next button -->
+
 					<button
 						type="submit"
-						class="btn flex shrink-0 items-center gap-3 px-5 btn-primary"
+						class="btn shrink-0 gap-2 rounded-xl px-6 btn-primary"
 						aria-label="Next — go to booking"
 						disabled={isNavigating}
 					>
 						{#if isNavigating}
 							<span class="loading loading-sm loading-spinner"></span>
+							Loading
 						{:else}
+							Check availability
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								class="h-5 w-5"
@@ -147,126 +196,150 @@
 				{#if error}
 					<p class="mt-3 text-sm text-error">{error}</p>
 				{:else}
-					<p class="text-muted mt-3 text-xs">You'll be taken to booking with the selected type.</p>
+					<p class="mt-3 text-xs text-base-content/50">You'll be taken to booking with the selected type.</p>
 				{/if}
 			</form>
+
+			<!-- Scroll cue -->
+			<svg
+				class="h-6 w-6 animate-bounce text-neutral-content/60 drop-shadow"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+				stroke-width="2"
+			>
+				<path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+			</svg>
 		</div>
 	</section>
 
 	<!-- Carousel -->
-	<section class="bg-base-100 py-12">
-		<h2 class="mb-8 text-center text-3xl font-bold">Our Premium Facilities</h2>
-		<div class="carousel w-full" bind:this={carouselElement}>
-			{#if venueData}
-				{#each venueData!.venueCourtCarouselImages as src, i}
-					<div id="slide{i}" class="relative carousel-item flex w-full justify-center">
-						<div
-							class="h-64 w-full overflow-hidden sm:h-80 md:h-96 md:w-[80vw] lg:h-[500px] xl:h-[600px]"
-						>
-							<img {src} class="h-full w-full object-cover" alt={src} loading="lazy" />
+	{#if venueData?.venueCourtCarouselImages?.length}
+		<section class="bg-base-100 py-16 md:py-24">
+			<div class="mx-auto max-w-6xl px-4">
+				<div class="mb-10 text-center">
+					<p class="text-sm font-semibold tracking-wide text-primary uppercase">Take a look inside</p>
+					<h2 class="mt-2 text-3xl font-bold text-base-content md:text-4xl">Our Premium Facilities</h2>
+				</div>
+
+				<div
+					class="carousel w-full overflow-hidden rounded-3xl shadow-lg"
+					bind:this={carouselElement}
+				>
+					{#each venueData.venueCourtCarouselImages as src, i}
+						<div id="slide{i}" class="relative carousel-item w-full">
+							<div class="h-64 w-full sm:h-80 md:h-[420px] lg:h-[520px]">
+								<img {src} class="h-full w-full object-cover" alt="Facility view {i + 1}" loading="lazy" />
+							</div>
+							<div class="absolute inset-0 bg-gradient-to-t from-neutral/40 via-transparent to-transparent"></div>
+
+							<div class="absolute top-1/2 right-4 left-4 flex -translate-y-1/2 justify-between">
+								
+									<a href="#slide{i === 0 ? venueData.venueCourtCarouselImages.length - 1 : i - 1}"
+									class="btn btn-circle border-0 bg-base-100/80 text-base-content shadow backdrop-blur hover:bg-base-100"
+								>❮</a>
+								
+									<a href="#slide{(i + 1) % venueData.venueCourtCarouselImages.length}"
+									class="btn btn-circle border-0 bg-base-100/80 text-base-content shadow backdrop-blur hover:bg-base-100"
+								>❯</a>
+							</div>
 						</div>
-						<div
-							class="absolute top-1/2 right-5 left-5 flex -translate-y-1/2 transform justify-between"
-						>
-							<a
-								href="#slide{i === 0 ? venueData!.venueCourtCarouselImages.length - 1 : i - 1}"
-								class="btn btn-circle btn-outline btn-soft">❮</a
-							>
-							<a
-								href="#slide{(i + 1) % venueData!.venueCourtCarouselImages.length}"
-								class="btn btn-circle btn-outline btn-soft">❯</a
-							>
-						</div>
-					</div>
-				{/each}
-			{/if}
-		</div>
-		{#if venueData}
-			<div class="flex justify-center py-2">
-				{#each venueData!.venueCourtCarouselImages as _, i}
-					<a href="#slide{i}" class="btn mx-1 btn-outline btn-xs">
-						{i + 1}
-					</a>
-				{/each}
+					{/each}
+				</div>
+
+				<div class="mt-6 flex justify-center gap-2">
+					{#each venueData.venueCourtCarouselImages as _, i}
+						
+							<a href="#slide{i}"
+							class="h-2.5 w-2.5 rounded-full bg-base-content/20 transition-all hover:bg-primary"
+							aria-label="Go to slide {i + 1}"
+						></a>
+					{/each}
+				</div>
 			</div>
-		{/if}
-	</section>
+		</section>
+	{/if}
 
 	<!-- Features -->
-	<section id="facilities" class="py-12">
-		<h2 class="mb-8 text-center text-3xl font-bold text-primary">
-			Why {venueData?.venueBrand || 'choose us'}?
-		</h2>
-		<div class="flex flex-wrap justify-center gap-6">
-			{#if venueData}
-				{#each venueData.venueDescription as feature}
-					<div class="card w-full max-w-sm bg-base-100 shadow">
-						<div class="card-body text-center">
+	{#if venueData?.venueDescription?.length}
+		<section id="facilities" class="bg-base-200/40 py-16 md:py-24">
+			<div class="mx-auto max-w-6xl px-4">
+				<div class="mb-12 text-center">
+					<p class="text-sm font-semibold tracking-wide text-primary uppercase">Why choose us</p>
+					<h2 class="mt-2 text-3xl font-bold text-base-content md:text-4xl">
+						What makes {venueData?.venueBrand || 'us'} different
+					</h2>
+				</div>
+
+				<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+					{#each venueData.venueDescription as feature}
+						<div
+							class="group rounded-2xl border border-base-content/10 bg-base-100 p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+						>
 							{#if isImagePath(feature.icon)}
-								<img src={feature.icon} alt={feature.title} class="mx-auto mb-4 h-12 w-12" />
+								<img src={feature.icon} alt={feature.title} class="mx-auto mb-4 h-12 w-12 object-contain" />
 							{:else if feature.icon !== 'default'}
-								<div class="mb-4 text-3xl">{feature.icon}</div>
+								<div
+									class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-3xl transition-colors group-hover:bg-primary/20"
+								>
+									{feature.icon}
+								</div>
 							{/if}
 
-							<h3 class="card-title justify-center">{feature.title}</h3>
-							<p class="opacity-70">{feature.description}</p>
+							<h3 class="text-lg font-semibold text-base-content">{feature.title}</h3>
+							<p class="mt-2 text-sm leading-relaxed text-base-content/60">{feature.description}</p>
 						</div>
-					</div>
-				{/each}
-			{/if}
-		</div>
-	</section>
+					{/each}
+				</div>
+			</div>
+		</section>
+	{/if}
 
 	<!-- Location Section -->
 	{#if !onTestMode}
-		<section id="location" class="bg-base-200 py-12">
-			<div class="container mx-auto px-4">
-				<h2 class="mb-8 text-center text-3xl font-bold text-primary">Find Us Here</h2>
-				<div class="flex flex-col items-center gap-8 lg:flex-row lg:justify-center">
-					<!-- Map Container -->
-					<div class="w-full max-w-2xl">
-						<div class="card bg-base-100 shadow-lg">
-							<div class="card-body p-0">
-								<div class="h-64 w-full overflow-hidden rounded-t-2xl md:h-80">
-									{#if venueData?.venueAddress || venueData?.venueBrand}
-										<iframe
-											src="https://www.google.com/maps/embed/v1/place?key=AIzaSyARYtZ_9ukYxOdqCMes7stPSiuNDxcFmaU&q={encodeURIComponent(
-												venueData?.venueAddress || venueData?.venueBrand || ''
-											)}"
-											width="100%"
-											height="100%"
-											style="border:0;"
-											allowfullscreen=""
-											loading="lazy"
-											referrerpolicy="no-referrer-when-downgrade"
-											title="Venue Location"
-										></iframe>
-									{:else}
-										<!-- Placeholder when no address is available -->
-										<div class="flex h-full items-center justify-center bg-base-300">
-											<div class="text-center">
-												<div class="mb-2 text-4xl">📍</div>
-												<p class="text-base-content/60">Location map will appear here</p>
-											</div>
-										</div>
-									{/if}
-								</div>
-								<div class="p-6">
-									<div class="text-center">
-										<h3 class="mb-2 text-xl font-semibold">
-											{venueData?.venueBrand || 'Our Location'}
-										</h3>
-										{#if venueData?.venueAddress}
-											<p class="mb-4 text-base-content/70">{venueData.venueAddress}</p>
-										{/if}
-										<button on:click={openGoogleMaps} class="btn gap-2 btn-primary">
-											<span class="text-lg">🗺️</span>
-											Open in Google Maps
-										</button>
-									</div>
+		<section id="location" class="bg-base-100 py-16 md:py-24">
+			<div class="mx-auto max-w-4xl px-4">
+				<div class="mb-10 text-center">
+					<p class="text-sm font-semibold tracking-wide text-primary uppercase">Getting here</p>
+					<h2 class="mt-2 text-3xl font-bold text-base-content md:text-4xl">Find Us Here</h2>
+				</div>
+
+				<div class="overflow-hidden rounded-3xl border border-base-content/10 bg-base-100 shadow-lg">
+					<div class="h-64 w-full md:h-96">
+						{#if venueData?.venueAddress || venueData?.venueBrand}
+							<iframe
+								src="https://www.google.com/maps/embed/v1/place?key=AIzaSyARYtZ_9ukYxOdqCMes7stPSiuNDxcFmaU&q={encodeURIComponent(
+									venueData?.venueAddress || venueData?.venueBrand || ''
+								)}"
+								width="100%"
+								height="100%"
+								style="border:0;"
+								allowfullscreen=""
+								loading="lazy"
+								referrerpolicy="no-referrer-when-downgrade"
+								title="Venue Location"
+							></iframe>
+						{:else}
+							<div class="flex h-full items-center justify-center bg-base-200">
+								<div class="text-center">
+									<div class="mb-2 text-4xl">📍</div>
+									<p class="text-base-content/60">Location map will appear here</p>
 								</div>
 							</div>
-						</div>
+						{/if}
+					</div>
+
+					<div class="flex flex-col items-center gap-3 p-8 text-center">
+						<h3 class="text-xl font-semibold text-base-content">
+							{venueData?.venueBrand || 'Our Location'}
+						</h3>
+						{#if venueData?.venueAddress}
+							<p class="text-base-content/60">{venueData.venueAddress}</p>
+						{/if}
+						<button on:click={openGoogleMaps} class="btn mt-2 gap-2 rounded-xl btn-primary">
+							<span class="text-lg">🗺️</span>
+							Open in Google Maps
+						</button>
 					</div>
 				</div>
 			</div>
@@ -283,7 +356,7 @@
 				<button
 					on:click={goToBooking}
 					disabled={isNavigating}
-					class="btn w-full transform gap-2 shadow-lg transition-all duration-200 btn-lg btn-primary hover:scale-105 hover:shadow-xl"
+					class="btn w-full transform gap-2 rounded-xl shadow-lg transition-all duration-200 btn-lg btn-primary hover:scale-[1.02] hover:shadow-xl"
 				>
 					{#if isNavigating}
 						<span class="loading loading-md loading-spinner"></span>
@@ -310,15 +383,15 @@
 	{/if}
 
 	<!-- Footer -->
-	<footer class="footer bg-base-200 p-10 pb-40 text-base-content sm:footer-horizontal">
-		<aside>
+	<footer class="footer border-t border-base-content/10 bg-base-200/40 p-10 pb-40 text-base-content sm:footer-horizontal">
+		<aside class="flex items-center gap-3">
 			{#if venueData?.venueLogo && venueData.venueLogo !== ''}
-				<img src={venueData.venueLogo} alt="logoImage" class="h-10 w-10" />
+				<img src={venueData.venueLogo} alt="logoImage" class="h-10 w-10 rounded-lg object-cover" />
 			{/if}
 			<p>
-				{venueData?.venueBrand}
+				<span class="font-semibold">{venueData?.venueBrand}</span>
 				<br />
-				{venueData?.venueSlogan}
+				<span class="text-base-content/60">{venueData?.venueSlogan}</span>
 			</p>
 		</aside>
 		<nav>
