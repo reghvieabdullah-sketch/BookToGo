@@ -15,7 +15,7 @@ function getVenueURL(hostname: string): string | null {
 		return parts.length >= 4 ? parts[1] : null;
 	}
 
-  
+
 	return parts[0];
 }
 
