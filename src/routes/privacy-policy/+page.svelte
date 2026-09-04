@@ -91,7 +91,7 @@
 					<!-- Information You Provide -->
 					<div class="collapse collapse-plus bg-base-100">
 						<input type="radio" name="collect-accordion" checked="checked" />
-						<div class="collapse-title text-xl font-medium text-black">Information You Provide</div>
+						<div class="collapse-title text-xl font-medium text-primary">Information You Provide</div>
 						<div class="collapse-content">
 							<ul class="space-y-3">
 								<li class="flex items-start gap-3">
@@ -126,7 +126,7 @@
 					<!-- Information Collected Automatically -->
 					<div class="collapse collapse-plus bg-base-100">
 						<input type="radio" name="collect-accordion" />
-						<div class="collapse-title text-xl font-medium text-black">
+						<div class="collapse-title text-xl font-medium text-primary">
 							Information Collected Automatically
 						</div>
 						<div class="collapse-content">
@@ -162,7 +162,7 @@
 					<!-- Cookies -->
 					<div class="collapse collapse-plus bg-base-100">
 						<input type="radio" name="collect-accordion" />
-						<div class="collapse-title text-xl font-medium text-black">
+						<div class="collapse-title text-xl font-medium text-primary">
 							Cookies and Similar Technologies
 						</div>
 						<div class="collapse-content">
@@ -176,9 +176,6 @@
 								</li>
 								<li class="flex items-center gap-2">
 									<span class="text-base-content/80">Analyze usage patterns</span>
-								</li>
-								<li class="flex items-center gap-2">
-									<span class="text-base-content/80">Protect the platform's security</span>
 								</li>
 							</ul>
 						</div>
@@ -235,7 +232,7 @@
 						<div class="stat-desc">To run your account and save your work</div>
 					</div>
 					<div class="stat bg-base-100 rounded-lg">
-						<div class="stat-figure text-black">
+						<div class="stat-figure text-primary">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								class="w-8 h-8"
@@ -516,10 +513,6 @@
 							<strong>Google OAuth:</strong> We only request the minimum data needed for login (email
 							+ profile basics)
 						</li>
-						<li>
-							<strong>Educational Content:</strong> Exam materials belong to their original copyright
-							holders. We do not claim ownership and only provide them for educational use
-						</li>
 					</ul>
 				</div>
 			</div>
@@ -531,7 +524,7 @@
 				<div class="card-body">
 					<h2 class="card-title text-xl text-primary mb-3">Children's Privacy</h2>
 					<p class="text-sm text-base-content/80">
-						booktogo.lk is built for students. If you are under 13, you should use this platform
+						BookToGo.lk is built for venue owners. If you are under 13, you should use this platform
 						only with parental/guardian supervision. We do not knowingly collect personal data from
 						children under 13 without consent.
 					</p>
@@ -584,8 +577,7 @@
 					</svg>
 					Contact Us
 				</h2>
-				<p class="mb-4">If you have questions about this Privacy Policy:</p>
-				<a href="mailto:reghvieabdullah@gmail.com" class="btn btn-neutral rounded-none!">
+				<a href="/contact" class="btn btn-neutral rounded-none!">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						class="h-5 w-5 mr-2"
@@ -600,7 +592,7 @@
 							d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
 						/>
 					</svg>
-					reghvieabdullah@gmail.com
+					Send us a message
 				</a>
 			</div>
 		</div>

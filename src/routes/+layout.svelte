@@ -70,11 +70,11 @@
 	</div>
 
 	<div class="navbar-end gap-2">
-		<a href="#how-it-works" class="btn btn-ghost hidden sm:inline-flex">
+		<a href="/#how-it-works" class="btn btn-ghost hidden sm:inline-flex">
 			How it works
 		</a>
 
-		<a href="#get-started" class="btn btn-primary">
+		<a href="/#get-started" class="btn btn-primary">
 			Get started
 		</a>
 	</div>
