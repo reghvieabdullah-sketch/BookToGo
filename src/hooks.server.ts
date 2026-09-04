@@ -23,7 +23,7 @@ function getVenueURL(hostname: string): string | null {
 const supabase: Handle = async ({ event, resolve }) => {
     const host = event.request.headers.get('host');
     // const subdomain = 'stjohnsbb'; // PLEASE REMEMBER TO NEVER HAVE THIS HARDCODED
-    event.locals.venueURL = getVenueURL(host) ;
+    event.locals.venueURL = getVenueURL(host) ?? '';
     
     event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         cookies: {
