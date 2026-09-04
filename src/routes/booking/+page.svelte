@@ -9,7 +9,14 @@
 	} from '$lib/bookingAssets/bookingStore.js';
 	import Calender from '$lib/bookingAssets/Calender.svelte';
 	import { fade, scale } from 'svelte/transition';
+	import { onMount } from 'svelte';
 	let { data } = $props();
+
+	onMount(() => {
+		if (data.keepPopupOpen) {
+			$bookingPopupVisible = true;
+		}
+	});
 </script>
 
 <div
