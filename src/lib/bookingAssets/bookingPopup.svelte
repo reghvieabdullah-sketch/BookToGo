@@ -142,7 +142,11 @@
 
 	const loadedBooking = loadBooking();
 
-	if (loadedBooking) clearBooking();
+	if (loadedBooking) {
+		showConfirmation = true;
+
+		clearBooking();
+	}
 
 	let selectedCourtId: number | null = $state(loadedBooking?.selectedCourtId || null);
 	let selectedUnitId: number | null = $state(loadedBooking?.selectedUnitId || null);
@@ -314,7 +318,7 @@
 			selectedUnitId,
 			selectedSubUnitIds,
 			selectedDuration,
-			selectedTime
+			selectedTime,
 		});
 
 		showConfirmation = true;
@@ -515,7 +519,7 @@
 {/if}
 
 <!-- Confirmation Screen -->
-{#if showConfirmation && pendingBooking}
+{#if showConfirmation && (pendingBooking || loadedBooking)}
 	<div class="max-w-sm border border-base-300 bg-base-100 p-4">
 		<div class="mb-3 text-center">
 			<div class="flex justify-center pb-2">
