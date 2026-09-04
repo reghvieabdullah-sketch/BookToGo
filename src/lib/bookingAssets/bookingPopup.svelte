@@ -52,14 +52,8 @@
 	let bookingResult: 'success' | 'error' | null = $state(null);
 	let bookingMessage = $state('');
 
-	let hasMounted = false;
-
 	$effect(() => {
 		$bookingDayData.date;
-		if (!hasMounted) {
-			hasMounted = true;
-			return;
-		}
 		showConfirmation = false;
 		bookingResult = null;
 	});
@@ -320,8 +314,7 @@
 			selectedUnitId,
 			selectedSubUnitIds,
 			selectedDuration,
-			selectedTime,
-			awaitingConfirmation: true
+			selectedTime
 		});
 
 		showConfirmation = true;
@@ -331,23 +324,15 @@
 	}
 
 	$effect(() => {
-		if (loadedBooking?.awaitingConfirmation && selectedCourt && selectedUnit && !pendingBooking) {
-			pendingBooking = {
-				courtStatus: selectedCourt?.approvalStatus!,
-				courtID: selectedCourtId!,
-				startTime: combineUTCDateAndTime($bookingDayData.date, selectedTime),
-				endTime: combineUTCDateAndTime(
-					$bookingDayData.date,
-					minutesToHHMM(HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration))
-				),
-				status: 'pending',
-				units: {
-					title: selectedUnit?.title!,
-					unitID: selectedUnit?.unitID!,
-					subUnits: selectedSubUnits
-				}
-			};
-			showConfirmation = true;
+		if (!selectedUnitId && allUnits.length > 0) {
+			const firstUnit = allUnits[0];
+
+			selectedCourtId = firstUnit.courtId;
+			selectedUnitId = firstUnit.unitID;
+
+			if (firstUnit.subUnits && firstUnit.subUnits.length > 0) {
+				selectedSubUnitIds = firstUnit.subUnits.map((su) => su.id);
+			}
 		}
 	});
 </script>
