@@ -54,7 +54,7 @@
 
 	$effect(() => {
 		$bookingDayData.date;
-		showConfirmation = false;
+		// showConfirmation = false;
 		bookingResult = null;
 	});
 
