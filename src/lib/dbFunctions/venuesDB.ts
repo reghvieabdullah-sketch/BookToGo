@@ -1,6 +1,6 @@
 import type { Closure, courtsType, CourtWithClosures, VenueData, VenueSettings } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { FN_CREATE_SAMPLE_VENUE, FN_CREATE_VENUE_INVITE_URL, FN_IS_SUPER_OWNER, FN_IS_VENUE_OWNER, FN_LOGO_URL_UPDATE, FN_OWNER_CONTACT_US, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_IMAGE_UPDATE, FN_VENUE_INVITATION_CONSUMPTION, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX, VENUE_LOGO_BUCKET_PATH } from "$lib/constants/postgressFunctionConstants";
+import { FN_CREATE_SAMPLE_VENUE, FN_CREATE_VENUE_INVITE_URL, FN_IS_SUPER_OWNER, FN_IS_VENUE_OWNER, FN_LOGO_URL_UPDATE, FN_OWNER_CONTACT_US, FN_VENUE_BOOKING_STATUS_UPDATE, FN_VENUE_BUNDLER_GET, FN_VENUE_CLOSURES_DELETE, FN_VENUE_CLOSURES_GET, FN_VENUE_CLOSURES_UPDATE, FN_VENUE_COURTS_GET, FN_VENUE_COURTS_UPDATE, FN_VENUE_GENERAL_SETTINGS_GET, FN_VENUE_GENERAL_SETTINGS_UPDATE, FN_VENUE_IMAGE_UPDATE, FN_VENUE_INVITATION_CONSUMPTION, FN_VENUE_SETTINGS_GET, FN_VENUE_SETTINGS_UPDATE, VENUE_IMAGE_BUCKET_FORMATS, VENUE_IMAGE_BUCKET_PATH, VENUE_IMAGE_BUCKET_PREFIX, VENUE_LOGO_BUCKET_PATH } from "$lib/constants/postgressFunctionConstants";
 import { runRPC, ensureArgs, type DBResult } from "./commonServerTypesAndFuncs";
 import crypto from 'node:crypto';
 
@@ -15,6 +15,13 @@ export async function contactRegardingPotentialCustomers(supabase: SupabaseClien
     return await runRPC(supabase, FN_OWNER_CONTACT_US, {p_contact_name: contactName, p_contact_email: contactEmail, p_contact_phone: contactPhone});
 }
 
+
+export async function updateBookingStatusByID(supabase: SupabaseClient, venueID: string | undefined, bookingID: string | undefined, newStatus: string | undefined): Promise<DBResult<any>> {
+    const missing = ensureArgs({ p_venue_id: venueID, p_booking_id: bookingID, p_new_status: newStatus });
+    if (missing) return { data: null, error: missing };
+    const { data, error } = await runRPC(supabase, FN_VENUE_BOOKING_STATUS_UPDATE, { p_venue_id: venueID, p_booking_id: bookingID, p_new_status: newStatus });
+    return { data, error };
+}
 
 
 export async function isUserSuperOwner(supabase: SupabaseClient): Promise<boolean> {
