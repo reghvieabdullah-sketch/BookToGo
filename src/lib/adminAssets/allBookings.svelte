@@ -78,9 +78,9 @@
 
 	function getStatusBadgeClass(status?: string) {
 		switch (status && status.toLowerCase()) {
-			case 'confirmed':
+			case 'paid':
 				return 'badge-success';
-			case 'pending':
+			case 'unpaid':
 				return 'badge-warning';
 			case 'cancelled':
 				return 'badge-error';
