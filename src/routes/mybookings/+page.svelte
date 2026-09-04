@@ -360,8 +360,8 @@
 											Booking #{booking.bookingID}
 										</div>
 
-										<div class="text-sm text-base-content/60">
-											Court ID: {booking.courtID}
+										<div class="text-sm text-base-content">
+											Total Price: Rs.{calculateTotalPrice(booking.units.subUnits, (new Date(booking.endTime!).getTime() - new Date(booking.startTime!).getTime()) / (1000 * 60 * 60))}
 										</div>
 									</div>
 
@@ -428,10 +428,6 @@
 										<div class="mb-1 badge badge-outline badge-sm">
 											{booking.units.title}
 										</div>
-
-										<ul class="ml-4 list-disc text-xs text-base-content/70">
-											<li>Total Price: Rs.{calculateTotalPrice(booking.units.subUnits, (new Date(booking.endTime!).getTime() - new Date(booking.startTime!).getTime()) / (1000 * 60 * 60))}</li>
-										</ul>
 									</div>
 								</div>
 
