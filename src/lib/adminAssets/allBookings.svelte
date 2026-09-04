@@ -28,7 +28,6 @@
 	// Keep local state in sync if the prop changes (e.g. after navigation)
 	onMount(() => {
 		bookings = flatten(bookingData);
-		console.log(JSON.stringify(bookings, null, 2));
 	});
 
 	
