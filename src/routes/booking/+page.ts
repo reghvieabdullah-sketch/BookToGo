@@ -27,6 +27,7 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
   const { bookingData, closureData } = await response.json();
   if (isBrowser()) bookingDayData.set({ date: targetDate, entries: bookingData[targetDate.toISOString().split('T')[0]] });
     return {
+    keepPopupOpen: !!dateParam, 
     bookingData: bookingData as BookingsForDateRange,
     closureData: closureData as CourtWithClosures[],
   };
