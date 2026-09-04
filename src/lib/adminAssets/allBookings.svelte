@@ -28,6 +28,8 @@
 	// Keep local state in sync if the prop changes (e.g. after navigation)
 	$effect(() => {
 		bookings = flatten(bookingData);
+		console.log(bookings);
+		
 	});
 
 	
