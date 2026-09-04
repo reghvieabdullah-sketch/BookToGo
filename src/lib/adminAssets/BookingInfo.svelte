@@ -24,11 +24,11 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 p-4"
+	class="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4"
 	on:click={handleBackdropClick}
 >
 	<div
-		class="card max-h-[90vh] w-full max-w-md overflow-y-auto bg-base-100"
+		class="card rounded-2xl max-h-[90vh] w-full max-w-md overflow-y-auto bg-base-100"
 		on:click={handleCardClick}
 	>
 		<div class="card-body p-3 sm:p-4">
