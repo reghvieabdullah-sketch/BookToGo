@@ -21,7 +21,7 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
   const dateParam = url.searchParams.get(QUERY_PARAM_BOOKING_DATE);
   const keepPopupOpen = url.searchParams.get(QUERY_PARAM_BOOKING_SHOW_CONFIRMATION) === 'true';
   const targetDate = dateParam ? new Date(dateParam) : new Date();
-  const { startDate, endDate } = getStartEndDayOfTimeStamp(targetDate);
+  const { startDate, endDate } = getStartEndDayOfTimeStamp  (targetDate);
   
   const queryPath = `/api/v1/bundler/${venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}`;
   
@@ -32,5 +32,16 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
     keepPopupOpen, 
     bookingData: bookingData as BookingsForDateRange,
     closureData: closureData as CourtWithClosures[],
+    bookingState: {
+		showConfirmation: url.searchParams.get('confirm') === 'true',
+		selectedCourtId: Number(url.searchParams.get('court')) || null,
+		selectedUnitId: Number(url.searchParams.get('unit')) || null,
+		selectedSubUnitIds: (url.searchParams.get('subunits') ?? '')
+			.split(',')
+			.filter(Boolean)
+			.map(Number),
+		selectedDuration: url.searchParams.get('duration') ?? '01:00',
+		selectedTime: url.searchParams.get('time') ?? '09:00'
+	}
   };
 };
