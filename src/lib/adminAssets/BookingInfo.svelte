@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { calculateTotalPrice } from "$lib/bookingLogic";
 	import type { BookingEntry } from "../../types/bookingTypes";
 
 	export let booking: BookingEntry;
@@ -43,6 +44,10 @@
 				<div class="mt-0.5 text-xs opacity-70 sm:mt-1 sm:text-sm">
 					Units: {booking.details.units.subUnits.map(s => s.description).join(', ')}
 				</div>
+
+				<div class="mt-0.5 text-xs opacity-70 sm:mt-1 sm:text-sm">
+					Price: Rs.{calculateTotalPrice(booking.details.units.subUnits, (new Date(booking.details.endTime).getTime() - new Date(booking.details.startTime).getTime()) / (1000 * 60 * 60))}
+				</div>
 			</div>
 
 			<div class="divider my-1 sm:my-2"></div>
@@ -75,9 +80,9 @@
 						<strong>Name:</strong> {booking.user.name}
 					</div>
 
-					<div class="break-all">
+					<!-- <div class="break-all">
 						<strong>Email:</strong> {booking.user.email}
-					</div>
+					</div> -->
 
 					<div>
 						<strong>Phone:</strong> {booking.user.phone}
