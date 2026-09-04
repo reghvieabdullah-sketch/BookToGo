@@ -7,7 +7,7 @@ import type {
   daySettingsType,
 } from "../types/bookingTypes";
 import { recurrenceEnum, courtStatusEnum } from "./constants/postgressFunctionConstants";
-import { utcToMinutes, parseTimeStringToUTCMinutes, doIntervalsOverlap, occursAtRecurrence, addMinutesToUTCTimestamp } from "./utils/timeUtils";
+import { utcToMinutes, parseTimeStringToUTCMinutes, doIntervalsOverlap, occursAtRecurrence, addMinutesToUTCTimestamp, HHMMToMinutes } from "./utils/timeUtils";
 
 
 
@@ -116,3 +116,12 @@ function conflictWithBookings(bookings: BookingDetails[], attemptedBooking: Book
   
   return false;
 }
+
+
+export function calculateTotalPrice(selectedSubUnits: { id: number; price?: number }[], durationHours: number): number {
+		const totalPrice = selectedSubUnits.reduce(
+			(sum, subUnit) => sum + subUnit.price!,
+			0
+		) * durationHours;
+		return totalPrice;
+	}

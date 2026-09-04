@@ -3,7 +3,7 @@
 	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate, parseTimeStringToUTCMinutes, combineUTCDateAndTime, timeStringToLocal } from '$lib/utils/timeUtils';
 	import GrabHandleIcon from '$lib/icons/GrabHandleIcon.svelte';
 	import { bookingDayData, bookingPopupVisible, isLoading } from './bookingStore';
-	import { hasBookingConflict } from '$lib/bookingLogic';
+	import { calculateTotalPrice, hasBookingConflict } from '$lib/bookingLogic';
 	import { goto } from '$app/navigation';
 	import { courtStatusEnum, QUERY_PARAM_BOOKING_DATE, QUERY_PARAM_BOOKING_SHOW_CONFIRMATION } from '$lib/constants/postgressFunctionConstants';
 	import type { BookingDetails, courtsType, CourtWithClosures, SubUnit, VenueData, VenueSettings } from '../../types/bookingTypes';
@@ -195,14 +195,7 @@
 		timeOptions = options;
 	}
 
-	function calculateTotalPrice() {
-		const durationHours = Math.round(HHMMToMinutes(selectedDuration) / 60);
-
-		totalPrice = selectedSubUnits.reduce(
-			(sum, subUnit) => sum + subUnit.price!,
-			0
-		) * durationHours;
-	}
+	
 
 	function handleUnitSelection(event: Event) {
 		const target = event.target as HTMLSelectElement;
@@ -260,7 +253,7 @@
 		selectedSubUnits;
 
 		generateTimeOptions();
-		calculateTotalPrice();
+		totalPrice = calculateTotalPrice(selectedSubUnits, Math.round(HHMMToMinutes(selectedDuration) / 60));
 	});
 
 	$effect(() => {
@@ -298,6 +291,7 @@
 		bookingResult = null;
 	});
 	
+
 </script>
 
 <!-- Main Booking Form -->
