@@ -118,7 +118,6 @@
 				<div class="flex flex-col gap-3 sm:flex-row">
 					<!-- Start -->
 					<select class="select select-primary" disabled={isNavigating}>
-						<option>Half Court</option>
 						<option>Full Court</option>
 					</select>
 					<!-- Next button -->
