@@ -122,9 +122,7 @@
 				if (booking) booking.details.status = 'paid';
 				selectedBooking = null;
 				showMobileDetails = false;
-			}
-			else {
-				alert('Failed to mark booking as paid. Please try again.');
+			
 			}
 		} catch (error) {
 			console.log(error);

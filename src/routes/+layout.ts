@@ -20,7 +20,7 @@ function getVenueURL(hostname: string): string | null {
 }
 
 export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
-  const venueURL = getVenueURL(url.hostname);
+  const venueURL = getVenueURL(url.hostname) ?? '';
   depends('supabase:auth');
   depends(INVALIDATE_PARENT_LAYOUT_CODE);
 
