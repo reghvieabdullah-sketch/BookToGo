@@ -27,13 +27,8 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
   
   const response = await fetch( queryPath );
   const { bookingData, closureData } = await response.json();
-  if (isBrowser()) bookingDayData.set({ date: targetDate, entries: bookingData[targetDate.toISOString().split('T')[0]] });
-    return {
-    keepPopupOpen, 
-    bookingData: bookingData as BookingsForDateRange,
-    closureData: closureData as CourtWithClosures[],
-    bookingState: {
-		showConfirmation: url.searchParams.get('confirm') === 'true',
+  const bookingState = {
+		showConfirmation: url.searchParams.get('p_show_confirmation') === 'true',
 		selectedCourtId: Number(url.searchParams.get('court')) || null,
 		selectedUnitId: Number(url.searchParams.get('unit')) || null,
 		selectedSubUnitIds: (url.searchParams.get('subunits') ?? '')
@@ -43,5 +38,15 @@ export const load: PageLoad = async ({ fetch, parent, url }) => {
 		selectedDuration: url.searchParams.get('duration') ?? '01:00',
 		selectedTime: url.searchParams.get('time') ?? '09:00'
 	}
+  console.log(bookingState);
+  
+  if (isBrowser()) bookingDayData.set({ date: targetDate, entries: bookingData[targetDate.toISOString().split('T')[0]] });
+  
+
+  return {
+    keepPopupOpen, 
+    bookingData: bookingData as BookingsForDateRange,
+    closureData: closureData as CourtWithClosures[],
+    bookingState
   };
 };
