@@ -4,17 +4,14 @@
 	import {
 		bookingPopupVisible,
 		fadeDuration,
-		isLoading,
 		scaleDuration
 	} from '$lib/bookingAssets/bookingStore.js';
 	import Calender from '$lib/bookingAssets/Calender.svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	let { data } = $props();
-	let showConfirmation = $state(false);
 	onMount(() => {
 		if (data.keepPopupOpen) {
-			showConfirmation = true;
 			$bookingPopupVisible = true;
 		}
 	});
@@ -48,7 +45,6 @@
 					venueData={data.venueData}
 					isLoggedIn={data.userLoggedIn}
 					isVenueOwner={data.isVenueOwner}
-					isConfirming={showConfirmation}
 				/>
 			</div>
 		</div>
