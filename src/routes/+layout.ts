@@ -15,12 +15,12 @@ function getVenueURL(hostname: string): string | null {
 		return parts.length >= 4 ? parts[1] : null;
 	}
 
-  
+
 	return parts[0];
 }
 
 export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
-  const venueURL = getVenueURL(url.hostname) ?? 'stmarybball';
+  const venueURL = getVenueURL(url.hostname);
   depends('supabase:auth');
   depends(INVALIDATE_PARENT_LAYOUT_CODE);
 
