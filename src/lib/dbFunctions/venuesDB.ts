@@ -45,6 +45,7 @@ export async function isUserVenueOwner(supabase: SupabaseClient, venueURL: strin
 
 export async function isUserVenueOwnerOrSuperOwner(supabase: SupabaseClient, venueURL: string) {
     const { data, error } = await runRPC(supabase, FN_IS_VENUE_OWNER_OR_SUPER_OWNER, { p_venue_url: venueURL });
+    console.log(error, 'is the asjgnfdsjiogn');
     return {
         isSuperOwner: (error || !data) ? data.isSuperOwner : false,
         isVenueOwner: (error || !data) ? data.isVenueOwner : false
