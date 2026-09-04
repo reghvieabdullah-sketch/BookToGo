@@ -21,7 +21,7 @@ export const FN_VENUE_COURTS_GET = 'get_venue_courts';
 
 export const FN_VENUE_BOOKING_INSERT = 'insert_booking';
 export const FN_VENUE_BOOKING_GET = 'get_bookings_by_day_for_venue';
-
+export const FN_VENUE_BOOKING_STATUS_UPDATE = 'update_booking_status_by_id';
 export const FN_VENUE_SETTINGS_GET = 'get_venue_settings'
 export const FN_VENUE_SETTINGS_UPDATE = 'update_venue_settings';
 

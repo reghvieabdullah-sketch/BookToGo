@@ -4,6 +4,7 @@ import { deleteCachedData, getCachedData, setCachedData } from "$lib/dbFunctions
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { getStartEndDayOfTimeStamp } from "$lib/utils/timeUtils";
 import type { BookingDetails } from "../../../../../types/bookingTypes";
+import { updateBookingStatusByID } from "$lib/dbFunctions/venuesDB";
 
 export const GET: RequestHandler = async ({ locals, params, url }) => {
     const { venueID } = params;
@@ -52,3 +53,13 @@ export const DELETE: RequestHandler = async ({ locals, request, params, url }) =
     }
     return json(result.data, { status: 200 });
 }
+
+export const PATCH: RequestHandler = async ({ locals, request, params, url }) => {
+    const { venueID } = params;
+    const { bookingID, newStatus } = await request.json();
+    const result = await updateBookingStatusByID(locals.supabase, venueID, bookingID, newStatus);
+    if (result.error) {
+        return json({ error: result.error }, { status: 400 });
+    }
+    return json(result.data, { status: 200 });
+};

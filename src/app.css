@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @plugin "daisyui" {
-    themes: light --default, dark --prefersdark, wireframe, valentine, dim, cupcake, garden, forest, aqua, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk, bumblebee, emerald, synthwave;
+    themes: light --default, dark --prefersdark, wireframe, valentine, dim, cupcake, garden, forest, aqua, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk, bumblebee, emerald, synthwave, luxury, sunset;
 }
 
 @plugin "daisyui/theme" {

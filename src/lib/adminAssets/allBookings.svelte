@@ -102,12 +102,34 @@
 		}
 	}
 
-	async function handleCancel() {
-		// if (!selectedBooking) return;
-		selectedBooking = null;
-		// Implement your cancel logic here
-		// After successful cancellation:
-		// await invalidate('layout:dashboard');
+	async function handlePaid() {
+		if (!selectedBooking) return;
+		const bookingID = selectedBooking.details.bookingID;
+		try {
+			const payload = { bookingID, newStatus: 'paid' };
+			const response = await fetch(`/api/v1/bookings/${venueID}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
+
+			// API returns a plain boolean indicating whether deletion succeeded
+			const success: boolean = await response.json();
+
+			if (success) {
+				const booking = bookings.find((b) => b.details.bookingID === bookingID);
+				if (booking) {
+					booking.details.status = 'paid';
+				}
+				selectedBooking = null;
+				showMobileDetails = false;
+			}
+			else {
+				alert('Failed to mark booking as paid. Please try again.');
+			}
+		} catch (error) {
+			console.log(error);
+		}
 	}
 
 	async function handleDelete() {
@@ -166,7 +188,7 @@
 					{getStatusBadgeClass}
 					{getPaymentStatusBadgeClass}
 					{formatDate}
-					{handleCancel}
+					{handlePaid}
 					{handleDelete}
 					{formatBookingDate}
 

@@ -225,9 +225,6 @@
 				<h1 class="mb-2 text-3xl font-bold text-base-content">Admin Panel</h1>
 				<div class="flex items-center justify-between">
 					<p class="text-base-content/60">Manage your venue settings and bookings</p>
-					<div class="text-right text-xs text-warning italic opacity-60 sm:text-sm">
-						Need help? Call 0772716627
-					</div>
 				</div>
 			</div>
 

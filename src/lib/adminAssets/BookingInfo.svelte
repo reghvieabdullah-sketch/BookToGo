@@ -7,9 +7,9 @@
 	export let getStatusBadgeClass;
 	export let getPaymentStatusBadgeClass;
 	export let formatDate;
-	export let handleCancel;
 	export let handleDelete;
 	export let formatBookingDate;
+	export let handlePaid;
 </script>
 
 <div class="card max-h-[90vh] w-full max-w-md overflow-y-auto bg-base-100">
@@ -131,29 +131,21 @@
 			<div class="divider my-1 sm:my-2"></div>
 
 			<!-- Actions -->
-			<div class="flex flex-col gap-2">
 				<div class="flex flex-row gap-2">
-					<button
-						class="btn btn-sm flex-1 btn-error"
-						on:click={handleCancel}
-					>
-						Mark as unpaid
-					</button>
 
 					<button
 						class="btn btn-sm flex-1 btn-success"
-						on:click={handleDelete}
+						on:click={handlePaid}
 					>
 						Mark as paid
 					</button>
 				</div>
 				<button
 					class="btn btn-sm btn-outline btn-warning"
-					on:click={onClose}
+					on:click={handleDelete}
 				>
 					Delete Booking
 				</button>
-			</div>
 		</div>
 	</div>
 </div>
