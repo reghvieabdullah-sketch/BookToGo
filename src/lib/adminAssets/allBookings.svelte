@@ -26,10 +26,9 @@
 	let bookings = $state<BookingEntry[]>(flatten(bookingData));
 
 	// Keep local state in sync if the prop changes (e.g. after navigation)
-	$effect(() => {
+	onMount(() => {
 		bookings = flatten(bookingData);
-		console.log(bookings);
-		
+		console.log(JSON.stringify(bookings, null, 2));
 	});
 
 	
