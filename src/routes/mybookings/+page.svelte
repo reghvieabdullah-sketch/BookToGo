@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { calculateTotalPrice } from '$lib/bookingLogic';
 	import type { BookingDetails } from '../../types/bookingTypes';
 	import type { PageData } from './$types';
 
@@ -429,6 +430,7 @@
 										</div>
 
 										<ul class="ml-4 list-disc text-xs text-base-content/70">
+											<li>Total Price: Rs.{calculateTotalPrice(booking.units.subUnits, (new Date(booking.endTime!).getTime() - new Date(booking.startTime!).getTime()) / (1000 * 60 * 60))}</li>
 											{#each booking.units.subUnits as sub}
 												<li>{sub.description} - Rs.{sub.price}</li>
 											{/each}
