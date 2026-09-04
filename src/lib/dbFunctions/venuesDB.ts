@@ -47,8 +47,8 @@ export async function isUserVenueOwnerOrSuperOwner(supabase: SupabaseClient, ven
     const { data, error } = await runRPC(supabase, FN_IS_VENUE_OWNER_OR_SUPER_OWNER, { p_venue_url: venueURL });
     console.log(data, 'is the asjgnfdsjiogn');
     return {
-        isSuperOwner: (error || !data) ? data.isSuperOwner : false,
-        isVenueOwner: (error || !data) ? data.isVenueOwner : false
+        isSuperOwner: (!error && data) ? data.isSuperOwner : false,
+        isVenueOwner: (!error && data) ? data.isVenueOwner : false
     }
 }
 /** Creates a new venue if the user is a super owner. And returns the invite token */
