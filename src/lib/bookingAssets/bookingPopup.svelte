@@ -37,6 +37,7 @@
 		courtsData,
 		closureData,
 		isVenueOwner = false,
+		isBookingConfirming = false
 	}: {
 		isLoggedIn?: boolean;
 		venueData: VenueData;
@@ -44,10 +45,11 @@
 		courtsData: courtsType;
 		closureData: CourtWithClosures[];
 		isVenueOwner: boolean;
+		isBookingConfirming: boolean;
 	} = $props();
 
+	let showConfirmation = $state(isBookingConfirming);
 	let pendingBooking: BookingDetails | null = $state(null);
-	let showConfirmation = $derived(pendingBooking !== null);
 	let bookingResult: 'success' | 'error' | null = $state(null);
 	let bookingMessage = $state('');
 
