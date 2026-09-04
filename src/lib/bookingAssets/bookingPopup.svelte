@@ -36,7 +36,8 @@
 		settingsData,
 		courtsData,
 		closureData,
-		isVenueOwner = false
+		isVenueOwner = false,
+		isConfirming = false
 	}: {
 		isLoggedIn?: boolean;
 		venueData: VenueData;
@@ -47,9 +48,8 @@
 		isConfirming: boolean;
 	} = $props();
 
-	let showConfirmation = $state(isConfirming || false);
+	let showConfirmation = $state(isConfirming);
 	let pendingBooking: BookingDetails | null = $state(null);
-	let isConfirming = $state(false);
 	let bookingResult: 'success' | 'error' | null = $state(null);
 	let bookingMessage = $state('');
 
