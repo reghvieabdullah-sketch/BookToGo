@@ -119,7 +119,7 @@
 			const success: boolean = await response.json();
 
 			if (success) {
-				if (booking) {booking.details.status = 'paid';
+				if (booking) booking.details.status = 'paid';
 				selectedBooking = null;
 				showMobileDetails = false;
 			}
