@@ -139,13 +139,13 @@
 					>
 						Mark as paid
 					</button>
-				</div>
-				<button
-					class="btn btn-sm btn-outline btn-warning"
+					<button
+					class="btn btn-sm btn-warning"
 					on:click={handleDelete}
 				>
 					Delete Booking
 				</button>
+			</div>
 		</div>
 	</div>
 </div>

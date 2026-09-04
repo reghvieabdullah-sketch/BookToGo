@@ -105,6 +105,8 @@
 	async function handlePaid() {
 		if (!selectedBooking) return;
 		const bookingID = selectedBooking.details.bookingID;
+		const booking = bookings.find((b) => b.details.bookingID === bookingID);
+		if (booking?.details.status === 'paid') return; // Already paid, no action needed
 		try {
 			const payload = { bookingID, newStatus: 'paid' };
 			const response = await fetch(`/api/v1/bookings/${venueID}`, {
@@ -117,10 +119,7 @@
 			const success: boolean = await response.json();
 
 			if (success) {
-				const booking = bookings.find((b) => b.details.bookingID === bookingID);
-				if (booking) {
-					booking.details.status = 'paid';
-				}
+				if (booking) {booking.details.status = 'paid';
 				selectedBooking = null;
 				showMobileDetails = false;
 			}
