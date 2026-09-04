@@ -1,65 +1,56 @@
 <script lang="ts">
 	import BookIcon from '$lib/icons/BookIcon.svelte';
-	import {
-		HHMMToMinutes,
-		minutesToHHMM,
-		to12HourFormat,
-		formatDate,
-		parseTimeStringToUTCMinutes,
-		localTimeToUTC,
-		combineUTCDateAndTime,
-		timeStringToLocal
-	} from '$lib/utils/timeUtils';
+	import { HHMMToMinutes, minutesToHHMM, to12HourFormat, formatDate, parseTimeStringToUTCMinutes, combineUTCDateAndTime, timeStringToLocal } from '$lib/utils/timeUtils';
 	import GrabHandleIcon from '$lib/icons/GrabHandleIcon.svelte';
 	import { bookingDayData, bookingPopupVisible, isLoading } from './bookingStore';
 	import { hasBookingConflict } from '$lib/bookingLogic';
-	import type {
-		BookingDetails,
-		courtsType,
-		CourtWithClosures,
-		SubUnit,
-		Unit,
-		VenueData,
-		VenueSettings
-	} from '../../types/bookingTypes';
 	import { goto } from '$app/navigation';
-	import {
-		courtStatusEnum,
-		QUERY_PARAM_BOOKING_DATE,
-
-		QUERY_PARAM_BOOKING_SHOW_CONFIRMATION
-
-	} from '$lib/constants/postgressFunctionConstants';
+	import { courtStatusEnum, QUERY_PARAM_BOOKING_DATE, QUERY_PARAM_BOOKING_SHOW_CONFIRMATION } from '$lib/constants/postgressFunctionConstants';
+	import type { BookingDetails, courtsType, CourtWithClosures, SubUnit, VenueData, VenueSettings } from '../../types/bookingTypes';
 
 	export const onclose = () => {};
 
-	let {
-		isLoggedIn = false,
-		venueData,
-		settingsData,
-		courtsData,
-		closureData,
-		isVenueOwner = false
-	}: {
-		isLoggedIn?: boolean;
-		venueData: VenueData;
-		settingsData: VenueSettings;
-		courtsData: courtsType;
-		closureData: CourtWithClosures[];
-		isVenueOwner: boolean;
+	let { isLoggedIn = false, venueData, settingsData, courtsData, closureData, isVenueOwner = false, bookingState }: { isLoggedIn?: boolean; venueData: VenueData; settingsData: VenueSettings; courtsData: courtsType; closureData: CourtWithClosures[]; isVenueOwner: boolean; bookingState?: {
+			showConfirmation: boolean;
+			selectedCourtId: number | null;
+			selectedUnitId: number | null;
+			selectedSubUnitIds: number[];
+			selectedDuration: string;
+			selectedTime: string;
+		};
 	} = $props();
 
-	let showConfirmation = $state(false);
+	let selectedCourtId = $state(bookingState?.selectedCourtId ?? null);
+	let selectedUnitId = $state(bookingState?.selectedUnitId ?? null);
+	let selectedSubUnitIds = $state(bookingState?.selectedSubUnitIds ?? []);
+	let selectedDuration = $state(bookingState?.selectedDuration ?? '01:00');
+	let selectedTime = $state(bookingState?.selectedTime ?? '09:00');
+	let showConfirmation = $state(bookingState?.showConfirmation ?? false);
 	let pendingBooking: BookingDetails | null = $state(null);
 	let isConfirming = $state(false);
 	let bookingResult: 'success' | 'error' | null = $state(null);
 	let bookingMessage = $state('');
+	let totalPrice = $state(0);
+	let timeOptions: string | any[] = $state([]);
+	let selectedCourt = $derived(courtsData.find((court) => court.courtID === selectedCourtId));
+	let selectedUnit = $derived(selectedCourt?.units?.find((unit) => unit.unitID === selectedUnitId));
+	let availableSubUnits = $derived(selectedUnit?.subUnits || []);
+	let selectedSubUnits = $derived(availableSubUnits.filter((subUnit) => selectedSubUnitIds.includes(subUnit.id)));
+	let allUnits = $derived(
+		courtsData.flatMap(
+			(court) =>
+				(court.approvalStatus === courtStatusEnum.APPROVED &&
+					court.units?.map((unit) => ({
+						...unit,
+						courtId: court.courtID,
+						courtName: court.name,
+						displayName: `${court.name} - ${unit.title}`
+					}))) ||
+				[]
+		)
+	);
 
-	$effect(() => {
-		$bookingDayData.date;
-		showConfirmation = false;
-		bookingResult = null;
-	});
+
 
 	async function attemptBooking(booking: BookingDetails): Promise<any> {
 		try {
@@ -79,27 +70,24 @@
 		}
 	}
 
-	function saveBooking(state: any) {
-		localStorage.setItem('bookingState', JSON.stringify(state));
-	}
-
-	function loadBooking() {
-		const raw = localStorage.getItem('bookingState');
-		return raw ? JSON.parse(raw) : null;
-	}
-
-	function clearBooking() {
-		localStorage.removeItem('bookingState');
-	}
-
 	async function confirmBooking(): Promise<void> {
 		if (!pendingBooking) return;
 
-		if (!isLoggedIn)
-			return goto(
-								`/auth?next=/booking?${QUERY_PARAM_BOOKING_DATE}=${$bookingDayData.date.toISOString().split('T')[0]}&${QUERY_PARAM_BOOKING_SHOW_CONFIRMATION}=true`
-			);
+		if (!isLoggedIn) {
+			const params = new URLSearchParams({
+				[QUERY_PARAM_BOOKING_DATE]: $bookingDayData.date.toISOString().split('T')[0],
+				[QUERY_PARAM_BOOKING_SHOW_CONFIRMATION]: 'true',
+				court: String(selectedCourtId),
+				unit: String(selectedUnitId),
+				subunits: selectedSubUnitIds.join(','),
+				duration: selectedDuration,
+				time: selectedTime
+			});
 
+			const next = `/booking?${params.toString()}`;
+
+			return goto(`/auth?next=${encodeURIComponent(next)}`);
+		}
 		isConfirming = true;
 		const bookingPossible = await attemptBooking(pendingBooking);
 		console.log(bookingPossible);
@@ -138,49 +126,17 @@
 		isConfirming = false;
 	}
 
+	async function handleBooking() {
+		if (timeOptions.length === 0) return;
+		pendingBooking = createPendingBooking();
+		showConfirmation = true;
+	}
+
 	function cancelBooking(): void {
 		showConfirmation = false;
 		pendingBooking = null;
 	}
-
-	const loadedBooking = loadBooking();
-
-	if (loadedBooking) clearBooking();
-
-	let selectedCourtId: number | null = $state(loadedBooking?.selectedCourtId || null);
-	let selectedUnitId: number | null = $state(loadedBooking?.selectedUnitId || null);
-	let selectedSubUnitIds: number[] = $state(loadedBooking?.selectedSubUnitIds || []);
-	let selectedDuration = $state(loadedBooking?.selectedDuration || '01:00');
-	let selectedTime = $state(loadedBooking?.selectedTime || '09:00');
-	let totalPrice = $state(0);
-	let timeOptions: string | any[] = $state([]);
-
-	let selectedCourt = $derived(courtsData.find((court) => court.courtID === selectedCourtId));
-
-	let selectedUnit = $derived(
-		selectedCourt?.units?.find((unit) => unit.unitID === selectedUnitId)
-	);
-
-	let availableSubUnits = $derived(selectedUnit?.subUnits || []);
-
-	let selectedSubUnits = $derived(
-		availableSubUnits.filter((subUnit) => selectedSubUnitIds.includes(subUnit.id))
-	);
-
-	let allUnits = $derived(
-		courtsData.flatMap(
-			(court) =>
-				(court.approvalStatus === courtStatusEnum.APPROVED &&
-					court.units?.map((unit) => ({
-						...unit,
-						courtId: court.courtID,
-						courtName: court.name,
-						displayName: `${court.name} - ${unit.title}`
-					}))) ||
-				[]
-		)
-	);
-
+	
 	function generateTimeOptions() {
 		if (!settingsData?.daySettings || !$bookingDayData?.date) {
 			return (timeOptions = []);
@@ -247,23 +203,6 @@
 		) * durationHours;
 	}
 
-	$effect(() => {
-		$bookingDayData;
-		$bookingPopupVisible;
-		selectedCourt;
-		selectedDuration;
-		selectedSubUnits;
-
-		generateTimeOptions();
-		calculateTotalPrice();
-	});
-
-	$effect(() => {
-		if (timeOptions.length > 0 && !timeOptions.includes(selectedTime)) {
-			selectedTime = timeOptions[0];
-		}
-	});
-
 	function handleUnitSelection(event: Event) {
 		const target = event.target as HTMLSelectElement;
 		const selectedUnitData = JSON.parse(target.value);
@@ -288,10 +227,8 @@
 			: (selectedSubUnitIds = [...selectedSubUnitIds, subUnitId]);
 	}
 
-	async function handleBooking() {
-		if (timeOptions.length === 0) return;
-
-		const booking: BookingDetails = {
+	function createPendingBooking(): BookingDetails {
+		return {
 			courtStatus: selectedCourt?.approvalStatus!,
 			courtID: selectedCourtId!,
 			startTime: combineUTCDateAndTime(
@@ -301,7 +238,8 @@
 			endTime: combineUTCDateAndTime(
 				$bookingDayData.date,
 				minutesToHHMM(
-					HHMMToMinutes(selectedTime) + HHMMToMinutes(selectedDuration)
+					HHMMToMinutes(selectedTime) +
+					HHMMToMinutes(selectedDuration)
 				)
 			),
 			status: 'pending',
@@ -311,20 +249,35 @@
 				subUnits: selectedSubUnits
 			}
 		};
-
-		saveBooking({
-			selectedCourtId,
-			selectedUnitId,
-			selectedSubUnitIds,
-			selectedDuration,
-			selectedTime
-		});
-
-		showConfirmation = true;
-		pendingBooking = booking;
-
-		console.log(pendingBooking);
 	}
+
+	$effect(() => {
+		$bookingDayData;
+		$bookingPopupVisible;
+		selectedCourt;
+		selectedDuration;
+		selectedSubUnits;
+
+		generateTimeOptions();
+		calculateTotalPrice();
+	});
+
+	$effect(() => {
+		if (timeOptions.length > 0 && !timeOptions.includes(selectedTime)) {
+			selectedTime = timeOptions[0];
+		}
+	});
+
+	$effect(() => {
+	if (
+		bookingState?.showConfirmation &&
+		!pendingBooking &&
+		selectedCourt &&
+		selectedUnit
+	) {
+		pendingBooking = createPendingBooking();
+	}
+	});
 
 	$effect(() => {
 		if (!selectedUnitId && allUnits.length > 0) {
@@ -338,6 +291,12 @@
 			}
 		}
 	});
+
+	$effect(() => {
+		$bookingDayData.date;
+		bookingResult = null;
+	});
+	
 </script>
 
 <!-- Main Booking Form -->
