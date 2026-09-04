@@ -7,6 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { courtStatusEnum, QUERY_PARAM_BOOKING_DATE, QUERY_PARAM_BOOKING_SHOW_CONFIRMATION } from '$lib/constants/postgressFunctionConstants';
 	import type { BookingDetails, courtsType, CourtWithClosures, SubUnit, VenueData, VenueSettings } from '../../types/bookingTypes';
+	import { onMount } from 'svelte';
 
 	export const onclose = () => {};
 

@@ -46,6 +46,7 @@
 					venueData={data.venueData}
 					isLoggedIn={data.userLoggedIn}
 					isVenueOwner={data.isVenueOwner}
+					bookingState={data.bookingState}
 				/>
 			</div>
 		</div>

@@ -74,16 +74,6 @@ function conflictWithClosure(
         closure.recurringType as recurrenceEnum
     );
 
-    console.log({bookingStartMinutes, bookingEndMinutes});
-    console.log({closureStartMinutes, closureEndMinutes});
-    
-    console.log(
-        'recurrence:',
-        recurrenceMatch,
-        'timeOverlap:',
-        timeOverlap
-    );
-
     return timeOverlap && recurrenceMatch;
 }
 
