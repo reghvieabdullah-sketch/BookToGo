@@ -43,7 +43,7 @@ export const FN_CREATE_SAMPLE_VENUE = 'create_sample_venue' // used to create a 
 export const FN_CREATE_VENUE_INVITE_URL = 'create_venue_invitation' // used to create a venue invite url for a super owner to invite a new owner to the venue. it returns the invite token that can be used to access the venue
 export const FN_VENUE_INVITATION_CONSUMPTION =  'consume_venue_invitation'
 export const FN_OWNER_CONTACT_US =  'insert_potential_customer'
-
+export const FN_IS_VENUE_OWNER_OR_SUPER_OWNER = 'is_venue_owner_or_is_super_owner'
 // Query params 
 
 
