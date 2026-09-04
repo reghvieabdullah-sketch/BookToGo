@@ -58,27 +58,15 @@
 {#if !venueData}
 <div class="navbar mx-auto max-w-full px-4 py-5 sm:px-6 lg:px-8">
 	<div class="navbar-start">
-		<a href="/" class="flex items-center gap-2">
-			<div
-				class="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-content shadow-lg"
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					class="size-5"
-				>
-					<path d="M6 3h12" />
-					<path d="M6 3v4a6 6 0 0 0 12 0V3" />
-					<path d="M12 13v8" />
-					<path d="M8 21h8" />
-				</svg>
-			</div>
+			<a href="/" class="flex items-center gap-2">
+		<div
+			class="flex size-10 items-center justify-center rounded-xl  text-primary-content shadow-lg"
+		>
+			<img src="/logo.png" alt="BookToGo" />
+		</div>
 
-			<span class="text-xl font-black tracking-tight">BookToGo</span>
-		</a>
+		<span class="text-xl font-black tracking-tight">BookToGo</span>
+	</a>
 	</div>
 
 	<div class="navbar-end gap-2">
