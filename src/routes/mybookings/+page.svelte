@@ -363,7 +363,7 @@
 
 								<!-- Date & Time -->
 								<div class="mb-3 space-y-2">
-									<div class="text-sm text-base-content">
+									<div class="text-sm text-base-content font-bold">
 										Total Price: Rs. {calculateTotalPrice(booking.units.subUnits, (new Date(booking.endTime!).getTime() - new Date(booking.startTime!).getTime()) / (1000 * 60 * 60))}
 									</div>
 									<div class="flex items-center gap-2 text-sm">
@@ -419,8 +419,13 @@
 									</div>
 
 									<div class="mb-1">
-										<div class="mb-1 badge badge-outline badge-sm">
-											{booking.units.title}
+										<div class="flex flex-row gap-1">
+										{#each booking.units.subUnits as su}
+											<div class="mb-1 badge badge-outline badge-sm">
+												{su.description}
+											</div>
+										{/each}
+										
 										</div>
 									</div>
 								</div>
