@@ -9,6 +9,7 @@
 	} from '$lib/bookingAssets/bookingStore.js';
 	import Calender from '$lib/bookingAssets/Calender.svelte';
 	import { fade, scale } from 'svelte/transition';
+	import Seo from '$lib/adminAssets/Seo.svelte';
 	let { data } = $props();
 
 	$effect(() => {
@@ -17,6 +18,13 @@
 		}
 	});
 </script>
+
+<Seo
+	image="https://booktogo.lk/logo.png"
+	title={`Book ${data.venueData.venueBrand} | BookToGo`}
+	description={`Book ${data.venueData.venueBrand} online with BookToGo. Check availability, view court options and prices, and reserve your preferred time slot instantly.`}
+	url={`https://${data.venueURL}.booktogo.lk/booking`}
+/>
 
 <div
 	class="relative flex h-[100vh] w-full flex-col items-center justify-center bg-base-300 px-4 sm:px-6 md:flex-row md:items-center md:justify-center lg:px-8"
