@@ -16,7 +16,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
     // Check if the owner request is present, we dont need to do auth checks, since postgres does it automatically
     if (!dateStart || !dateEnd) console.error('Invalid dates ', dateStart, ' ', dateEnd);
     if (url.searchParams.has(QUERY_PARAM_BOOKING_EXCEL_REQUEST)){
-        if (!locals.isUserOwner || !locals.isUserSuperOwner) return json( {error: "access denied"} , { status: 400 });
+        if (!locals.isUserOwner && !locals.isUserSuperOwner) return json( {error: "access denied"} , { status: 400 });
         const possible = await checkPossibilityOfCreatingBookingExcelFile(locals.supabase, venueID, dateStart, dateEnd);
         if (possible.error || !possible.data) return json({ error: possible.error ? possible.error : 'Failed to generate excel sheet'}, { status: 400 });
         return generateBookingsExcel(possible.data, dateStart.split('T')[0], dateEnd.split('T')[0], "Asia/Colombo");
