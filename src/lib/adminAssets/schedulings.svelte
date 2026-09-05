@@ -207,8 +207,6 @@
 							required
 						>
 							<option>Hours</option>
-							<option>Days</option>
-							<option>Weeks</option>
 						</select>
 					</div>
 					{#if submitted && !duration}

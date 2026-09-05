@@ -56,10 +56,14 @@ const authGuard: Handle = async ({ event, resolve }) => {
     const { isSuperOwner, isVenueOwner } = await isUserVenueOwnerOrSuperOwner(event.locals.supabase, event.locals.venueURL);
     event.locals.isUserSuperOwner = isSuperOwner;
     event.locals.isUserOwner = isVenueOwner;
+    console.log(isSuperOwner, isVenueOwner);
+    
     // Also make it possible to pass in venueID using locals
     if (!session && event.url.pathname.startsWith('/dashboard')) {
         throw redirect(303, '/auth?next=' + encodeURIComponent(event.url.pathname));
-    } else if (session && event.url.pathname.startsWith('/dashboard') && !event.locals.isUserOwner) {
+    } else if (session && event.url.pathname.startsWith('/dashboard') && !(event.locals.isUserOwner || event.locals.isUserSuperOwner)) {
+        console.log("Redirecting out to hom");
+        
         throw redirect(303, '/');
     }
      else if (session && event.url.pathname.startsWith('/auth')) {

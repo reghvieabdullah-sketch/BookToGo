@@ -45,9 +45,7 @@
 					Units: {booking.details.units.subUnits.map(s => s.description).join(', ')}
 				</div>
 
-				<div class="mt-0.5 text-xs opacity-70 sm:mt-1 sm:text-sm">
-					Price: Rs.{calculateTotalPrice(booking.details.units.subUnits, (new Date(booking.details.endTime).getTime() - new Date(booking.details.startTime).getTime()) / (1000 * 60 * 60))}
-				</div>
+
 			</div>
 
 			<div class="divider my-1 sm:my-2"></div>
@@ -64,6 +62,9 @@
 
 				<div>
 					<strong>End:</strong> {formatDate(booking.details.endTime)}
+				</div>
+				<div class="mt-0.5 text-xs  sm:mt-1 sm:text-sm">
+					<strong>Price (Rs):</strong> {calculateTotalPrice(booking.details.units.subUnits, (new Date(booking.details.endTime).getTime() - new Date(booking.details.startTime).getTime()) / (1000 * 60 * 60))}
 				</div>
 			</div>
 
