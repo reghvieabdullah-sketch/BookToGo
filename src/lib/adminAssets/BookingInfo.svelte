@@ -29,7 +29,7 @@
 			<div>
 				<div class="flex items-center justify-between gap-2">
 					<span class="text-sm font-semibold sm:text-base">
-						Booking #{selectedBookingIndex}
+						Booking #{selectedBookingIndex + 1}
 					</span>
 
 					<span class="badge badge-sm {getStatusBadgeClass(booking.details.status)}">
