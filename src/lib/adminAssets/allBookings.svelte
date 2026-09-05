@@ -13,13 +13,15 @@
 		venueID: number;
 	} = $props();
 
-	// Flatten bookings if they're grouped by date
 	function flatten(data: Record<string, BookingEntry[]> | BookingEntry[]) {
-		if (Array.isArray(data)) {
-			return data;
-		}
-		return Object.values(data ?? {}).flat();
-	}
+		const bookings = Array.isArray(data)
+			? data
+			: Object.values(data ?? {}).flat();
+
+		return [...bookings].sort(
+			(a, b) => new Date(a.details.startTime).getTime() - new Date(b.details.startTime).getTime()
+	);
+}
 
 	// Local, mutable copy so we can remove entries after delete
 	// without waiting on a full page invalidate/reload
@@ -50,10 +52,7 @@
 
 	function selectBooking(booking: BookingEntry) {
 		selectedBooking = booking;
-		
-		if (isMobile) {
-			showMobileDetails = true;
-		}
+		showMobileDetails = true; 
 	}
 
 	function closeMobileDetails() {
@@ -77,14 +76,15 @@
 	
 
 	function getStatusBadgeClass(status?: string) {
+		
 		switch (status && status.toLowerCase()) {
 			case 'paid':
 				return 'badge-success';
 			case 'unpaid':
 				return 'badge-warning';
-			case 'cancelled':
-				return 'badge-error';
-			default:
+			case 'upcoming':
+				return 'badge-info';
+			case 'past':
 				return 'badge-neutral';
 		}
 	}
@@ -153,17 +153,22 @@
 			console.log(error);
 		}
 	}
-</script>
 
+	function getTimeStatus(startTime: string) {
+		return new Date(startTime) > new Date() ? 'upcoming' : 'past';
+	}
+</script>
 <div class="flex h-full flex-row gap-4">
 	<div class="min-w-0 flex-1">
 		<div class="flex flex-row flex-wrap gap-4 p-2">
 			{#if bookings.length > 0}
-				{#each bookings as booking (booking.details.bookingID)}
+				{#each bookings as booking, index (booking.details.bookingID)}
 					<BookingCard
 						{booking}
-						selected={selectedBooking?.details.bookingID === booking.details.bookingID && !isMobile}
+						{index}
+						selected={selectedBooking?.details.bookingID === booking.details.bookingID}
 						onClick={() => selectBooking(booking)}
+						{getTimeStatus}
 						{getStatusBadgeClass}
 						{formatDate}
 						{formatBookingDate}
@@ -174,29 +179,10 @@
 			{/if}
 		</div>
 	</div>
-
-	<!-- Second Column - Booking Details (Desktop) -->
-	{#if selectedBooking && !isMobile}
-		<div class="w-80 border-l border-base-300 pl-4">
-			<div class="sticky top-0">
-				<BookingInfo
-					booking={selectedBooking}
-					onClose={() => (selectedBooking = null)}
-					{getStatusBadgeClass}
-					{getPaymentStatusBadgeClass}
-					{formatDate}
-					{handlePaid}
-					{handleDelete}
-					{formatBookingDate}
-
-				/>
-			</div>
-		</div>
-	{/if}
 </div>
 
-<!-- Mobile Details Modal -->
-{#if showMobileDetails && selectedBooking && isMobile}
+<!-- Details Modal (mobile + desktop) -->
+{#if showMobileDetails && selectedBooking}
 	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
 		<BookingInfo
 			booking={selectedBooking}
@@ -207,7 +193,6 @@
 			{handlePaid}
 			{handleDelete}
 			{formatBookingDate}
-
 		/>
 	</div>
 {/if}

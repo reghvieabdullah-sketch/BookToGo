@@ -221,12 +221,12 @@
 		<!-- Main Content -->
 		<div class="drawer-content flex flex-col">
 			<!-- Desktop Header -->
-			<div class="hidden p-6 pb-0 lg:block">
-				<h1 class="mb-2 text-3xl font-bold text-base-content">Admin Panel</h1>
+			<!-- <div class="hidden p-6 pb-0 lg:block">
+				<h1 class="mb-2 text-3xl font-bold text-base-content ">Admin Panel</h1>
 				<div class="flex items-center justify-between">
 					<p class="text-base-content/60">Manage your venue settings and bookings</p>
 				</div>
-			</div>
+			</div> -->
 
 			<!-- Main Content Area -->
 			<div class="flex-1 p-6">
