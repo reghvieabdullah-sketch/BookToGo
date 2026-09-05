@@ -5,6 +5,7 @@
 	import type { BookingEntry } from '../../types/bookingTypes';
 	import BookingInfo from './BookingInfo.svelte';
 	import { getPaymentStatusBadgeClass, getStatusBadgeClass } from '$lib/utils/utils';
+	import { QUERY_PARAM_BOOKING_EXCEL_REQUEST, QUERY_PARAM_VENUE_BOOKING_DATE_END, QUERY_PARAM_VENUE_BOOKING_DATE_START } from '$lib/constants/postgressFunctionConstants';
 
 	let {
 		bookingData,
@@ -163,8 +164,122 @@
 	function getTimeStatus(startTime: string) {
 		return new Date(startTime) > new Date() ? 'upcoming' : 'past';
 	}
+
+	let excelStartDate = $state('');
+	let excelEndDate = $state('');
+	let downloadingExcel = $state(false);
+	let excelError = $state<string | null>(null);
+	
+	async function downloadBookingExcel() {
+		if (!excelStartDate || !excelEndDate) return;
+		
+		excelError = null;
+		downloadingExcel = true;
+		const startDate = new Date(`${excelStartDate}T00:00:00.000Z`).toISOString();
+		const endDate = new Date(`${excelEndDate}T23:59:59.999Z`).toISOString();
+
+		const params = new URLSearchParams({
+			[QUERY_PARAM_VENUE_BOOKING_DATE_START]: startDate,
+			[QUERY_PARAM_VENUE_BOOKING_DATE_END]: endDate,
+			[QUERY_PARAM_BOOKING_EXCEL_REQUEST]: 'true'
+		});
+
+		try {
+			const response = await fetch(
+				`/api/v1/bookings/${venueID}?${params}`
+			);
+
+			if (!response.ok) {
+				const data = await response.json();
+				excelError = data.error ?? 'No bookings within that range.';
+				return;
+			}
+
+			const blob = await response.blob();
+
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+
+			a.href = url;
+			a.download = `bookings_${excelStartDate}_to_${excelEndDate}.xlsx`;
+
+			a.click();
+
+			URL.revokeObjectURL(url);
+		} catch (error) {
+			console.error(error);
+			excelError = 'Something went wrong while downloading the file.';
+		} finally {
+			downloadingExcel = false;
+		}
+	}	
+
 </script>
+<div class="w-full p-2">
+	<div class="card w-full bg-base-200 shadow-sm">
+		<div class="card-body gap-5">
+			<div class="flex flex-col gap-1">
+				<h2 class="card-title">Export bookings</h2>
+				<p class="text-sm text-base-content/60">
+					Select a date range to download your bookings as an Excel file.
+				</p>
+			</div>
+
+			<div class="flex flex-col gap-4 lg:flex-row lg:items-end">
+				<!-- Date range -->
+				<div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+					<label class="form-control w-full">
+						<div class="label pb-1">
+							<span class="label-text font-medium">Start date</span>
+						</div>
+
+						<input
+							type="date"
+							class="input input-bordered w-full"
+							bind:value={excelStartDate}
+						/>
+					</label>
+
+					<label class="form-control w-full">
+						<div class="label pb-1">
+							<span class="label-text font-medium">End date</span>
+						</div>
+
+						<input
+							type="date"
+							class="input input-bordered w-full"
+							bind:value={excelEndDate}
+						/>
+					</label>
+				</div>
+
+				<!-- Download action -->
+				<div class="lg:ml-auto">
+					<button
+						class="btn btn-primary w-full sm:w-auto lg:min-w-44"
+						onclick={downloadBookingExcel}
+						disabled={downloadingExcel}
+					>
+						{#if downloadingExcel}
+							<span class="loading loading-spinner loading-sm"></span>
+							Generating...
+						{:else}
+							Download Excel
+						{/if}
+					</button>
+				</div>
+			</div>
+
+			{#if excelError}
+				<div class="alert alert-error">
+					<span>{excelError}</span>
+				</div>
+			{/if}
+		</div>
+	</div>
+</div>
 <div class="flex h-full flex-row gap-4">
+
 	<div class="min-w-0 flex-1">
 		<div class="flex flex-row flex-wrap gap-4 p-2">
 			{#if bookings.length > 0}
@@ -259,3 +374,4 @@
 		</div>
 	</div>
 {/if}
+

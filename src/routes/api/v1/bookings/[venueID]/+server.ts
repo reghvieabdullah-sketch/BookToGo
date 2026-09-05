@@ -1,19 +1,26 @@
-import { QUERY_PARAM_BOOKING_DASHBOARD_TYPE, QUERY_PARAM_VENUE_BOOKING_DATE_END, QUERY_PARAM_VENUE_BOOKING_DATE_START, QUERY_PARAM_VENUE_ID } from "$lib/constants/postgressFunctionConstants";
-import { deleteBookingByID, getVenueBookingsForDateRange, getVenueBookingsForDateRangeAndDashboard, insertVenueBookingWithPossibilityCheck } from "$lib/dbFunctions/bookingsDB";
+import { QUERY_PARAM_BOOKING_DASHBOARD_TYPE, QUERY_PARAM_BOOKING_EXCEL_REQUEST, QUERY_PARAM_VENUE_BOOKING_DATE_END, QUERY_PARAM_VENUE_BOOKING_DATE_START, QUERY_PARAM_VENUE_ID } from "$lib/constants/postgressFunctionConstants";
+import { checkPossibilityOfCreatingBookingExcelFile, deleteBookingByID, getVenueBookingsForDateRange, getVenueBookingsForDateRangeAndDashboard, insertVenueBookingWithPossibilityCheck } from "$lib/dbFunctions/bookingsDB";
 import { deleteCachedData, getCachedData, setCachedData } from "$lib/dbFunctions/cacheHandler";
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { getStartEndDayOfTimeStamp } from "$lib/utils/timeUtils";
 import type { BookingDetails } from "../../../../../types/bookingTypes";
 import { updateBookingStatusByID } from "$lib/dbFunctions/venuesDB";
+import { generateBookingsExcel } from "$lib/utils/utils";
 
 export const GET: RequestHandler = async ({ locals, params, url }) => {
     const { venueID } = params;
     const dateStart = url.searchParams.get(QUERY_PARAM_VENUE_BOOKING_DATE_START) as string;
     const dateEnd = url.searchParams.get(QUERY_PARAM_VENUE_BOOKING_DATE_END) as string;
-
+    
 
     // Check if the owner request is present, we dont need to do auth checks, since postgres does it automatically
     if (!dateStart || !dateEnd) console.error('Invalid dates ', dateStart, ' ', dateEnd);
+    if (url.searchParams.has(QUERY_PARAM_BOOKING_EXCEL_REQUEST)){
+        if (!locals.isUserOwner || !locals.isUserSuperOwner) return json( {error: "access denied"} , { status: 400 });
+        const possible = await checkPossibilityOfCreatingBookingExcelFile(locals.supabase, venueID, dateStart, dateEnd);
+        if (possible.error || !possible.data) return json({ error: possible.error ? possible.error : 'Failed to generate excel sheet'}, { status: 400 });
+        return generateBookingsExcel(possible.data, dateStart.split('T')[0], dateEnd.split('T')[0], "Asia/Colombo");
+    }    
     if (QUERY_PARAM_BOOKING_DASHBOARD_TYPE in url.searchParams) return json(await getVenueBookingsForDateRangeAndDashboard(locals.supabase, venueID, dateStart, dateEnd));
     
     // const { startDate, endDate } = getStartEndDayOfTimeStamp(dateStart);

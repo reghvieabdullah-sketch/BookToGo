@@ -1,4 +1,4 @@
-import type { BookingDetails, BookingEntry } from "../../types/bookingTypes";
+import type { BookingDetails, BookingEntry, BookingsForDateRange } from "../../types/bookingTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FN_BOOKING_CLOSURE_GET, FN_BOOKING_CLOSURE_GET_OWNER_DASHBOARD, FN_IS_VENUE_OWNER, FN_VENUE_BOOKING_DELETE, FN_VENUE_BOOKING_GET, FN_VENUE_BOOKING_GET_FOR_DASHBOARD, FN_VENUE_BOOKING_INSERT, FN_VENUE_BOOKING_INSERT_WITHOUT_CHECK, FN_VENUE_BOOKING_LIMIT, FN_VENUE_USER_BOOKINGS_GET } from "$lib/constants/postgressFunctionConstants";
 import { ensureValidCredentialsForBooking, hasBookingConflict } from "$lib/bookingLogic";
@@ -7,6 +7,25 @@ import { HHMMToMinutes, isSameDay, timeStampToDateString, timeStampToDayKey, utc
 import { runRPC, ensureArgs, type DBResult } from "./commonServerTypesAndFuncs";
 
 // Common return type for DB operations
+
+
+export async function checkPossibilityOfCreatingBookingExcelFile(supabase: SupabaseClient, venueID: string | undefined, dateStart: string, dateEnd: string): Promise<DBResult<any>> {
+  const missing = ensureArgs({ venueID, dateStart, dateEnd });
+  if (missing) return { data: null, error: missing };
+  if (isNaN(new Date(dateStart).getTime()) || isNaN(new Date(dateEnd).getTime())) return { data: null, error: "Invalid start or end timestamp" };
+  const { data, error } = await getBookingClosureBundle( supabase, venueID, dateStart, dateEnd, true);
+  if (error) return {data: null, error: "An unexpected error occurred generating excel sheet!"};
+  
+  const bookingData: BookingsForDateRange = data.bookingData as BookingsForDateRange;
+  if (!bookingData) return { data: 'No bookings for this date range', error: null};
+  
+  const hasBookings = Object.values(bookingData).some((entries) => entries.length > 0);
+  if (!hasBookings) return { data: 'No bookings for this date range', error: null};
+
+  return {data: bookingData, error: null };
+}
+
+
 
 
 /**Inserts a venue specific booking. No auth or type/null checks done.*/
