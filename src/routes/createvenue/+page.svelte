@@ -13,7 +13,7 @@
 	let copied = $state(false);
 
 	async function handleCreate() {
-		const name = venueName.trim();
+		let name = venueName.trim().toLowerCase().replace(/\s/g, '');
 		if (!name || isCreating) return;
 
 		isCreating = true;
