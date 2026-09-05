@@ -137,11 +137,12 @@
 					<button
 						class="btn btn-sm flex-1 btn-success"
 						on:click={handlePaid}
+						disabled={booking.details.status === 'paid'}
 					>
 						Mark as paid
 					</button>
 					<button
-					class="btn btn-sm btn-warning"
+					class="btn btn-sm flex-1 btn-warning"
 					on:click={handleDelete}
 				>
 					Delete Booking

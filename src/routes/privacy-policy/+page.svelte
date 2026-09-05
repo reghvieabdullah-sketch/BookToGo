@@ -1,4 +1,5 @@
 <script>
+	import Seo from '$lib/adminAssets/Seo.svelte';
 	import { onMount } from 'svelte';
 
 	let currentDate = '';
@@ -12,18 +13,7 @@
 	});
 </script>
 
-<svelte:head>
-	<title>Privacy Policy | BookToGo</title>
-	<meta
-		name="description"
-		content="Read BookToGo’s privacy policy to learn how we handle your data responsibly and securely."
-	/>
-	<link rel="canonical" href="https://booktogo.lk/privacy-policy" />
-
-	<meta property="og:title" content="BookToGo Privacy Policy" />
-	<meta property="og:description" content="Learn how BookToGo protects your data and privacy." />
-	<meta property="og:url" content="https://booktogo.lk/privacy-policy" />
-</svelte:head>
+<Seo image={'https://booktogo.lk/logo.png'} title={'Privacy Policy | BookToGo'} description={'Read BookToGo’s privacy policy to learn how we handle your data responsibly and securely'} url={`https://booktogo.lk/privacy-policy` }/>
 
 <div class="min-h-screen bg-base-100">
 	<!-- Hero Section -->

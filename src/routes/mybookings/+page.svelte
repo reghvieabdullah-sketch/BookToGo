@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '$lib/adminAssets/Seo.svelte';
 	import { calculateTotalPrice } from '$lib/bookingLogic';
 	import type { BookingDetails } from '../../types/bookingTypes';
 	import type { PageData } from './$types';
@@ -161,6 +162,8 @@
 		showResultDialog = false;
 	}
 </script>
+
+<Seo image={'https://booktogo.lk/logo.png'} title={`${data.venueData.venueBrand} | Bookings`} description={`See your bookings with ${data.venueData.venueBrand}`} url={`https://${data.venueURL}.booktogo.lk/mybookings`} noindex={true}/>
 
 <div class="min-h-screen bg-base-200 p-4 md:p-8">
 	<div class="mx-auto w-full max-w-6xl space-y-6">

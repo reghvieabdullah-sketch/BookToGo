@@ -3,7 +3,9 @@
 	let phoneNumber = '';
 	let touched = false;
 
+	export let data;
 	import { page } from '$app/stores';
+	import Seo from '$lib/adminAssets/Seo.svelte';
 	const next = $page.url.searchParams.get('next') ?? '/';
 
 	// Sri Lankan mobile numbers:
@@ -32,6 +34,8 @@
 		isLoading = true;
 	}
 </script>
+
+<Seo image={'https://booktogo.lk/logo.png'} title={'Login | BookToGo'} description={'Sign in to book or view your dashboard'} url={`https://${data.venueURL ? `${data.venueURL}.` : ''}booktogo.lk/auth`} noindex={true}/>
 
 <div class="flex min-h-screen items-center justify-center bg-base-200 px-4 py-10">
 	<div class="relative w-full max-w-[380px]">

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Seo from "$lib/adminAssets/Seo.svelte";
+
 	let contactName = '';
 	let contactEmail = '';
 	let contactPhone = '';
@@ -40,6 +42,8 @@
 		}
 	}
 </script>
+
+<Seo image={'https://booktogo.lk/logo.png'} title={'BookToGo | Support'} description={'Have questions or want to add your venue to BookToGo? Contact us here.'} url={'https://booktogo.lk/contact' }/>
 <div class="min-h-screen bg-base-100">
 	<!-- Hero -->
 	<section class="border-b border-base-200 bg-base-200/40">

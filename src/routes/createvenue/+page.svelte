@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Seo from "$lib/adminAssets/Seo.svelte";
+
 	const CREATE_VENUE_ENDPOINT = `/api/v1/venues/`;
 
 
@@ -56,6 +58,7 @@
 		}
 	}
 </script>
+<Seo image={'https://booktogo.lk/logo.png'} title={'BookToGo | Admin'} description={'Create a venue'} url={'https://booktogo.lk/createvenue' } noindex={true}/>
 
 <div class="flex min-h-screen items-center justify-center bg-base-200 px-4 py-16">
 	<div class="w-full max-w-sm">

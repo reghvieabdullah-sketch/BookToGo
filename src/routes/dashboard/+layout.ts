@@ -16,6 +16,7 @@ export const load: LayoutLoad = async ({ fetch, parent, depends, url }) => {
   const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
   const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
 
+  // here venueID is the URL 😒
   const response = await fetch(
     `/api/v1/bundler/${venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}&${QUERY_PARAM_BOOKING_CLOSURE_BUNDLE_DASHBOARD_TYPE}=true`
 );

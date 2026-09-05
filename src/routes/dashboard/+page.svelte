@@ -3,6 +3,7 @@
 	import AllBookings from '$lib/adminAssets/allBookings.svelte';
 	import PaymentsInfo from '$lib/adminAssets/paymentsInfo.svelte';
 	import Schedulings from '$lib/adminAssets/schedulings.svelte';
+	import Seo from '$lib/adminAssets/Seo.svelte';
 	import SettingsInfo from '$lib/adminAssets/settingsInfo.svelte';
 	import ContactDetails from '$lib/configAssets/contactDetails.svelte';
 	import CourtsPricing from '$lib/configAssets/courtsPricing.svelte';
@@ -195,6 +196,7 @@
 	$: currentSectionName = currentSection?.name || '';
 </script>
 
+<Seo image={'https://booktogo.lk/logo.png'} title={ `${venueDataCopy.venueBrand} | Dashboard`} description={'View your venue dashboard'} url={`https://${data.venueURL}.booktogo.lk/dashboard` } noindex={true}/>
 <div class="min-h-screen bg-base-200">
 	<!-- Mobile Header with Drawer Toggle -->
 	<div class="navbar bg-base-100 shadow-sm lg:hidden">
