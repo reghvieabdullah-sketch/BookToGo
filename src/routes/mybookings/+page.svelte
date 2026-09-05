@@ -363,12 +363,10 @@
 
 								<!-- Date & Time -->
 								<div class="mb-3 space-y-2">
+									<div class="text-sm text-base-content">
+										Total Price: Rs. {calculateTotalPrice(booking.units.subUnits, (new Date(booking.endTime!).getTime() - new Date(booking.startTime!).getTime()) / (1000 * 60 * 60))}
+									</div>
 									<div class="flex items-center gap-2 text-sm">
-									
-										<div class="text-sm text-base-content">
-											Total Price: Rs. {calculateTotalPrice(booking.units.subUnits, (new Date(booking.endTime!).getTime() - new Date(booking.startTime!).getTime()) / (1000 * 60 * 60))}
-										</div>
-
 										<svg
 											class="h-4 w-4 text-base-content/60"
 											fill="none"
