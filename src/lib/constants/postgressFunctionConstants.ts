@@ -10,7 +10,7 @@ export const VENUE_LOGO_BUCKET_PATH = 'venue-logo-images'
 export const FN_USER_SETTINGS_SET = 'create_venue_user'
 
 export const FN_VENUE_BUNDLER_GET = 'get_venue_bundle'
-
+export const FN_VENUE_GET_INDEXABLE = 'get_indexable_venues'
 export const FN_VENUE_GENERAL_SETTINGS_UPDATE = 'update_venue_data'
 export const FN_VENUE_GENERAL_SETTINGS_GET = 'get_pg_assets'
 

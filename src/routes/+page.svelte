@@ -38,6 +38,7 @@
 		QUERY_PARAM_VENUE_ID
 	} from '$lib/constants/postgressFunctionConstants';
 	import Hompage from '$lib/hompage.svelte';
+	import Seo from '$lib/adminAssets/Seo.svelte';
 
 	onMount(() => {
 		window.addEventListener('scroll', handleScroll);
@@ -88,9 +89,14 @@
 </script>
 
 {#if data.venueURL}
+	<Seo
+    image="https://booktogo.lk/logo.png"
+    title={`${data.venueURL} | BookToGo`}
+    description={`Discover ${data.venueURL} on BookToGo. Explore available services, check details, and book your next experience easily online.`}
+    url={`https://${data.venueURL}.booktogo.lk`}
+	/>
 <div class="min-h-screen bg-base-100">
-
-	<!-- Hero -->
+	
 	<section
 		bind:this={heroSection}
 		class="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-24"
@@ -407,5 +413,11 @@
 	</footer>
 </div>
 {:else}
+	<Seo
+	image="https://booktogo.lk/logo.png"
+	title="BookToGo | Grow Your Sports Venue"
+	description="Take your sports venue online with BookToGo. Manage bookings, showcase your courts, and make it easier for customers to find and reserve your venue."
+	url="https://booktogo.lk"
+	/>
 	<Hompage/>
 {/if}

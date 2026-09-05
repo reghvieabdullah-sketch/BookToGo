@@ -99,14 +99,14 @@
 		}
 	}
 </script>
-
+<!-- 
 <svelte:head>
 	<title>BookToGo — Let your customers book themselves</title>
 	<meta
 		name="description"
 		content="BookToGo helps sports venues spend less time answering booking calls and messages, and more time running their venue."
 	/>
-</svelte:head>
+</svelte:head> -->
 
 <div class="bg-base-100 text-base-content">
 	<!-- NAVBAR -->
@@ -742,21 +742,9 @@
 		>
 			<div class="flex items-center gap-2">
 				<div
-					class="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-content"
+					class="flex size-8 items-center justify-center rounded-lg text-primary-content"
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						class="size-4"
-					>
-						<path d="M6 3h12" />
-						<path d="M6 3v4a6 6 0 0 0 12 0V3" />
-						<path d="M12 13v8" />
-						<path d="M8 21h8" />
-					</svg>
+				<img src="/logo.png" alt="BookToGo" />	
 				</div>
 
 				<span class="font-bold">BookToGo</span>
