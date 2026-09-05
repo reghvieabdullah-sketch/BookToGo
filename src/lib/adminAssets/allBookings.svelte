@@ -204,7 +204,7 @@
 			{getStatusBadgeClass}
 			{getPaymentStatusBadgeClass}
 			{formatDate}
-			{handleCancel}
+			{handlePaid}
 			{handleDelete}
 			{formatBookingDate}
 
