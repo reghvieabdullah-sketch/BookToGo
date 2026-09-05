@@ -3,7 +3,7 @@
 	let phoneNumber = '';
 	let touched = false;
 
-	export let { data };
+	export let data;
 	import { page } from '$app/stores';
 	import Seo from '$lib/adminAssets/Seo.svelte';
 	const next = $page.url.searchParams.get('next') ?? '/';
