@@ -1,5 +1,5 @@
 <script lang="ts">
-	import customerBookingVideo from '$lib/vids/customer-booking.mov';
+	import customerBookingVideo from '$lib/vids/compressed_customer_booking.mp4';
 
 	const problems = [
 		{
