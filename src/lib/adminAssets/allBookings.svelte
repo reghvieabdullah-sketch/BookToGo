@@ -4,6 +4,7 @@
 	import BookingCard from './BookingCard.svelte';
 	import type { BookingEntry } from '../../types/bookingTypes';
 	import BookingInfo from './BookingInfo.svelte';
+	import { getPaymentStatusBadgeClass, getStatusBadgeClass } from '$lib/utils/utils';
 
 	let {
 		bookingData,
@@ -77,32 +78,7 @@
 	}
 	
 
-	function getStatusBadgeClass(status?: string) {
-		
-		switch (status && status.toLowerCase()) {
-			case 'paid':
-				return 'badge-success';
-			case 'unpaid':
-				return 'badge-warning';
-			case 'upcoming':
-				return 'badge-info';
-			case 'past':
-				return 'badge-neutral';
-		}
-	}
-
-	function getPaymentStatusBadgeClass(status: string) {
-		switch (status.toLowerCase()) {
-			case 'paid':
-				return 'badge-success';
-			case 'pending':
-				return 'badge-warning';
-			case 'refunded':
-				return 'badge-info';
-			default:
-				return 'badge-neutral';
-		}
-	}
+	
 
 	function handlePaid() {
 		if (!selectedBooking) return;

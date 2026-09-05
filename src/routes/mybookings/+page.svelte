@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Seo from '$lib/adminAssets/Seo.svelte';
 	import { calculateTotalPrice } from '$lib/bookingLogic';
+	import { getStatusBadgeClass } from '$lib/utils/utils';
 	import type { BookingDetails } from '../../types/bookingTypes';
 	import type { PageData } from './$types';
 
@@ -52,17 +53,7 @@
 		return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
 	}
 
-	function getStatusColor(status: string): string {
-		const statusMap: Record<string, string> = {
-			upcoming: 'badge-info',
-			active: 'badge-success',
-			pending: 'badge-warning',
-			cancelled: 'badge-error',
-			completed: 'badge-neutral'
-		};
 
-		return statusMap[status.toLowerCase()] || 'badge-ghost';
-	}
 
 	function getContactHref(contact: {
 		icon?: string;
@@ -363,12 +354,9 @@
 											Booking #{booking.bookingID}
 										</div>
 
-										<div class="text-sm text-base-content">
-											Total Price: Rs.{calculateTotalPrice(booking.units.subUnits, (new Date(booking.endTime!).getTime() - new Date(booking.startTime!).getTime()) / (1000 * 60 * 60))}
-										</div>
 									</div>
 
-									<div class="badge {getStatusColor(booking.status!)} badge-sm">
+									<div class="badge {getStatusBadgeClass(booking.status)} badge-sm">
 										{booking.status}
 									</div>
 								</div>
@@ -376,6 +364,11 @@
 								<!-- Date & Time -->
 								<div class="mb-3 space-y-2">
 									<div class="flex items-center gap-2 text-sm">
+									
+										<div class="text-sm text-base-content">
+											Total Price: Rs. {calculateTotalPrice(booking.units.subUnits, (new Date(booking.endTime!).getTime() - new Date(booking.startTime!).getTime()) / (1000 * 60 * 60))}
+										</div>
+
 										<svg
 											class="h-4 w-4 text-base-content/60"
 											fill="none"
@@ -446,16 +439,12 @@
 								</div>
 
 								<!-- Cancel Button -->
-								{#if booking.status!.toLowerCase() === 'upcoming' ||
-									booking.status!.toLowerCase() === 'active' ||
-									booking.status!.toLowerCase() === 'pending'}
-									<button
+								<button
 										class="btn mt-auto w-full btn-outline btn-sm btn-error"
 										onclick={() => requestCancel(booking)}
 									>
 										Cancel Booking
-									</button>
-								{/if}
+								</button>
 							</div>
 						{/each}
 					</div>
