@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { calculateTotalPrice } from "$lib/bookingLogic";
 	import type { BookingEntry } from "../../types/bookingTypes";
-
+	export let selectedBookingIndex;
 	export let booking: BookingEntry;
 	export let onClose = () => {};
 	export let getStatusBadgeClass;
@@ -29,7 +29,7 @@
 			<div>
 				<div class="flex items-center justify-between gap-2">
 					<span class="text-sm font-semibold sm:text-base">
-						Booking #{booking.details.bookingID}
+						Booking #{selectedBookingIndex}
 					</span>
 
 					<span class="badge badge-sm {getStatusBadgeClass(booking.details.status)}">
