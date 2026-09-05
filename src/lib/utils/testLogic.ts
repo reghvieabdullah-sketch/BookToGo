@@ -5,7 +5,7 @@ import type { BookingDetails } from "../../types/bookingTypes";
 
 import { createClient } from '@supabase/supabase-js';
 import { timeStampToDayKey, timeStampToDateString, HHMMToMinutes } from "./timeUtils";
-import { userBookingPastLimit, getBookingClosureBundle } from "$lib/dbFunctions/bookingsDB";
+import { userBookingPastLimit, getBookingClosureBundle, createBookingExcelFile } from "$lib/dbFunctions/bookingsDB";
 
 const supabase = createClient(
     "https://girygvjwrdgdinbljcfu.supabase.co",
@@ -59,8 +59,8 @@ const testBooking: BookingDetails = {
 };
 
 
-testHasBookingConflict("1", "0d5aa090-620d-42a3-86d5-34cf6bc7af20", testBooking, supabase, "example");
-
+// testHasBookingConflict("1", "0d5aa090-620d-42a3-86d5-34cf6bc7af20", testBooking, supabase, "example");
+console.log(await createBookingExcelFile(supabase, "1", " ", "2026-09-30T23:59:59.999Z"));
 
 
 
