@@ -11,7 +11,7 @@
 
 	// Extract bookings with a fallback
 	let bookings: BookingDetails[] = $derived(data.bookings || []);
-	let venueID: string = $derived(data.venueID || '');
+	let venueID: string = $derived(data.venueData.venueID || '');
 
 	// Cancel-confirmation dialog state
 	let showConfirmDialog = $state(false);
