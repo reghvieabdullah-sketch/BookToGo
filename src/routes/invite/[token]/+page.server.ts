@@ -10,7 +10,7 @@ export const load = async ({ params, url, locals: { supabase, session, venueURL,
   }
 
   if (isUserSuperOwner) {
-    throw error(404, "As a super admin, you are granted access to all venues. Thus this invitation is only valid (and still valid) for non admins");
+    throw error(404, "As a super admin, you are granted access to all venues. Thus this invitation is only valid (and still valid) for non admins\nIf you want to claim this court. First logout of super admin account");
   }
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
   const { data, error: invError } = await consumeVenueInvitation(supabase, tokenHash);
