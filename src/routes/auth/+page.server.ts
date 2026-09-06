@@ -36,7 +36,7 @@ export const actions: Actions = {
 			provider: 'google',
 			options: {
 				redirectTo:
-					`${origin}/auth/callback` +
+					`${url.origin}/auth/callback` +
 					`?next=${encodeURIComponent(next)}` +
 					`&returnHost=${encodeURIComponent(returnHost)}`,
 				queryParams: {
