@@ -31,16 +31,21 @@ export const actions: Actions = {
 			maxAge: 60 * 10 // 10 minutes, plenty for the OAuth round trip
 		});
 		
+		const returnHost = url.hostname;
 		const { data, error } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
-				redirectTo: `${url.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+				redirectTo:
+					`${origin}/auth/callback` +
+					`?next=${encodeURIComponent(next)}` +
+					`&returnHost=${encodeURIComponent(returnHost)}`,
 				queryParams: {
 					access_type: 'offline',
 					prompt: 'consent'
 				}
 			}
 		});
+
 
 		if (error) {
 			console.error('OAuth error:', error);
