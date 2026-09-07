@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { dayNamesShort, monthNames } from '$lib/constants/dayMonthconstants';
-	import { bookingDayData, bookingPopupVisible, isLoading } from './bookingStore';
+	import { bookingDayData } from './bookingStore';
 	import { HHMMToMinutes } from '$lib/utils/timeUtils';
 	import {
 		QUERY_PARAM_VENUE_BOOKING_DATE_END,
@@ -22,10 +22,8 @@
 	function setDayBooking(date: Date) {
 		const key = formatDateUTC(date);
 		const entries = bookingData ? (bookingData[key] ?? []) : [];
-		// console.log(bookingData);
-		
+
 		$bookingDayData = { date, entries };
-		// isLoading.set(false);
 	}
 
 	function getIsBookableDay(date: Date) {
@@ -86,24 +84,16 @@
 	}
 
 	async function refetchBookingData() {
-
 		const startDate = new Date(currentYear, currentMonth, 1);
 		const endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
-		console.warn(`refetching from ${startDate.toISOString()} to ${endDate.toISOString()}`);
-		
+
 		const response = await fetch(
 			`/api/v1/bookings/${venueData?.venueID}?${QUERY_PARAM_VENUE_BOOKING_DATE_START}=${startDate.toISOString()}&${QUERY_PARAM_VENUE_BOOKING_DATE_END}=${endDate.toISOString()}`
 		);
 		bookingData = await response.json();
-		console.log(bookingData);
-		
 	}
 
 	async function previousMonth() {
-		const todayUTC = new Date();
-		todayUTC.setUTCHours(0, 0, 0, 0);
-
-
 		if (currentMonth === 0) {
 			currentMonth = 11;
 			currentYear--;
@@ -128,22 +118,29 @@
 		setDayBooking(day.date);
 	}
 
+	function isSelectedDay(day: any) {
+		return (
+			day?.date &&
+			$bookingDayData.date &&
+			day.date.toDateString() === $bookingDayData.date.toDateString()
+		);
+	}
+
 	function bookedPercentageForDate(date: Date) {
 		if (!date) return 0;
-		
+
 		const weekday = date.toLocaleString('en-US', { weekday: 'long', timeZone: 'UTC' }).toLowerCase();
 		const daySettings = settingsData?.daySettings?.[weekday] ?? {};
 		const slotGenerationValue = settingsData?.slotGenerationInterval ?? 60;
-		// are fallbacks needed for slotgeneration, what if the owner does some shit yet doesnt want 60 min bookings
 		const openTime = daySettings.openTime ?? '00:00';
 		const closeTime = daySettings.closeTime ?? '23:59';
 
 		const totalSlots = (HHMMToMinutes(closeTime) - HHMMToMinutes(openTime)) / slotGenerationValue;
-		
+
 		const bookedSlots = bookingData?.[formatDateUTC(date)]?.length ?? 0;
-		
+
 		if (totalSlots === 0) return 0;
-		
+
 		return (bookedSlots / totalSlots) * 100;
 	}
 
@@ -158,17 +155,17 @@
 	});
 </script>
 
-<div class="mx-auto w-full sm:w-[90%] lg:w-[60%]">
+<div class="w-full rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm sm:p-6">
 	<!-- Header -->
-	<div class="mb-4 flex items-center justify-between rounded-lg bg-base-200 p-4">
-		<h2 class="text-lg font-semibold text-base-content md:text-xl">
+	<div class="mb-4 flex items-center justify-between">
+		<h2 class="text-base font-semibold text-base-content sm:text-lg">
 			{monthNames[currentMonth]}
 			{currentYear}
 		</h2>
 
-		<div class="flex gap-2">
+		<div class="flex gap-1">
 			<button
-				class="btn btn-circle btn-sm btn-primary"
+				class="btn btn-circle btn-ghost btn-sm border border-base-300"
 				on:click={previousMonth}
 				aria-label="Previous month"
 			>
@@ -178,7 +175,7 @@
 				</svg>
 			</button>
 			<button
-				class="btn btn-circle btn-sm btn-primary"
+				class="btn btn-circle btn-ghost btn-sm border border-base-300"
 				on:click={nextMonth}
 				aria-label="Next month"
 			>
@@ -190,52 +187,55 @@
 		</div>
 	</div>
 
-	<!-- Calendar -->
-	<div class="rounded-lg bg-base-100 p-4 shadow-lg">
-		<div class="mb-2 grid grid-cols-7 gap-2">
-			{#each dayNamesShort as d}
-				<div class="py-3 text-center text-sm font-semibold text-base-content/70">{d}</div>
-			{/each}
-		</div>
-
-		<div class="grid grid-cols-7 gap-2">
-			{#each calendarDays as day}
-				<button
-					class="btn relative flex items-center justify-center overflow-hidden rounded-lg text-sm btn-ghost duration-150 hover:scale-105 sm:h-20 md:text-base {!day?.isBookableDay
-						? 'text-base-content/30'
-						: ''}"
-					class:ring-2={day?.date &&
-						$bookingDayData.date &&
-						day.date.toDateString() === $bookingDayData.date.toDateString()}
-					on:click={() => {
-						selectDate(day);
-						$bookingPopupVisible = !$bookingPopupVisible;
-					}}
-					disabled={!day?.day}
-				>
-					<span class="z-10">{day?.day || ''}</span>
-
-					{#if day?.date}
-					{@const bookedPercent = bookedPercentageForDate(day.date)}
-						{#if bookedPercent > 0}
-						<span
-							class="pointer-events-none absolute bottom-0 left-0 z-0 w-full bg-primary/20"
-							style="height: {bookedPercent}%;"
-							aria-hidden="true"
-						></span>
-						{/if}
-					{/if}
-
-				</button>
-			{/each}
-		</div>
+	<!-- Day names -->
+	<div class="mb-1 grid grid-cols-7 gap-1">
+		{#each dayNamesShort as d}
+			<div class="py-1 text-center text-xs font-medium text-base-content/50">{d}</div>
+		{/each}
 	</div>
 
-	{#if $bookingDayData.date}
-		<div class="mt-4 rounded-lg bg-base-200 p-3">
-			<p class="text-sm text-base-content">
-				Selected: <span class="font-semibold">{$bookingDayData.date.toDateString()}</span>
-			</p>
-		</div>
-	{/if}
+	<!-- Days grid -->
+	<div class="grid grid-cols-7 gap-1">
+		{#each calendarDays as day}
+			<button
+				class="relative flex aspect-square flex-col items-center justify-center rounded-lg text-sm font-medium transition-colors duration-150
+					{!day?.day ? 'invisible' : ''}
+					{day?.day && !day.isBookableDay ? 'cursor-not-allowed text-base-content/25' : ''}
+					{day?.day && day.isBookableDay && !isSelectedDay(day) ? 'text-base-content hover:bg-base-200' : ''}
+					{isSelectedDay(day) ? 'bg-primary text-primary-content hover:bg-primary' : ''}"
+				class:ring-1={day?.isToday && !isSelectedDay(day)}
+				class:ring-primary={day?.isToday && !isSelectedDay(day)}
+				on:click={() => selectDate(day)}
+				disabled={!day?.day || !day.isBookableDay}
+			>
+				<span>{day?.day || ''}</span>
+
+				{#if day?.date && day.isBookableDay}
+					{@const bookedPercent = bookedPercentageForDate(day.date)}
+					{#if bookedPercent > 0 && !isSelectedDay(day)}
+						<span
+							class="absolute bottom-1 h-1 w-1 rounded-full {bookedPercent >= 90
+								? 'bg-error'
+								: bookedPercent >= 50
+									? 'bg-warning'
+									: 'bg-success'}"
+							aria-hidden="true"
+						></span>
+					{/if}
+				{/if}
+			</button>
+		{/each}
+	</div>
 </div>
+
+{#if $bookingDayData.date}
+	<p class="mt-4 text-center text-sm font-medium text-base-content/60">
+		{$bookingDayData.date.toLocaleDateString('en-US', {
+			weekday: 'long',
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric',
+			timeZone: 'UTC'
+		})}
+	</p>
+{/if}
