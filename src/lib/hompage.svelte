@@ -742,9 +742,9 @@
 		>
 			<div class="flex items-center gap-2">
 				<div
-					class="flex size-8 items-center justify-center rounded-lg text-primary-content"
+					class="flex size-8 items-center justify-center  text-primary-content"
 				>
-				<img src="/logo.png" alt="BookToGo" />	
+				<img src="/logo.png" alt="BookToGo" class="rounded-3xl bg-gray p-1"/>	
 				</div>
 
 				<span class="font-bold">BookToGo</span>
