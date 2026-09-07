@@ -134,11 +134,11 @@
 					/>
 				{/if}
 
-				<h1 class="text-4xl leading-tight font-extrabold tracking-tight text-primary drop-shadow-lg md:text-6xl">
+				<h1 class="text-4xl leading-tight font-extrabold tracking-tight text-secondary drop-shadow-lg md:text-6xl">
 					{venueData?.venueBrand || 'Book your Court!'}
 				</h1>
 
-				<p class="max-w-2xl text-balance text-base leading-relaxed text-primary-content/85 drop-shadow md:text-lg">
+				<p class="max-w-2xl text-balance text-base leading-relaxed text-secondary-content/85 drop-shadow md:text-lg">
 					Booking a court with {venueData?.venueBrand || 'us'} has never been easier. Experience seamless
 					booking, top-notch facilities, and unforgettable moments every time.
 				</p>
